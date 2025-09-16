@@ -1,0 +1,497 @@
+openapi: 3.0.3
+info:
+  title: Hylo Travel Itinerary API
+  description: Constitutional-compliant edge function API for AI-powered travel planning
+  version: 1.0.0
+  contact:
+    name: Hylo Development Team
+
+servers:
+  - url: https://hylo-travel.vercel.app/api
+    description: Production Vercel Edge Functions
+  - url: http://localhost:3000/api
+    description: Local development
+
+paths:
+  /itinerary:
+    post:
+      summary: Generate personalized travel itinerary
+      description: |
+        Orchestrates multi-agent AI system to generate comprehensive travel itinerary
+        based on user preferences, with real-time streaming updates.
+      operationId: generateItinerary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TravelFormData'
+            examples:
+              family_trip:
+                summary: Family trip to Japan
+                value:
+                  tripDetails:
+                    location: 'Tokyo, Japan'
+                    departDate: '2025-06-15T00:00:00Z'
+                    returnDate: '2025-06-25T00:00:00Z'
+                    plannedDays: 10
+                    adults: 2
+                    children: 2
+                    childrenAges: [8, 12]
+                    budget: 8000
+                    currency: 'USD'
+                  groups: ['Family']
+                  interests: ['Culture', 'Food', 'Nature']
+                  inclusions: ['Accommodations', 'Activities', 'Dining']
+                  experience: ['Some international travel']
+                  vibes: ['Cultural immersion', 'Family-friendly']
+                  nickname: 'Tokyo Adventure'
+                  contact:
+                    email: 'family@example.com'
+      responses:
+        '200':
+          description: Streaming itinerary generation response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events stream with agent logs and final itinerary
+              examples:
+                agent_update:
+                  summary: Real-time agent update
+                  value: |
+                    data: {"type":"agent_log","agentId":1,"agentName":"Data Gatherer","status":"processing"}
+
+                    data: {"type":"agent_log","agentId":1,"agentName":"Data Gatherer","status":"completed","output":"Processed travel preferences"}
+
+                    data: {"type":"itinerary","content":"# Your Tokyo Adventure Itinerary\n\n## Day 1: Arrival in Tokyo..."}
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Form validation failed
+                  value:
+                    error: 'VALIDATION_ERROR'
+                    message: 'Invalid travel dates: return date must be after departure date'
+                    details:
+                      field: 'tripDetails.returnDate'
+                      code: 'date_range_invalid'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limit:
+                  summary: Too many requests
+                  value:
+                    error: 'RATE_LIMIT_EXCEEDED'
+                    message: 'Rate limit exceeded. Please try again in 60 seconds.'
+                    retryAfter: 60
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                all_providers_down:
+                  summary: All AI providers unavailable
+                  value:
+                    error: 'SERVICE_UNAVAILABLE'
+                    message: 'All AI providers are currently unavailable. Please try again later.'
+                    estimatedRecovery: '2025-09-17T15:30:00Z'
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health status including AI provider availability
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: All systems operational
+                  value:
+                    status: 'healthy'
+                    timestamp: '2025-09-17T14:30:00Z'
+                    providers:
+                      cerebras:
+                        status: 'available'
+                        responseTime: 245
+                        quotaRemaining: 0.85
+                      gemini:
+                        status: 'available'
+                        responseTime: 312
+                        quotaRemaining: 0.67
+                      groq:
+                        status: 'available'
+                        responseTime: 156
+                        quotaRemaining: 0.92
+                degraded:
+                  summary: Partial service availability
+                  value:
+                    status: 'degraded'
+                    timestamp: '2025-09-17T14:30:00Z'
+                    providers:
+                      cerebras:
+                        status: 'unavailable'
+                        error: 'rate_limit_exceeded'
+                      gemini:
+                        status: 'available'
+                        responseTime: 298
+                        quotaRemaining: 0.45
+                      groq:
+                        status: 'available'
+                        responseTime: 178
+                        quotaRemaining: 0.78
+        '503':
+          description: Service unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /providers:
+    get:
+      summary: Get AI provider status and capabilities
+      description: Returns detailed information about available AI providers
+      operationId: getProviders
+      responses:
+        '200':
+          description: Provider information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvidersResponse'
+
+components:
+  schemas:
+    TravelFormData:
+      type: object
+      required:
+        - tripDetails
+        - groups
+        - interests
+        - inclusions
+        - experience
+        - vibes
+        - sampleDays
+        - dinnerChoices
+        - nickname
+        - contact
+      properties:
+        tripDetails:
+          $ref: '#/components/schemas/TripDetails'
+        groups:
+          type: array
+          items:
+            type: string
+          example: ['Family', 'Friends']
+        interests:
+          type: array
+          items:
+            type: string
+          example: ['Culture', 'Food', 'Nature', 'Adventure']
+        inclusions:
+          type: array
+          items:
+            type: string
+          example: ['Accommodations', 'Dining', 'Transportation']
+        inclusionPreferences:
+          type: object
+          additionalProperties: true
+        experience:
+          type: array
+          items:
+            type: string
+          example: ['Some international travel', 'Comfortable with technology']
+        vibes:
+          type: array
+          items:
+            type: string
+          example: ['Relaxation', 'Cultural immersion']
+        sampleDays:
+          type: array
+          items:
+            type: string
+          example: ['Museum and cultural sites', 'Nature and outdoor activities']
+        dinnerChoices:
+          type: array
+          items:
+            type: string
+          example: ['Local cuisine', 'Fine dining']
+        nickname:
+          type: string
+          maxLength: 50
+          example: 'Tokyo Adventure'
+        contact:
+          $ref: '#/components/schemas/ContactInfo'
+
+    TripDetails:
+      type: object
+      required:
+        - location
+        - departDate
+        - returnDate
+        - plannedDays
+        - adults
+        - children
+        - budget
+        - currency
+      properties:
+        location:
+          type: string
+          maxLength: 100
+          pattern: '^[a-zA-Z\s,.-]+$'
+          example: 'Tokyo, Japan'
+        departDate:
+          type: string
+          format: date-time
+          example: '2025-06-15T00:00:00Z'
+        returnDate:
+          type: string
+          format: date-time
+          example: '2025-06-25T00:00:00Z'
+        plannedDays:
+          type: integer
+          minimum: 1
+          maximum: 365
+          example: 10
+        adults:
+          type: integer
+          minimum: 1
+          maximum: 50
+          example: 2
+        children:
+          type: integer
+          minimum: 0
+          maximum: 20
+          example: 2
+        childrenAges:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+            maximum: 18
+          example: [8, 12]
+        budget:
+          type: number
+          minimum: 0
+          example: 8000
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, CAD, AUD, JPY]
+          example: 'USD'
+
+    ContactInfo:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: 'traveler@example.com'
+        phone:
+          type: string
+          maxLength: 20
+          example: '+1-555-123-4567'
+        name:
+          type: string
+          maxLength: 100
+          example: 'John Doe'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - RATE_LIMIT_EXCEEDED
+            - SERVICE_UNAVAILABLE
+            - INTERNAL_ERROR
+            - AUTHENTICATION_FAILED
+          example: 'VALIDATION_ERROR'
+        message:
+          type: string
+          example: 'Invalid travel dates: return date must be after departure date'
+        details:
+          type: object
+          properties:
+            field:
+              type: string
+              example: 'tripDetails.returnDate'
+            code:
+              type: string
+              example: 'date_range_invalid'
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for rate limits)
+          example: 60
+        estimatedRecovery:
+          type: string
+          format: date-time
+          description: Estimated service recovery time
+          example: '2025-09-17T15:30:00Z'
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - providers
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: 'healthy'
+        timestamp:
+          type: string
+          format: date-time
+          example: '2025-09-17T14:30:00Z'
+        providers:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProviderHealth'
+
+    ProviderHealth:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [available, degraded, unavailable]
+          example: 'available'
+        responseTime:
+          type: integer
+          description: Average response time in milliseconds
+          example: 245
+        quotaRemaining:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Percentage of quota remaining (0-1)
+          example: 0.85
+        error:
+          type: string
+          example: 'rate_limit_exceeded'
+        lastChecked:
+          type: string
+          format: date-time
+          example: '2025-09-17T14:29:55Z'
+
+    ProvidersResponse:
+      type: object
+      required:
+        - providers
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderInfo'
+
+    ProviderInfo:
+      type: object
+      required:
+        - name
+        - status
+        - capabilities
+        - tier
+      properties:
+        name:
+          type: string
+          example: 'groq'
+        status:
+          type: string
+          enum: [available, degraded, unavailable]
+          example: 'available'
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: ['text-generation', 'structured-output', 'streaming']
+        tier:
+          type: string
+          enum: [free, paid]
+          example: 'free'
+        models:
+          type: array
+          items:
+            type: string
+          example: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
+        rateLimit:
+          type: object
+          properties:
+            requestsPerMinute:
+              type: integer
+              example: 30
+            tokensPerMinute:
+              type: integer
+              example: 150000
+        usage:
+          type: object
+          properties:
+            requestsToday:
+              type: integer
+              example: 45
+            tokensToday:
+              type: integer
+              example: 23450
+            quotaRemaining:
+              type: number
+              example: 0.85
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional API key for rate limiting bypass (future use)
+
+security:
+  - {} # No authentication required for public endpoints
+  # - ApiKeyAuth: []  # Future: API key for premium features
+
+# Webhook definitions for future integrations
+webhooks:
+  itineraryCompleted:
+    post:
+      summary: Itinerary generation completed
+      description: Webhook called when itinerary generation is completed (future feature)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                status:
+                  type: string
+                  enum: [completed, failed]
+                itinerary:
+                  type: string
+                logs:
+                  type: array
+                  items:
+                    type: object
