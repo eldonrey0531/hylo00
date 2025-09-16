@@ -1,0 +1,493 @@
+openapi: 3.0.3
+info:
+  title: Hylo Multi-LLM Routing API
+  description: Edge function API for intelligent LLM provider routing and management
+  version: 1.0.0
+  contact:
+    name: Hylo Development Team
+
+servers:
+  - url: https://hylo.vercel.app/api
+    description: Production environment
+  - url: http://localhost:3000/api
+    description: Development environment
+
+paths:
+  /llm/route:
+    post:
+      summary: Route travel query to optimal LLM provider
+      description: |
+        Analyzes travel query complexity and routes to the most appropriate
+        LLM provider with automatic fallback handling.
+      operationId: routeTravelQuery
+      tags:
+        - LLM Routing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TravelQueryRequest'
+            example:
+              query: 'Plan a 10-day trip to Japan for 2 people in spring, budget $5000, interested in temples and food'
+              context:
+                userId: 'user_123'
+                sessionId: 'session_456'
+                preferences:
+                  - 'cultural experiences'
+                  - 'local cuisine'
+      responses:
+        '200':
+          description: Successful query routing and response
+          headers:
+            X-Provider-Used:
+              description: Which LLM provider was used
+              schema:
+                type: string
+                enum: [cerebras, gemini, groq]
+            X-Fallback-Chain:
+              description: Fallback providers attempted
+              schema:
+                type: string
+                example: 'cerebras->gemini'
+            X-Complexity-Score:
+              description: Calculated query complexity (1-10)
+              schema:
+                type: number
+                example: 7.5
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/StreamingResponse'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelQueryResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: All providers unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /llm/providers:
+    get:
+      summary: Get provider health status
+      description: Returns current health and availability status of all LLM providers
+      operationId: getProviderStatus
+      tags:
+        - Provider Management
+      responses:
+        '200':
+          description: Provider status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderStatusResponse'
+
+  /llm/providers/{providerId}/health:
+    get:
+      summary: Get detailed provider health metrics
+      description: Returns comprehensive health metrics for a specific provider
+      operationId: getProviderHealth
+      tags:
+        - Provider Management
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [cerebras, gemini, groq]
+      responses:
+        '200':
+          description: Detailed provider health metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderHealthResponse'
+        '404':
+          description: Provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /llm/routing/rules:
+    get:
+      summary: Get current routing rules
+      description: Returns active routing rules and their configuration
+      operationId: getRoutingRules
+      tags:
+        - Routing Configuration
+      responses:
+        '200':
+          description: Current routing rules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingRulesResponse'
+
+    post:
+      summary: Update routing rules
+      description: Update routing rules configuration
+      operationId: updateRoutingRules
+      tags:
+        - Routing Configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutingRulesRequest'
+      responses:
+        '200':
+          description: Rules updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingRulesResponse'
+        '400':
+          description: Invalid rule configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TravelQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: Natural language travel query
+          minLength: 10
+          maxLength: 2000
+          example: 'Plan a romantic weekend in Paris for anniversary'
+        context:
+          type: object
+          properties:
+            userId:
+              type: string
+              description: User identifier for request tracking
+            sessionId:
+              type: string
+              description: Session identifier for conversation context
+            preferences:
+              type: array
+              items:
+                type: string
+              description: User travel preferences
+            constraints:
+              type: object
+              properties:
+                budget:
+                  type: object
+                  properties:
+                    min:
+                      type: number
+                    max:
+                      type: number
+                    currency:
+                      type: string
+                      example: 'USD'
+                dates:
+                  type: object
+                  properties:
+                    start:
+                      type: string
+                      format: date
+                    end:
+                      type: string
+                      format: date
+                travelers:
+                  type: integer
+                  minimum: 1
+                  maximum: 20
+
+    TravelQueryResponse:
+      type: object
+      required:
+        - requestId
+        - itinerary
+        - metadata
+      properties:
+        requestId:
+          type: string
+          description: Unique request identifier
+        itinerary:
+          type: string
+          description: Generated travel itinerary
+        metadata:
+          type: object
+          required:
+            - providerId
+            - complexity
+            - executionTime
+          properties:
+            providerId:
+              type: string
+              enum: [cerebras, gemini, groq]
+              description: Provider that generated the response
+            complexity:
+              type: number
+              minimum: 1
+              maximum: 10
+              description: Calculated query complexity score
+            executionTime:
+              type: number
+              description: Total execution time in milliseconds
+            tokenUsage:
+              type: object
+              properties:
+                input:
+                  type: integer
+                output:
+                  type: integer
+                total:
+                  type: integer
+            fallbackChain:
+              type: array
+              items:
+                type: string
+              description: Providers attempted in order
+            cost:
+              type: number
+              description: Estimated cost in USD
+
+    StreamingResponse:
+      type: object
+      description: Server-sent events for streaming responses
+      properties:
+        type:
+          type: string
+          enum: [start, chunk, metadata, error, end]
+        data:
+          type: string
+          description: Response chunk or metadata
+        requestId:
+          type: string
+          description: Request identifier
+
+    ProviderStatusResponse:
+      type: object
+      required:
+        - providers
+        - lastUpdated
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderStatus'
+        lastUpdated:
+          type: string
+          format: date-time
+
+    ProviderStatus:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - availability
+      properties:
+        id:
+          type: string
+          enum: [cerebras, gemini, groq]
+        name:
+          type: string
+          example: 'Google Gemini'
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, maintenance]
+        availability:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Availability percentage in last 24h
+        averageLatency:
+          type: number
+          description: Average response time in milliseconds
+        quotaUsage:
+          type: object
+          properties:
+            used:
+              type: integer
+            limit:
+              type: integer
+            percentage:
+              type: number
+
+    ProviderHealthResponse:
+      type: object
+      required:
+        - providerId
+        - health
+        - metrics
+      properties:
+        providerId:
+          type: string
+        health:
+          $ref: '#/components/schemas/ProviderStatus'
+        metrics:
+          type: object
+          properties:
+            uptime:
+              type: number
+              description: Uptime percentage in measurement window
+            errorRate:
+              type: number
+              description: Error rate percentage
+            successfulRequests:
+              type: integer
+            failedRequests:
+              type: integer
+            averageLatency:
+              type: number
+            p95Latency:
+              type: number
+            measurementWindow:
+              type: string
+              description: Time window for metrics (e.g., "24h")
+        incidents:
+          type: array
+          items:
+            type: object
+            properties:
+              startTime:
+                type: string
+                format: date-time
+              endTime:
+                type: string
+                format: date-time
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              description:
+                type: string
+
+    RoutingRulesResponse:
+      type: object
+      required:
+        - rules
+        - version
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutingRule'
+        version:
+          type: string
+          description: Configuration version
+        lastUpdated:
+          type: string
+          format: date-time
+
+    RoutingRule:
+      type: object
+      required:
+        - id
+        - priority
+        - conditions
+        - targetProvider
+        - fallbackChain
+        - isActive
+      properties:
+        id:
+          type: string
+        priority:
+          type: integer
+          description: Higher priority rules evaluated first
+        conditions:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                enum: [complexity, tokenCount, providerHealth, quotaAvailable]
+              operator:
+                type: string
+                enum: [gt, lt, eq, gte, lte, in]
+              value:
+                oneOf:
+                  - type: number
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+        targetProvider:
+          type: string
+          enum: [cerebras, gemini, groq]
+        fallbackChain:
+          type: array
+          items:
+            type: string
+            enum: [cerebras, gemini, groq]
+        isActive:
+          type: boolean
+
+    RoutingRulesRequest:
+      type: object
+      required:
+        - rules
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutingRule'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - requestId
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        requestId:
+          type: string
+          description: Request identifier for debugging
+        details:
+          type: object
+          description: Additional error context
+        retryAfter:
+          type: integer
+          description: Suggested retry delay in seconds
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: LLM Routing
+    description: Core routing functionality
+  - name: Provider Management
+    description: Provider health and status monitoring
+  - name: Routing Configuration
+    description: Routing rules management

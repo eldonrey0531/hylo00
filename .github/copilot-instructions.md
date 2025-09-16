@@ -57,23 +57,35 @@ All development must comply with these non-negotiable principles:
 
 - **Frontend**: React 18.3+ with TypeScript, Vite build system
 - **Styling**: Tailwind CSS with custom design system
-- **AI Integration**: Groq SDK (needs migration to edge functions)
-- **Deployment**: Vercel Edge Functions (planned)
+- **AI Integration**: LangChain.js multi-LLM routing infrastructure
+- **LLM Providers**: Cerebras (complex), Google Gemini (balanced), Groq (fast)
+- **Observability**: LangSmith tracing and monitoring
+- **Deployment**: Vercel Edge Functions
+- **Testing**: Vitest, Playwright, Contract Testing
 
 ### Project Structure
 
 ```
 src/
 ├── components/          # React UI components
-├── services/           # API integration (needs edge migration)
+├── services/           # API integration services
 ├── types/              # TypeScript definitions
 ├── App.tsx             # Main application
 └── main.tsx            # Entry point
 
-api/ (PLANNED)          # Vercel Edge Functions
-├── itinerary.ts        # Main generation endpoint
-├── agents/             # Multi-agent orchestration
-└── providers/          # LLM provider abstractions
+api/                    # Vercel Edge Functions
+├── llm/                # LLM routing endpoints
+│   ├── route.ts        # Main query routing
+│   ├── providers.ts    # Provider status
+│   └── health.ts       # Health monitoring
+├── providers/          # LLM provider abstractions
+│   ├── cerebras.ts     # Cerebras integration
+│   ├── gemini.ts       # Google Gemini integration
+│   └── groq.ts         # Groq integration
+└── utils/              # Shared utilities
+    ├── routing.ts      # Routing decision engine
+    ├── fallback.ts     # Fallback chain handling
+    └── observability.ts # LangSmith tracing
 ```
 
 ### Data Models
@@ -177,15 +189,19 @@ async function withFallback<T>(
 - TypeScript throughout application
 - Tailwind CSS design system
 
-### ❌ Needs Implementation (Constitutional Violations)
+### 🚧 In Progress
 
-- Vercel Edge Functions migration
-- Multi-LLM provider system (Cerebras, Gemini, Groq)
+- LangChain.js multi-LLM routing infrastructure (003-setup-langchain-js)
+- Provider abstraction layer for Cerebras, Gemini, Groq
+- API key rotation and quota management
 - LangSmith tracing integration
+
+### ❌ Needs Implementation
+
 - Comprehensive error boundaries
-- Cost tracking and quota management
 - Security hardening (API key protection)
-- Testing infrastructure
+- Performance optimization
+- Production monitoring
 
 ## Migration Priorities
 
@@ -248,9 +264,10 @@ class AIErrorBoundary extends React.Component {
 
 ## Recent Changes
 
-- **2025-09-17**: Constitutional analysis completed
-- **2025-09-17**: API contracts defined for edge migration
-- **2025-09-17**: Data models documented with validation schemas
+- **2025-09-17**: Feature 003-setup-langchain-js specification and planning completed
+- **2025-09-17**: LangChain.js multi-LLM routing infrastructure designed
+- **2025-09-17**: API contracts defined for provider routing and health monitoring
+- **2025-09-17**: Data models documented for LLM providers, routing rules, and observability
 
 ---
 

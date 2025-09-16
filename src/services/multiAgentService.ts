@@ -1,8 +1,7 @@
-import Groq from 'groq-sdk';
+import { createRoutingGroqClient } from './llmRoutingService';
 
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true,
+const groq = createRoutingGroqClient({
+  enableLogging: true,
 });
 
 export interface TravelFormData {
@@ -87,12 +86,8 @@ const gatherUserSelections = async (
             preferences[key] = formData.inclusionPreferences[key];
 
             // Special handling for nature preferences
-            if (
-              key === 'nature' &&
-              formData.inclusionPreferences[key].naturePreferences
-            ) {
-              preferences.naturePreferences =
-                formData.inclusionPreferences[key].naturePreferences;
+            if (key === 'nature' && formData.inclusionPreferences[key].naturePreferences) {
+              preferences.naturePreferences = formData.inclusionPreferences[key].naturePreferences;
             }
           }
         });
@@ -119,28 +114,18 @@ FORM DATA:
 - Trip Nickname: "${formData.nickname || 'Not specified'}"
 
 SELECTED CATEGORIES:
-- Travel Group: ${
-      formData.groups?.length > 0 ? formData.groups.join(', ') : 'NONE SELECTED'
-    }
+- Travel Group: ${formData.groups?.length > 0 ? formData.groups.join(', ') : 'NONE SELECTED'}
   ${
     otherInputs.travelGroupOther
       ? `- Travel Group Other Input: "${otherInputs.travelGroupOther}"`
       : ''
   }
 - Travel Interests: ${
-      formData.interests?.length > 0
-        ? formData.interests.join(', ')
-        : 'NONE SELECTED'
+      formData.interests?.length > 0 ? formData.interests.join(', ') : 'NONE SELECTED'
     }
-  ${
-    otherInputs.interestsOther
-      ? `- Interests Other Input: "${otherInputs.interestsOther}"`
-      : ''
-  }
+  ${otherInputs.interestsOther ? `- Interests Other Input: "${otherInputs.interestsOther}"` : ''}
 - Itinerary Inclusions: ${
-      formData.inclusions?.length > 0
-        ? formData.inclusions.join(', ')
-        : 'NONE SELECTED'
+      formData.inclusions?.length > 0 ? formData.inclusions.join(', ') : 'NONE SELECTED'
     }
   ${
     inclusionPrefs.naturePreferences
@@ -148,32 +133,14 @@ SELECTED CATEGORIES:
       : ''
   }
 - Experience Level: ${
-      formData.experience?.length > 0
-        ? formData.experience.join(', ')
-        : 'NONE SELECTED'
+      formData.experience?.length > 0 ? formData.experience.join(', ') : 'NONE SELECTED'
     }
-  ${
-    otherInputs.experienceOther
-      ? `- Experience Other Input: "${otherInputs.experienceOther}"`
-      : ''
-  }
-- Trip Vibe: ${
-      formData.vibes?.length > 0 ? formData.vibes.join(', ') : 'NONE SELECTED'
-    }
-  ${
-    otherInputs.vibesOther
-      ? `- Vibe Other Input: "${otherInputs.vibesOther}"`
-      : ''
-  }
-- Sample Days: ${
-      formData.sampleDays?.length > 0
-        ? formData.sampleDays.join(', ')
-        : 'NONE SELECTED'
-    }
+  ${otherInputs.experienceOther ? `- Experience Other Input: "${otherInputs.experienceOther}"` : ''}
+- Trip Vibe: ${formData.vibes?.length > 0 ? formData.vibes.join(', ') : 'NONE SELECTED'}
+  ${otherInputs.vibesOther ? `- Vibe Other Input: "${otherInputs.vibesOther}"` : ''}
+- Sample Days: ${formData.sampleDays?.length > 0 ? formData.sampleDays.join(', ') : 'NONE SELECTED'}
 - Dinner Choices: ${
-      formData.dinnerChoices?.length > 0
-        ? formData.dinnerChoices.join(', ')
-        : 'NONE SELECTED'
+      formData.dinnerChoices?.length > 0 ? formData.dinnerChoices.join(', ') : 'NONE SELECTED'
     }
 
 INCLUSION PREFERENCES DETAILS:
@@ -244,9 +211,7 @@ Return a JSON object with the following structure. Include ALL values including 
     });
 
     const result = completion.choices[0]?.message?.content;
-    const parsedResult = result
-      ? JSON.parse(result)
-      : getDefaultSelections(formData);
+    const parsedResult = result ? JSON.parse(result) : getDefaultSelections(formData);
 
     // Ensure all values are properly extracted
     if (!parsedResult.categories.travelers) {
@@ -275,16 +240,11 @@ Return a JSON object with the following structure. Include ALL values including 
 
     // Log the agent's work
     const decisions = [];
-    if (parsedResult.hasAccommodations)
-      decisions.push('User wants accommodation recommendations');
-    if (parsedResult.hasDining)
-      decisions.push('User wants dining recommendations');
-    if (parsedResult.hasTransportation)
-      decisions.push('User wants transportation details');
-    if (parsedResult.hasActivities)
-      decisions.push('User wants activities and tours');
-    if (parsedResult.hasGuides)
-      decisions.push('User wants local guide information');
+    if (parsedResult.hasAccommodations) decisions.push('User wants accommodation recommendations');
+    if (parsedResult.hasDining) decisions.push('User wants dining recommendations');
+    if (parsedResult.hasTransportation) decisions.push('User wants transportation details');
+    if (parsedResult.hasActivities) decisions.push('User wants activities and tours');
+    if (parsedResult.hasGuides) decisions.push('User wants local guide information');
     decisions.push(`Extracted ${adults} adults, ${children} children`);
     decisions.push(`Budget: ${budget} ${currency}`);
 
@@ -341,9 +301,7 @@ const gatherRealtimeInformation = async (
     }
 
     if (selections.hasAccommodations) {
-      const query = `Hotel recommendations in ${location} for ${
-        travelers.adults
-      } adults${
+      const query = `Hotel recommendations in ${location} for ${travelers.adults} adults${
         travelers.children > 0 ? ` and ${travelers.children} children` : ''
       }, budget: ${budget}`;
       searchQuery += `- ${query}\n`;
@@ -377,13 +335,9 @@ const gatherRealtimeInformation = async (
     }
 
     // Always search for these
-    searchQueries.push(
-      `Current events and festivals in ${location} for ${dates}`
-    );
+    searchQueries.push(`Current events and festivals in ${location} for ${dates}`);
     searchQueries.push(`Weather conditions and best time to visit ${location}`);
-    searchQueries.push(
-      `Safety tips, local customs, and travel advice for ${location}`
-    );
+    searchQueries.push(`Safety tips, local customs, and travel advice for ${location}`);
     searchQueries.push(`Hidden gems and local recommendations in ${location}`);
 
     searchQuery += `- Current events and festivals for ${dates}\n`;
@@ -408,9 +362,7 @@ const gatherRealtimeInformation = async (
       max_tokens: 3000,
     });
 
-    const result =
-      completion.choices[0]?.message?.content ||
-      'No real-time information available.';
+    const result = completion.choices[0]?.message?.content || 'No real-time information available.';
 
     logs.push({
       agentId: 2,
@@ -477,9 +429,9 @@ Create a structured plan that includes:
 - Budget-conscious recommendations based on ${
       selections.categories.budget?.formatted || 'budget not specified'
     }
-- Consider group size: ${
-      selections.categories.travelers?.adults || 0
-    } adults, ${selections.categories.travelers?.children || 0} children
+- Consider group size: ${selections.categories.travelers?.adults || 0} adults, ${
+      selections.categories.travelers?.children || 0
+    } children
 
 Return a detailed, personalized planning structure based on actual current information.`;
 
@@ -500,9 +452,7 @@ Return a detailed, personalized planning structure based on actual current infor
       max_tokens: 3000,
     });
 
-    const result =
-      completion.choices[0]?.message?.content ||
-      'Unable to create plan structure.';
+    const result = completion.choices[0]?.message?.content || 'Unable to create plan structure.';
 
     // Log the planning decisions
     const decisions = [
@@ -511,29 +461,17 @@ Return a detailed, personalized planning structure based on actual current infor
       `Planned for ${selections.categories.travelers?.adults || 0} adults, ${
         selections.categories.travelers?.children || 0
       } children`,
-      `Budget consideration: ${
-        selections.categories.budget?.formatted || 'Not specified'
-      }`,
-      `Focused on ${
-        selections.categories.interests?.length || 0
-      } interest categories`,
-      `Adapted for ${
-        selections.categories.experience?.join(', ') || 'general'
-      } experience level`,
-      `Structured for ${
-        selections.categories.vibes?.join(', ') || 'balanced'
-      } trip vibe`,
+      `Budget consideration: ${selections.categories.budget?.formatted || 'Not specified'}`,
+      `Focused on ${selections.categories.interests?.length || 0} interest categories`,
+      `Adapted for ${selections.categories.experience?.join(', ') || 'general'} experience level`,
+      `Structured for ${selections.categories.vibes?.join(', ') || 'balanced'} trip vibe`,
     ];
 
     if (selections.categories.travelGroupOther) {
-      decisions.push(
-        `Incorporated custom travel group: ${selections.categories.travelGroupOther}`
-      );
+      decisions.push(`Incorporated custom travel group: ${selections.categories.travelGroupOther}`);
     }
     if (selections.categories.interestsOther) {
-      decisions.push(
-        `Incorporated custom interests: ${selections.categories.interestsOther}`
-      );
+      decisions.push(`Incorporated custom interests: ${selections.categories.interestsOther}`);
     }
     if (selections.categories.inclusionPreferences?.naturePreferences) {
       decisions.push(
@@ -554,9 +492,7 @@ Return a detailed, personalized planning structure based on actual current infor
       decisions,
       reasoning: `Designed data-driven itinerary framework using real-time information. Created personalized structure for ${
         selections.categories.travelers?.total || 0
-      } travelers with budget of ${
-        selections.categories.budget?.formatted || 'unspecified'
-      }.`,
+      } travelers with budget of ${selections.categories.budget?.formatted || 'unspecified'}.`,
     });
 
     return result;
@@ -619,11 +555,7 @@ CREATE A PERSONALIZED ITINERARY WITH THESE RULES:
        ? '- Include activities and tours'
        : '- DO NOT suggest specific activities'
    }
-   ${
-     selections.hasGuides
-       ? '- Include local guide information'
-       : '- DO NOT mention guides'
-   }
+   ${selections.hasGuides ? '- Include local guide information' : '- DO NOT mention guides'}
 
 3. Structure the output with these emoji headers ONLY for selected sections:
    🌟 **WELCOME MESSAGE**
@@ -636,13 +568,9 @@ CREATE A PERSONALIZED ITINERARY WITH THESE RULES:
    ✨ **SPECIAL TOUCHES**
 
 4. For the day-by-day itinerary:
-   - Focus on the selected interests: ${selections.categories.interests?.join(
-     ', '
-   )}
+   - Focus on the selected interests: ${selections.categories.interests?.join(', ')}
    - Match the selected vibe: ${selections.categories.vibes?.join(', ')}
-   - Incorporate sample day preferences: ${selections.categories.sampleDays?.join(
-     ', '
-   )}
+   - Incorporate sample day preferences: ${selections.categories.sampleDays?.join(', ')}
    - Consider experience level: ${selections.categories.experience?.join(', ')}
    - Include nature activities if specified: ${
      selections.categories.inclusionPreferences?.naturePreferences || 'None'
@@ -664,11 +592,7 @@ CREATE A PERSONALIZED ITINERARY WITH THESE RULES:
        ? `- Experience Other: ${selections.categories.experienceOther}`
        : ''
    }
-   ${
-     selections.categories.vibesOther
-       ? `- Vibes Other: ${selections.categories.vibesOther}`
-       : ''
-   }
+   ${selections.categories.vibesOther ? `- Vibes Other: ${selections.categories.vibesOther}` : ''}
 
 6. Budget should reflect: ${selections.categories.budget?.amount || 5000} ${
       selections.categories.budget?.currency || 'USD'
@@ -693,9 +617,7 @@ CRITICAL: Use specific recommendations from the real-time information. Do not cr
       max_tokens: 5000,
     });
 
-    const result =
-      completion.choices[0]?.message?.content ||
-      'Unable to generate final itinerary.';
+    const result = completion.choices[0]?.message?.content || 'Unable to generate final itinerary.';
 
     const decisions = [
       `Compiled personalized itinerary for "${formData.nickname}"`,
@@ -777,19 +699,13 @@ const getDefaultSelections = (formData: TravelFormData): SelectedChoices => {
   checkForOther(formData.vibes, 'vibesOther');
 
   return {
-    hasAccommodations: inclusions.some((i) =>
-      i.toLowerCase().includes('accommodation')
-    ),
+    hasAccommodations: inclusions.some((i) => i.toLowerCase().includes('accommodation')),
     hasDining: inclusions.some((i) => i.toLowerCase().includes('dining')),
     hasTransportation: inclusions.some(
-      (i) =>
-        i.toLowerCase().includes('transportation') ||
-        i.toLowerCase().includes('rental')
+      (i) => i.toLowerCase().includes('transportation') || i.toLowerCase().includes('rental')
     ),
     hasActivities: inclusions.some(
-      (i) =>
-        i.toLowerCase().includes('activities') ||
-        i.toLowerCase().includes('tours')
+      (i) => i.toLowerCase().includes('activities') || i.toLowerCase().includes('tours')
     ),
     hasGuides: inclusions.some((i) => i.toLowerCase().includes('guide')),
     categories: {
@@ -852,35 +768,20 @@ export const generateMultiAgentItinerary = async (
     console.log('✅ Real-time info gathered');
 
     // Agent 3: Plan itinerary structure using real-time info (runs AFTER information gathering)
-    console.log(
-      '📝 Agent 3: Planning itinerary structure with real-time data...'
-    );
-    const plan = await planItineraryStructure(
-      selections,
-      realtimeInfo,
-      formData,
-      logs
-    );
+    console.log('📝 Agent 3: Planning itinerary structure with real-time data...');
+    const plan = await planItineraryStructure(selections, realtimeInfo, formData, logs);
     if (onAgentUpdate) onAgentUpdate([...logs]);
     console.log('✅ Data-driven plan created');
 
     // Agent 4: Compile final itinerary
     console.log('✨ Agent 4: Compiling final itinerary...');
-    const finalItinerary = await compileItinerary(
-      selections,
-      plan,
-      realtimeInfo,
-      formData,
-      logs
-    );
+    const finalItinerary = await compileItinerary(selections, plan, realtimeInfo, formData, logs);
     if (onAgentUpdate) onAgentUpdate([...logs]);
     console.log('✅ Itinerary compiled successfully');
 
     return { itinerary: finalItinerary, logs };
   } catch (error) {
     console.error('Error in multi-agent itinerary generation:', error);
-    throw new Error(
-      'Failed to generate personalized itinerary. Pleasetry again.'
-    );
+    throw new Error('Failed to generate personalized itinerary. Pleasetry again.');
   }
 };
