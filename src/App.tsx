@@ -25,6 +25,14 @@ function App() {
   const [dinnerChoices, setDinnerChoices] = useState<string[]>([]);
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
+
+  // Custom text inputs for "other" options
+  const [customGroupText, setCustomGroupText] = useState<string>('');
+  const [customInterestsText, setCustomInterestsText] = useState<string>('');
+  const [customVibesText, setCustomVibesText] = useState<string>('');
+  const [customInclusionsText, setCustomInclusionsText] = useState<string>('');
+  const [inclusionPreferences, setInclusionPreferences] = useState<Record<string, any>>({});
+
   const [generatedItinerary, setGeneratedItinerary] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string>('');
@@ -110,18 +118,26 @@ function App() {
           <TravelGroupSelector
             selectedGroups={selectedGroups}
             onSelectionChange={setSelectedGroups}
+            otherText={customGroupText}
+            onOtherTextChange={setCustomGroupText}
           />
 
           {/* Travel Interests */}
           <TravelInterests
             selectedInterests={selectedInterests}
             onSelectionChange={setSelectedInterests}
+            otherText={customInterestsText}
+            onOtherTextChange={setCustomInterestsText}
           />
 
           {/* What Should We Include in Your Itinerary */}
           <ItineraryInclusions
             selectedInclusions={selectedInclusions}
             onSelectionChange={setSelectedInclusions}
+            otherText={customInclusionsText}
+            onOtherTextChange={setCustomInclusionsText}
+            inclusionPreferences={inclusionPreferences}
+            onPreferencesChange={setInclusionPreferences}
           />
 
           {/* Travel Style Header - Full Width No Rounded Corners */}

@@ -35,3 +35,17 @@ EOF
 
 check_file() { [[ -f "$1" ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
 check_dir() { [[ -d "$1" && -n $(ls -A "$1" 2>/dev/null) ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
+
+# Context7 research helper - only for research.md generation
+suggest_context7_research() {
+    local feature_branch="$1"
+    
+    if command -v mcp &> /dev/null; then
+        echo ""
+        echo "📚 Context7 available for research.md documentation:"
+        echo "   Use: mcp call resolve-library-id --libraryName=\"[library]\""
+        echo "   Then: mcp call get-library-docs --context7CompatibleLibraryID=\"/[library]/docs\" --topic=\"[topic]\" --tokens=2000"
+        echo "   Append to research: >> \$RESEARCH"
+        echo ""
+    fi
+}
