@@ -33,6 +33,22 @@
 9. Return: SUCCESS (tasks ready for execution)
 ```
 
+**Context7 Documentation References (if available)**:
+
+```
+For each technology in plan.md:
+  Context7: mcp call get-library-docs --context7CompatibleLibraryID="/{tech}/docs" --topic="implementation" --tokens=1500
+For each unknown pattern:
+  Context7: mcp call get-library-docs --context7CompatibleLibraryID="/{lib}/docs" --topic="{pattern}" --tokens=1000
+```
+
+**@workspace Implementation Context**:
+During task execution, reference existing patterns:
+
+- `@workspace similar implementations for guidance`
+- `@workspace error handling patterns`
+- `@workspace test patterns and structure`
+
 ## Format: `[ID] [P?] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)

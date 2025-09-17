@@ -14,4 +14,11 @@ if $JSON_MODE; then
     "$FEATURE_SPEC" "$IMPL_PLAN" "$FEATURE_DIR" "$CURRENT_BRANCH"
 else
   echo "FEATURE_SPEC: $FEATURE_SPEC"; echo "IMPL_PLAN: $IMPL_PLAN"; echo "SPECS_DIR: $FEATURE_DIR"; echo "BRANCH: $CURRENT_BRANCH"
+  
+  # Context7 research suggestions for this feature
+  suggest_context7_research "$CURRENT_BRANCH"
+  
+  echo "💡 For implementation planning, use @workspace:"
+  echo "   @workspace current project architecture in src/ and api/"
+  echo "   @workspace similar feature implementations"
 fi

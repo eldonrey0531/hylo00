@@ -125,12 +125,31 @@ ios/ or android/
      Task: "Find best practices for {tech} in {domain}"
    ```
 
+   **Context7 Enhancement (if available)**:
+
+   ```
+   For each unknown:
+     Context7: mcp call resolve-library-id --libraryName="{related-tech}"
+     Context7: mcp call get-library-docs --context7CompatibleLibraryID="/{tech}/docs" --topic="{unknown-domain}" --tokens=2000
+   For each technology:
+     Context7: mcp call get-library-docs --context7CompatibleLibraryID="/{tech}/docs" --topic="best-practices" --tokens=2000
+   ```
+
 3. **Consolidate findings** in `research.md` using format:
    - Decision: [what was chosen]
    - Rationale: [why chosen]
    - Alternatives considered: [what else evaluated]
+   - Context7 Documentation: [if used, append outputs]
 
 **Output**: research.md with all NEEDS CLARIFICATION resolved
+
+**@workspace Integration for Implementation Planning**:
+During planning, use @workspace to understand existing patterns:
+
+- `@workspace current project architecture in src/ and api/`
+- `@workspace similar feature implementations`
+- `@workspace constitutional compliance patterns`
+- `@workspace error handling implementations`
 
 ## Phase 1: Design & Contracts
 

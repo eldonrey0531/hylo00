@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface TravelInterestsProps {
   selectedInterests: string[];
   onSelectionChange: (interests: string[]) => void;
+  /** Controlled value for custom 'other' interest text */
+  otherText: string;
+  /** Handler when the custom 'other' interest text changes */
+  onOtherTextChange: (value: string) => void;
+  /** Optional externally controlled visibility (if parent wants to force open) */
+  showOther?: boolean;
+  /** Notify parent that the other section was toggled (used to manage show state upstream) */
+  onToggleOther?: (visible: boolean) => void;
 }
 
 const TravelInterests: React.FC<TravelInterestsProps> = ({
   selectedInterests,
   onSelectionChange,
+  otherText,
+  onOtherTextChange,
+  showOther,
+  onToggleOther,
 }) => {
-  const [otherText, setOtherText] = useState('');
-  const [showOtherInput, setShowOtherInput] = useState(false);
+  // Derive visibility if not explicitly provided: show when 'other' is selected
+  const derivedShowOther =
+    typeof showOther === 'boolean' ? showOther : selectedInterests.includes('other');
 
   const interestOptions = [
     { id: 'beach', label: 'Beach', emoji: '🏖️' },
@@ -37,25 +50,23 @@ const TravelInterests: React.FC<TravelInterestsProps> = ({
 
   const toggleInterest = (interestId: string) => {
     if (interestId === 'other') {
-      setShowOtherInput(!showOtherInput);
-      if (!showOtherInput) {
+      const willShow = !derivedShowOther;
+      if (willShow) {
         if (!selectedInterests.includes('other')) {
           onSelectionChange([...selectedInterests, 'other']);
         }
       } else {
+        // Removing other: remove from selection & clear text
         onSelectionChange(selectedInterests.filter((id) => id !== 'other'));
-        setOtherText('');
+        onOtherTextChange('');
       }
-    } else {
-      const newSelection = selectedInterests.includes(interestId)
-        ? selectedInterests.filter((id) => id !== interestId)
-        : [...selectedInterests, interestId];
-      onSelectionChange(newSelection);
+      onToggleOther?.(willShow);
+      return;
     }
-  };
-
-  const handleOtherTextChange = (text: string) => {
-    setOtherText(text);
+    const newSelection = selectedInterests.includes(interestId)
+      ? selectedInterests.filter((id) => id !== interestId)
+      : [...selectedInterests, interestId];
+    onSelectionChange(newSelection);
   };
 
   return (
@@ -64,9 +75,7 @@ const TravelInterests: React.FC<TravelInterestsProps> = ({
         <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
           TRAVEL INTERESTS
         </h3>
-        <p className="text-primary font-bold font-raleway text-xs">
-          Select all that apply
-        </p>
+        <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -100,20 +109,18 @@ const TravelInterests: React.FC<TravelInterestsProps> = ({
       </div>
 
       {/* Other Input Field */}
-      {showOtherInput && (
+      {derivedShowOther && (
         <div className="bg-primary/10 rounded-[10px] p-4 border border-primary/20">
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-xl">✨</span>
-            <label className="block text-primary font-bold text-base font-raleway">
-              Other
-            </label>
+            <label className="block text-primary font-bold text-base font-raleway">Other</label>
           </div>
           <label className="block text-primary font-bold mb-3 text-sm font-raleway">
             What other interests should be part of your itinerary?
           </label>
           <textarea
             value={otherText}
-            onChange={(e) => handleOtherTextChange(e.target.value)}
+            onChange={(e) => onOtherTextChange(e.target.value)}
             placeholder="Include anything that will help us customize your itinerary"
             className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
             rows={3}
