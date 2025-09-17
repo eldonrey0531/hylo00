@@ -23,6 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 .env
-
-# Specification and planning directory
-.specify/
