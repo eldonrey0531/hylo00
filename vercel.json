@@ -1,0 +1,35 @@
+{
+  "functions": {
+    "api/llm/route.js": {
+      "runtime": "edge"
+    },
+    "api/llm/health.js": {
+      "runtime": "edge"
+    },
+    "api/llm/agents.js": {
+      "runtime": "edge"
+    }
+  },
+  "env": [
+    "GROQ_API_KEY",
+    "CEREBRAS_API_KEY",
+    "GOOGLE_AI_API_KEY",
+    "LANGSMITH_API_KEY",
+    "LANGSMITH_TRACE_URL"
+  ],
+  "build": {
+    "env": {
+      "ENABLE_EXPERIMENTAL_COREPACK": "1"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ]
+}

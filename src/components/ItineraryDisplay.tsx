@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  Download,
-  Mail,
-  MapPin,
-  Clock,
-  DollarSign,
-  Calendar,
-  CheckCircle,
-} from 'lucide-react';
+import { Download, Mail, MapPin, Clock, DollarSign, Calendar, CheckCircle } from 'lucide-react';
+import ResilientLoading from './ResilientLoading';
 
 interface ItineraryDisplayProps {
   itinerary: string;
@@ -15,11 +8,7 @@ interface ItineraryDisplayProps {
   error?: string;
 }
 
-const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
-  itinerary,
-  isLoading,
-  error,
-}) => {
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ itinerary, isLoading, error }) => {
   const handleDownload = () => {
     const element = document.createElement('a');
     const file = new Blob([itinerary], { type: 'text/plain' });
@@ -105,10 +94,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
     );
 
     // Format money amounts
-    formatted = formatted.replace(
-      /\$[\d,]+/g,
-      '<span class="text-green-600 font-bold">$&</span>'
-    );
+    formatted = formatted.replace(/\$[\d,]+/g, '<span class="text-green-600 font-bold">$&</span>');
 
     return <div dangerouslySetInnerHTML={{ __html: formatted }} />;
   };
@@ -116,33 +102,18 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   return (
     <div className="animate-expandIn">
       <div className="space-y-6">
-        {/* Loading State */}
+        {/* Loading State with Timeout Handling */}
         {isLoading && (
-          <div className="bg-form-box rounded-[36px] p-8 shadow-lg border border-gray-200">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20"></div>
-                <div className="absolute top-0 animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
-              </div>
-              <p className="text-primary font-bold font-raleway text-lg animate-pulse">
-                Creating your perfect travel experience...
-              </p>
-              <div className="flex space-x-2">
-                <span
-                  className="inline-block w-2 h-2 bg-primary rounded-full animate-bounce"
-                  style={{ animationDelay: '0ms' }}
-                ></span>
-                <span
-                  className="inline-block w-2 h-2 bg-primary rounded-full animate-bounce"
-                  style={{ animationDelay: '150ms' }}
-                ></span>
-                <span
-                  className="inline-block w-2 h-2 bg-primary rounded-full animate-bounce"
-                  style={{ animationDelay: '300ms' }}
-                ></span>
-              </div>
-            </div>
-          </div>
+          <ResilientLoading
+            isLoading={isLoading}
+            loadingMessage="Creating your perfect travel experience..."
+            timeoutMessage="Our AI agents are working hard on your personalized itinerary. High demand may be causing delays."
+            timeoutDuration={45000} // 45 seconds for travel planning
+            onTimeout={() => {
+              console.log('Itinerary generation timeout detected');
+            }}
+            className="bg-form-box rounded-[36px] shadow-lg border border-gray-200"
+          />
         )}
 
         {/* Error State */}
@@ -200,48 +171,46 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
             {/* Itinerary Content - Each section in its own card, expanding naturally */}
             <div className="space-y-4">
-              {itinerary
-                .split(/(?=🌟|📅|🏨|🍽️|🚗|💰|🎒|📱|✨)/)
-                .map((section, index) => {
-                  if (!section.trim()) return null;
+              {itinerary.split(/(?=🌟|📅|🏨|🍽️|🚗|💰|🎒|📱|✨)/).map((section, index) => {
+                if (!section.trim()) return null;
 
-                  const lines = section.split('\n');
-                  const headerLine = lines[0];
-                  const content = lines.slice(1).join('\n');
+                const lines = section.split('\n');
+                const headerLine = lines[0];
+                const content = lines.slice(1).join('\n');
 
-                  // Check if this section has an emoji header
-                  const hasEmojiHeader = /^[🌟📅🏨🍽️🚗💰🎒📱✨]/.test(section);
+                // Check if this section has an emoji header
+                const hasEmojiHeader = /^[🌟📅🏨🍽️🚗💰🎒📱✨]/.test(section);
 
-                  if (hasEmojiHeader) {
-                    return (
-                      <div
-                        key={index}
-                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-md animate-slideIn"
-                        style={{ animationDelay: `${index * 150}ms` }}
-                      >
-                        <h3 className="text-xl font-bold text-primary mb-4 pb-2 border-b-2 border-primary/20">
-                          {headerLine}
-                        </h3>
-                        <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-                          {formatContent(content)}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  // For non-header content
+                if (hasEmojiHeader) {
                   return (
                     <div
                       key={index}
                       className="bg-white rounded-2xl p-6 border border-gray-200 shadow-md animate-slideIn"
                       style={{ animationDelay: `${index * 150}ms` }}
                     >
+                      <h3 className="text-xl font-bold text-primary mb-4 pb-2 border-b-2 border-primary/20">
+                        {headerLine}
+                      </h3>
                       <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-                        {formatContent(section)}
+                        {formatContent(content)}
                       </div>
                     </div>
                   );
-                })}
+                }
+
+                // For non-header content
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-md animate-slideIn"
+                    style={{ animationDelay: `${index * 150}ms` }}
+                  >
+                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                      {formatContent(section)}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Action Buttons */}

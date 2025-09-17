@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  generateItinerary,
-  TravelFormData,
-  AgentLog,
-} from './services/groqService';
+import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetailsForm from './components/TripDetailsForm';
 import TravelGroupSelector from './components/TravelGroupSelector';
 import TravelInterests from './components/TravelInterests';
@@ -15,6 +11,8 @@ import DinnerChoice from './components/DinnerChoice';
 import TripNickname from './components/TripNickname';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import BehindTheScenes from './components/BehindTheScenes';
+import AIErrorBoundary from './components/AIErrorBoundary';
+import HealthMonitor from './components/HealthMonitor';
 
 function App() {
   const [formData, setFormData] = useState({});
@@ -140,8 +138,8 @@ function App() {
           <div className="text-center py-4">
             <p className="text-primary leading-relaxed text-sm font-bold font-raleway">
               <span style={{ color: '#ece8de' }}>
-                The next few questions are optional, but answering them helps us
-                understand you and create an even more personalized itinerary.
+                The next few questions are optional, but answering them helps us understand you and
+                create an even more personalized itinerary.
               </span>{' '}
               <span style={{ color: '#f9dd8b' }} className="font-bold">
                 Answer them with this group and trip in mind.
@@ -155,9 +153,7 @@ function App() {
               <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
                 What is your group's level of travel experience?
               </h4>
-              <p className="text-primary font-bold font-raleway text-xs">
-                Select all that apply
-              </p>
+              <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
             </div>
             <TravelExperience
               selectedExperience={selectedExperience}
@@ -171,14 +167,9 @@ function App() {
               <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
                 What do you want the "vibe" of this trip to be?
               </h4>
-              <p className="text-primary font-bold font-raleway text-xs">
-                Select all that apply
-              </p>
+              <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
             </div>
-            <TripVibe
-              selectedVibes={selectedVibes}
-              onSelectionChange={setSelectedVibes}
-            />
+            <TripVibe selectedVibes={selectedVibes} onSelectionChange={setSelectedVibes} />
           </div>
 
           {/* Sample Days */}
@@ -191,10 +182,7 @@ function App() {
 
           {/* Dinner Choice */}
           <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <DinnerChoice
-              selectedChoice={dinnerChoices}
-              onSelectionChange={setDinnerChoices}
-            />
+            <DinnerChoice selectedChoice={dinnerChoices} onSelectionChange={setDinnerChoices} />
           </div>
 
           {/* Trip Nickname with Contact Info */}
@@ -232,11 +220,23 @@ function App() {
           {/* Itinerary Results Section - Directly below the button */}
           <div ref={itineraryRef}>
             {(isGenerating || generatedItinerary || generationError) && (
-              <ItineraryDisplay
-                itinerary={generatedItinerary}
-                isLoading={isGenerating}
-                error={generationError}
-              />
+              <AIErrorBoundary
+                enableRecovery={true}
+                maxRetries={2}
+                onError={(error, errorInfo) => {
+                  console.error('AI Error Boundary caught error:', error, errorInfo);
+                  setGenerationError(
+                    'Our AI service encountered an error. Please try again or refresh the page.'
+                  );
+                }}
+                className="w-full"
+              >
+                <ItineraryDisplay
+                  itinerary={generatedItinerary}
+                  isLoading={isGenerating}
+                  error={generationError}
+                />
+              </AIErrorBoundary>
             )}
           </div>
         </div>
@@ -248,6 +248,13 @@ function App() {
         agentLogs={agentLogs}
         isProcessing={isGenerating}
       />
+
+      {/* System Health Monitor - Only show during development or when there are issues */}
+      {(process.env['NODE_ENV'] === 'development' || generationError) && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <HealthMonitor showDetails={process.env['NODE_ENV'] === 'development'} className="mt-6" />
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@
     "dev:api": "node dev-server.mjs",
     "dev:full": "concurrently \"npm run dev:api\" \"npm run dev\"",
     "build": "vite build",
+    "deploy": "vercel",
+    "deploy:prod": "vercel --prod",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
@@ -24,8 +26,10 @@
     "test:all": "npm run test:unit && npm run test:contract && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@langchain/google-genai": "^0.2.18",
     "@langchain/groq": "^0.2.4",
+    "dotenv": "^17.2.2",
     "groq-sdk": "^0.30.0",
     "langsmith": "^0.3.68",
     "lucide-react": "^0.344.0",

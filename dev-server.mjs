@@ -9,9 +9,28 @@
 
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Load environment variables
+dotenv.config();
+
+// Initialize LLM clients
+const groqClient = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+const googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+
+// Cerebras configuration (uses Groq-compatible API)
+const cerebrasClient = new Groq({
+  apiKey: process.env.CEREBRAS_API_KEY,
+  baseURL: 'https://api.cerebras.ai/v1',
+});
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.API_PORT || 3001;
 
 // Middleware
 app.use(
@@ -478,6 +497,192 @@ app.get('/api/monitoring/errors', async (req, res) => {
   }
 });
 
+// LLM Provider Selection and Routing Logic
+const routeToProvider = async (request) => {
+  const { query, messages, options = {}, metadata = {} } = request;
+  const complexity = metadata.complexity || 'medium';
+
+  // Provider selection based on complexity and availability
+  const providers = {
+    high: ['cerebras', 'groq', 'google'],
+    medium: ['groq', 'cerebras', 'google'],
+    low: ['groq', 'google', 'cerebras'],
+  };
+
+  const fallbackChain = providers[complexity] || providers['medium'];
+
+  for (const provider of fallbackChain) {
+    try {
+      console.log(`Attempting ${provider} for complexity: ${complexity}`);
+      const result = await callProvider(
+        provider,
+        messages || [{ role: 'user', content: query }],
+        options,
+        metadata
+      );
+      return {
+        ...result,
+        provider,
+        fallbacksUsed: fallbackChain.indexOf(provider),
+        complexity,
+      };
+    } catch (error) {
+      console.log(`${provider} failed:`, error.message);
+      if (provider === fallbackChain[fallbackChain.length - 1]) {
+        throw error; // Last provider in chain failed
+      }
+      continue; // Try next provider
+    }
+  }
+};
+
+// Call specific LLM provider
+const callProvider = async (provider, messages, options, metadata) => {
+  const startTime = Date.now();
+
+  try {
+    switch (provider) {
+      case 'cerebras':
+        return await callCerebras(messages, options, metadata);
+      case 'groq':
+        return await callGroq(messages, options, metadata);
+      case 'google':
+        return await callGoogle(messages, options, metadata);
+      default:
+        throw new Error(`Unknown provider: ${provider}`);
+    }
+  } finally {
+    const latency = Date.now() - startTime;
+    console.log(`${provider} response time: ${latency}ms`);
+  }
+};
+
+// Cerebras API call
+const callCerebras = async (messages, options, metadata) => {
+  const completion = await cerebrasClient.chat.completions.create({
+    model: options.model || 'llama3.1-8b',
+    messages,
+    max_tokens: options.maxTokens || 2000,
+    temperature: options.temperature || 0.7,
+    ...options,
+  });
+
+  return {
+    response: completion.choices[0]?.message?.content || '',
+    usage: completion.usage,
+    rawResponse: completion,
+  };
+};
+
+// Groq API call
+const callGroq = async (messages, options, metadata) => {
+  const completion = await groqClient.chat.completions.create({
+    model: options.model || 'llama-3.3-70b-versatile',
+    messages,
+    max_tokens: options.maxTokens || 2000,
+    temperature: options.temperature || 0.7,
+    ...options,
+  });
+
+  return {
+    response: completion.choices[0]?.message?.content || '',
+    usage: completion.usage,
+    rawResponse: completion,
+  };
+};
+
+// Google AI call
+const callGoogle = async (messages, options, metadata) => {
+  const model = googleAI.getGenerativeModel({
+    model: 'gemini-1.5-flash', // Always use Google's model, ignore options.model
+  });
+
+  // Convert messages to Google format
+  const prompt = messages.map((m) => `${m.role}: ${m.content}`).join('\n');
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  return {
+    response: text,
+    usage: {
+      promptTokens: 0, // Google doesn't provide token counts in free tier
+      completionTokens: 0,
+      totalTokens: 0,
+    },
+    rawResponse: response,
+  };
+};
+
+// LLM Route Endpoint Implementation - Real provider integration
+app.post('/api/llm/route', async (req, res) => {
+  try {
+    console.log('POST /api/llm/route - Processing real LLM request');
+
+    const { messages, query, options = {}, metadata = {} } = req.body;
+    const timestamp = new Date().toISOString();
+    const requestId = metadata.requestId || `req_${Date.now()}`;
+
+    console.log(
+      `Request ${requestId}: ${metadata.agentName || 'Unknown Agent'} - Complexity: ${
+        metadata.complexity || 'medium'
+      }`
+    );
+
+    // Route to appropriate LLM provider with fallback chain
+    const result = await routeToProvider({
+      messages,
+      query,
+      options,
+      metadata: { ...metadata, requestId },
+    });
+
+    // Calculate costs (mock values for now)
+    const costs = {
+      inputCost: (result.usage?.promptTokens || 100) * 0.00001,
+      outputCost: (result.usage?.completionTokens || 200) * 0.00002,
+    };
+    costs.totalCost = costs.inputCost + costs.outputCost;
+
+    const response = {
+      success: true,
+      timestamp,
+      data: {
+        response: result.response,
+        metadata: {
+          provider: result.provider,
+          latency: Date.now() - new Date(timestamp).getTime(),
+          complexity: result.complexity,
+          requestId,
+          fallbacksUsed: result.fallbacksUsed,
+          cost: costs,
+        },
+        usage: result.usage,
+        rawResponse: result.rawResponse,
+      },
+    };
+
+    console.log(
+      `✅ Request ${requestId} completed - Provider: ${result.provider}, Fallbacks used: ${result.fallbacksUsed}`
+    );
+    res.json(response);
+  } catch (error) {
+    console.error('❌ Error in /api/llm/route:', error);
+    res.status(500).json({
+      success: false,
+      timestamp: new Date().toISOString(),
+      error: {
+        code: 'LLM_ERROR',
+        message: 'Error processing LLM request',
+        details: error.message,
+        status: 500,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+});
+
 // Basic health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -526,5 +731,6 @@ app.listen(PORT, () => {
   console.log('  GET /api/health/system - System health check ✅');
   console.log('  GET /api/health/providers - LLM provider status ✅');
   console.log('  GET /api/monitoring/errors - Error monitoring ✅');
+  console.log('  POST /api/llm/route - LLM routing endpoint ✅');
   console.log('');
 });

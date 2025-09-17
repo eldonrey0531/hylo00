@@ -1,7 +1,9 @@
 import { createRoutingGroqClient } from './llmRoutingService';
 
+// Create client for LangChain-integrated API - auto-detects environment
 const groq = createRoutingGroqClient({
   enableLogging: true,
+  // baseUrl will be auto-detected: localhost:3002 for dev, /api/llm for production
 });
 
 export interface TravelFormData {
@@ -27,6 +29,17 @@ export interface AgentLog {
   output: any;
   searchQueries?: string[];
   decisions?: string[];
+  provider?: string;
+  latency?: number;
+  tokens?: {
+    input: number;
+    output: number;
+    total: number;
+  };
+  cost?: number;
+  complexity?: string;
+  fallbackChain?: string[];
+  traceId?: string;
   reasoning?: string;
 }
 
@@ -782,6 +795,169 @@ export const generateMultiAgentItinerary = async (
     return { itinerary: finalItinerary, logs };
   } catch (error) {
     console.error('Error in multi-agent itinerary generation:', error);
-    throw new Error('Failed to generate personalized itinerary. Pleasetry again.');
+    throw new Error('Failed to generate personalized itinerary. Please try again.');
   }
 };
+
+/**
+ * Generate itinerary using LangChain-based multi-agent system
+ * This function uses the new edge-first architecture with observability
+ */
+export const generateItineraryWithLangChain = async (
+  formData: TravelFormData,
+  onAgentUpdate?: (logs: AgentLog[]) => void
+): Promise<{ itinerary: string; logs: AgentLog[] }> => {
+  try {
+    console.log('🚀 Starting LangChain multi-agent workflow...');
+
+    const logs: AgentLog[] = [];
+    const apiUrl = 'http://localhost:3001/api/llm/agents';
+
+    // Prepare travel data for the API
+    const travelData = {
+      tripDetails: formData.tripDetails,
+      groups: formData.groups,
+      interests: formData.interests,
+      inclusions: formData.inclusions,
+      experience: formData.experience,
+      vibes: formData.vibes,
+      sampleDays: formData.sampleDays,
+      dinnerChoices: formData.dinnerChoices,
+      nickname: formData.nickname,
+      contact: formData.contact,
+    };
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        travelData,
+        complexity: 'high', // Travel planning is complex
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`LangChain API failed: ${response.statusText}`);
+    }
+
+    // Handle Server-Sent Events for real-time updates
+    if (response.headers.get('Content-Type') === 'text/event-stream') {
+      let finalItinerary = '';
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('Failed to get response reader');
+      }
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.error) {
+                throw new Error(data.message);
+              }
+
+              // Create log entry for this agent update
+              const log: AgentLog = {
+                agentId: getAgentId(data.agent),
+                agentName: data.agent || 'unknown',
+                model: data.metadata?.model_used || 'multi-agent',
+                timestamp: data.timestamp || new Date().toISOString(),
+                input: data.message || '',
+                output: data.result || '',
+                provider: data.metadata?.provider_used,
+                latency: data.metadata?.provider_latency_ms,
+                tokens: data.metadata?.usage
+                  ? {
+                      input: data.metadata.usage.input_tokens || 0,
+                      output: data.metadata.usage.output_tokens || 0,
+                      total: data.metadata.usage.total_tokens || 0,
+                    }
+                  : undefined,
+                cost: data.metadata?.cost_estimate,
+                complexity: data.metadata?.routing_decision?.complexity,
+                fallbackChain: data.metadata?.routing_decision?.fallbacks,
+                traceId: data.metadata?.trace_id,
+              };
+
+              logs.push(log);
+
+              // Update final itinerary if this is the planner agent
+              if (data.agent === 'itinerary-planner' && data.result) {
+                finalItinerary = data.result;
+              }
+
+              // Call update callback
+              if (onAgentUpdate) {
+                onAgentUpdate([...logs]);
+              }
+
+              console.log(`🤖 ${data.agent}: ${data.message}`);
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', parseError);
+            }
+          }
+        }
+      }
+
+      if (!finalItinerary) {
+        throw new Error('No itinerary generated from multi-agent workflow');
+      }
+
+      return { itinerary: finalItinerary, logs };
+    } else {
+      // Handle regular JSON response (fallback)
+      const result = await response.json();
+
+      const log: AgentLog = {
+        agentId: 1,
+        agentName: 'langchain-fallback',
+        model: 'multi-agent',
+        timestamp: new Date().toISOString(),
+        input: travelData,
+        output: result.content || result.message || 'No content',
+        traceId: result.trace_id,
+      };
+
+      logs.push(log);
+
+      if (onAgentUpdate) {
+        onAgentUpdate(logs);
+      }
+
+      return {
+        itinerary: result.content || result.message || 'Failed to generate itinerary',
+        logs,
+      };
+    }
+  } catch (error) {
+    console.error('❌ LangChain multi-agent workflow error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to generate itinerary with LangChain: ${errorMessage}`);
+  }
+};
+
+/**
+ * Helper function to map agent names to IDs
+ */
+function getAgentId(agentName: string): number {
+  const agentMap: { [key: string]: number } = {
+    'data-gatherer': 1,
+    'travel-analyzer': 2,
+    'itinerary-planner': 3,
+    'workflow-complete': 4,
+  };
+
+  return agentMap[agentName] || 0;
+}

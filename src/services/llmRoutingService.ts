@@ -67,8 +67,33 @@ export class LLMRoutingClient {
   private enableLogging: boolean;
 
   constructor(config: { baseUrl?: string; enableLogging?: boolean } = {}) {
-    this.baseUrl = config.baseUrl || '/api/llm';
+    // Auto-detect environment and set appropriate base URL
+    if (config.baseUrl) {
+      this.baseUrl = config.baseUrl;
+    } else if (typeof window !== 'undefined') {
+      // Browser environment - determine if we're in dev or production
+      const isDev =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isDev) {
+        // Development: Use dev server if running, otherwise fallback to local API
+        this.baseUrl = 'http://localhost:3002/api/llm'; // LangChain dev server
+      } else {
+        // Production: Use relative paths for Vercel deployment
+        this.baseUrl = '/api/llm';
+      }
+    } else {
+      // Node.js environment (SSR) - use relative paths
+      this.baseUrl = '/api/llm';
+    }
+
     this.enableLogging = config.enableLogging !== false;
+
+    if (this.enableLogging) {
+      console.log('🔗 LLM Routing Client initialized:', {
+        baseUrl: this.baseUrl,
+        environment: typeof window !== 'undefined' ? 'browser' : 'node',
+      });
+    }
   }
 
   /**
@@ -403,7 +428,9 @@ export class LLMRoutingClient {
 /**
  * Create Groq SDK compatible client using our routing infrastructure
  */
-export function createRoutingGroqClient(config: { enableLogging?: boolean } = {}) {
+export function createRoutingGroqClient(
+  config: { enableLogging?: boolean; baseUrl?: string } = {}
+) {
   const client = new LLMRoutingClient(config);
 
   return {
