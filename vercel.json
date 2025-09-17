@@ -1,22 +1,13 @@
 {
   "functions": {
-    "api/llm/route.js": {
-      "runtime": "edge"
+    "api/llm/route.ts": {
+      "runtime": "@vercel/edge"
     },
-    "api/llm/health.js": {
-      "runtime": "edge"
+    "api/health.ts": {
+      "runtime": "@vercel/edge"
     },
-    "api/llm/agents.js": {
-      "runtime": "edge"
-    },
-    "api/dns/verification.js": {
-      "runtime": "edge"
-    },
-    "api/deployment/dnsReadinessCheck.js": {
-      "runtime": "edge"
-    },
-    "api/monitoring/errors.js": {
-      "runtime": "edge"
+    "api/providers/status.ts": {
+      "runtime": "@vercel/edge"
     }
   },
   "env": {
