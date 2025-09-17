@@ -13,6 +13,8 @@ import type { ProviderName } from '../types/index.js';
 import { ProviderFactory } from '../providers/factory.js';
 import { createObservabilityService } from '../utils/observability.js';
 import type { LangSmithConfig } from '../types/observability.js';
+import { enhancedProviderStatusService } from '../services/enhancedProviderStatusService';
+import { dnsVerificationService } from '../services/dnsVerificationService';
 
 // =============================================================================
 // Edge Runtime Configuration
@@ -107,11 +109,19 @@ class SystemHealthChecker {
     const providerChecks = await this.checkProviderHealth(env);
     checks.push(...providerChecks);
 
-    // 2. Routing System Health
+    // 2. Enhanced Provider Status Monitoring (T026)
+    const enhancedProviderChecks = await this.checkEnhancedProviderStatus();
+    checks.push(...enhancedProviderChecks);
+
+    // 3. DNS Infrastructure Health (T026)
+    const dnsCheck = await this.checkDNSInfrastructure();
+    checks.push(dnsCheck);
+
+    // 4. Routing System Health
     const routingCheck = await this.checkRoutingHealth(env);
     checks.push(routingCheck);
 
-    // 3. Observability Health
+    // 5. Observability Health
     const observabilityCheck = await this.checkObservabilityHealth(env);
     checks.push(observabilityCheck);
 
@@ -550,6 +560,163 @@ class SystemHealthChecker {
       this.requestMetrics.successful++;
     } else {
       this.requestMetrics.failed++;
+    }
+  }
+
+  /**
+   * Enhanced provider status monitoring integration (T026)
+   */
+  async checkEnhancedProviderStatus(): Promise<HealthCheck[]> {
+    const checks: HealthCheck[] = [];
+
+    try {
+      const startTime = Date.now();
+
+      // Get detailed provider status from enhanced service
+      const providerStatuses = await enhancedProviderStatusService.getAllProviderStatus();
+
+      for (const [providerId, status] of providerStatuses) {
+        let healthLevel: HealthLevel;
+        let message: string;
+
+        if (!status.isEnabled) {
+          healthLevel = 'degraded';
+          message = `${providerId} is disabled`;
+        } else if (!status.isHealthy) {
+          healthLevel = 'critical';
+          message = `${providerId} is unhealthy`;
+        } else if (!status.hasCapacity) {
+          healthLevel = 'degraded';
+          message = `${providerId} has no capacity`;
+        } else {
+          healthLevel = 'healthy';
+          message = `${providerId} is healthy with capacity`;
+        }
+
+        checks.push({
+          name: `enhanced_${providerId}_status`,
+          status: healthLevel,
+          message,
+          latency: Date.now() - startTime,
+          details: {
+            provider: providerId,
+            enabled: status.isEnabled,
+            healthy: status.isHealthy,
+            available: status.isAvailable,
+            hasCapacity: status.hasCapacity,
+            activeKeys: status.keys.filter((k) => k.isActive).length,
+            totalKeys: status.keys.length,
+            metricsSnapshot: {
+              totalRequests: status.metrics.totalRequests,
+              successRate:
+                status.metrics.successfulRequests / Math.max(status.metrics.totalRequests, 1),
+              avgLatency: status.metrics.avgLatency,
+              totalCost: status.metrics.totalCost,
+            },
+            rateLimits: {
+              currentRpm: status.rateLimits.currentRpm,
+              maxRpm: status.rateLimits.requestsPerMinute,
+              utilizationRate:
+                (status.rateLimits.currentRpm / Math.max(status.rateLimits.requestsPerMinute, 1)) *
+                100,
+            },
+            lastHealthCheck: status.lastHealthCheck,
+          },
+        });
+      }
+
+      // Add overall enhanced monitoring check
+      const healthyProviders = checks.filter((c) => c.status === 'healthy').length;
+      const totalProviders = checks.length;
+
+      let overallStatus: HealthLevel;
+      if (healthyProviders === totalProviders && totalProviders > 0) {
+        overallStatus = 'healthy';
+      } else if (healthyProviders > 0) {
+        overallStatus = 'degraded';
+      } else {
+        overallStatus = 'critical';
+      }
+
+      checks.push({
+        name: 'enhanced_provider_monitoring',
+        status: overallStatus,
+        message: `Enhanced monitoring: ${healthyProviders}/${totalProviders} providers healthy`,
+        latency: Date.now() - startTime,
+        details: {
+          healthyProviders,
+          totalProviders,
+          coverageRate: totalProviders > 0 ? (healthyProviders / totalProviders) * 100 : 0,
+        },
+      });
+    } catch (error) {
+      checks.push({
+        name: 'enhanced_provider_monitoring',
+        status: 'critical',
+        message: `Enhanced provider monitoring failed: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      });
+    }
+
+    return checks;
+  }
+
+  /**
+   * DNS infrastructure health check (T026 integration)
+   */
+  async checkDNSInfrastructure(): Promise<HealthCheck> {
+    const startTime = Date.now();
+
+    try {
+      // Check active DNS verifications
+      const activeVerifications = await dnsVerificationService.listVerifications();
+
+      const pendingCount = activeVerifications.filter((v) => v.status === 'pending').length;
+      const failedCount = activeVerifications.filter((v) => v.status === 'failed').length;
+      const successfulCount = activeVerifications.filter((v) => v.status === 'verified').length;
+
+      let status: HealthLevel;
+      let message: string;
+
+      if (failedCount === 0 && pendingCount < 5) {
+        status = 'healthy';
+        message = `DNS infrastructure healthy: ${successfulCount} verified, ${pendingCount} pending`;
+      } else if (failedCount < 3 && pendingCount < 10) {
+        status = 'degraded';
+        message = `DNS infrastructure degraded: ${failedCount} failures, ${pendingCount} pending`;
+      } else {
+        status = 'critical';
+        message = `DNS infrastructure critical: ${failedCount} failures, ${pendingCount} pending`;
+      }
+
+      return {
+        name: 'dns_infrastructure',
+        status,
+        message,
+        latency: Date.now() - startTime,
+        details: {
+          totalVerifications: activeVerifications.length,
+          pendingCount,
+          successfulCount,
+          failedCount,
+          successRate:
+            activeVerifications.length > 0
+              ? (successfulCount / activeVerifications.length) * 100
+              : 100,
+        },
+      };
+    } catch (error) {
+      return {
+        name: 'dns_infrastructure',
+        status: 'critical',
+        message: `DNS infrastructure check failed: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+        latency: Date.now() - startTime,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      };
     }
   }
 }

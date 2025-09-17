@@ -315,9 +315,9 @@ export class ProviderFactory {
     // Log health status (in production, this would go to observability system)
     results.forEach((result) => {
       if (result.status === 'fulfilled') {
-        const { name, available, status } = result.value;
-        if (!available || status !== 'active') {
-          console.warn(`Provider ${name} is ${status}`);
+        const { name, available } = result.value;
+        if (!available) {
+          console.warn(`Provider ${name} is not available`);
         }
       }
     });

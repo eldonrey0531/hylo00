@@ -25,6 +25,17 @@ interface AgentLog {
   output: any;
   searchQueries?: string[];
   decisions?: string[];
+  provider?: string;
+  latency?: number;
+  tokens?: {
+    input: number;
+    output: number;
+    total: number;
+  };
+  cost?: number;
+  complexity?: string;
+  fallbackChain?: string[];
+  traceId?: string;
   reasoning?: string;
 }
 
@@ -34,11 +45,7 @@ interface BehindTheScenesProps {
   isProcessing: boolean;
 }
 
-const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
-  formData,
-  agentLogs,
-  isProcessing,
-}) => {
+const BehindTheScenes: React.FC<BehindTheScenesProps> = ({ formData, agentLogs, isProcessing }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
@@ -163,14 +170,8 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
         onClick={() => setIsExpanded(!isExpanded)}
         className="mb-2 ml-auto flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-all duration-200"
       >
-        {isExpanded ? (
-          <EyeOff className="h-5 w-5" />
-        ) : (
-          <Eye className="h-5 w-5" />
-        )}
-        <span className="font-bold">
-          {isExpanded ? 'Hide' : 'Show'} Behind the Scenes
-        </span>
+        {isExpanded ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+        <span className="font-bold">{isExpanded ? 'Hide' : 'Show'} Behind the Scenes</span>
       </button>
 
       {/* Main Panel */}
@@ -202,9 +203,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
               >
                 <div className="flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-gray-600" />
-                  <span className="font-bold text-gray-700">
-                    Gathered Form Data
-                  </span>
+                  <span className="font-bold text-gray-700">Gathered Form Data</span>
                 </div>
                 {expandedSections.formData ? (
                   <ChevronDown className="h-5 w-5 text-gray-600" />
@@ -233,32 +232,27 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                         )}
                       </h4>
 
-                      {category.type === 'array' &&
-                        Array.isArray(category.data) && (
-                          <div className="flex flex-wrap gap-2">
-                            {category.data.length > 0 ? (
-                              category.data.map((item: string, i: number) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-1 bg-white border border-gray-300 rounded-full text-xs"
-                                >
-                                  {item}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-gray-400 italic text-xs">
-                                None selected
+                      {category.type === 'array' && Array.isArray(category.data) && (
+                        <div className="flex flex-wrap gap-2">
+                          {category.data.length > 0 ? (
+                            category.data.map((item: string, i: number) => (
+                              <span
+                                key={i}
+                                className="px-2 py-1 bg-white border border-gray-300 rounded-full text-xs"
+                              >
+                                {item}
                               </span>
-                            )}
-                          </div>
-                        )}
+                            ))
+                          ) : (
+                            <span className="text-gray-400 italic text-xs">None selected</span>
+                          )}
+                        </div>
+                      )}
 
                       {category.type === 'string' && (
                         <span className="text-sm text-gray-600">
                           {category.data || (
-                            <span className="italic text-gray-400">
-                              Not provided
-                            </span>
+                            <span className="italic text-gray-400">Not provided</span>
                           )}
                         </span>
                       )}
@@ -267,9 +261,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {category.fields.map((field: string) => (
                             <div key={field} className="flex justify-between">
-                              <span className="text-gray-500 capitalize">
-                                {field}:
-                              </span>
+                              <span className="text-gray-500 capitalize">{field}:</span>
                               <span className="text-gray-700 font-medium">
                                 {category.data[field] || '-'}
                               </span>
@@ -285,10 +277,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
 
             {/* Agent Logs */}
             {agentLogs.map((log) => (
-              <div
-                key={`agent-${log.agentId}`}
-                className="border rounded-lg overflow-hidden"
-              >
+              <div key={`agent-${log.agentId}`} className="border rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleSection(`agent${log.agentId}`)}
                   className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${getAgentColor(
@@ -299,9 +288,18 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                     {getAgentIcon(log.agentId)}
                     <div className="text-left">
                       <span className="font-bold">{log.agentName}</span>
-                      <span className="text-xs block opacity-75">
-                        {log.model}
-                      </span>
+                      <div className="text-xs opacity-75 space-y-0.5">
+                        <div>{log.model}</div>
+                        {log.provider && (
+                          <div className="flex items-center space-x-1">
+                            <Database className="h-3 w-3" />
+                            <span className="capitalize">{log.provider}</span>
+                            {log.complexity && (
+                              <span className="text-gray-400">({log.complexity})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {expandedSections[`agent${log.agentId}`] ? (
@@ -324,6 +322,79 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                       </div>
                     )}
 
+                    {/* Provider & Performance Details */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Provider Information */}
+                      {log.provider && (
+                        <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                          <h5 className="font-bold text-sm text-indigo-700 mb-1 flex items-center">
+                            <Database className="h-4 w-4 mr-1" />
+                            Provider
+                          </h5>
+                          <p className="text-xs text-indigo-600 capitalize">{log.provider}</p>
+                          {log.complexity && (
+                            <p className="text-xs text-indigo-500 mt-1">
+                              Complexity: {log.complexity}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Performance Metrics */}
+                      {(log.latency || log.tokens) && (
+                        <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                          <h5 className="font-bold text-sm text-emerald-700 mb-1 flex items-center">
+                            <Zap className="h-4 w-4 mr-1" />
+                            Performance
+                          </h5>
+                          {log.latency && (
+                            <p className="text-xs text-emerald-600">Latency: {log.latency}ms</p>
+                          )}
+                          {log.tokens && (
+                            <div className="text-xs text-emerald-600">
+                              <p>Tokens: {log.tokens.total}</p>
+                              <p className="text-emerald-500">
+                                In: {log.tokens.input} | Out: {log.tokens.output}
+                              </p>
+                            </div>
+                          )}
+                          {log.cost && (
+                            <p className="text-xs text-emerald-600 mt-1">
+                              Cost: ${log.cost.toFixed(4)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Fallback Chain & Tracing */}
+                    {(log.fallbackChain || log.traceId) && (
+                      <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <h5 className="font-bold text-sm text-orange-700 mb-2 flex items-center">
+                          <Globe className="h-4 w-4 mr-1" />
+                          Routing & Tracing
+                        </h5>
+                        {log.fallbackChain && log.fallbackChain.length > 0 && (
+                          <div className="mb-2">
+                            <p className="text-xs text-orange-600 mb-1">Fallback Chain:</p>
+                            <div className="flex space-x-1 flex-wrap">
+                              {log.fallbackChain.map((provider, idx) => (
+                                <span
+                                  key={`${log.traceId}-fallback-${idx}`}
+                                  className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded"
+                                >
+                                  {provider}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {log.traceId && (
+                          <p className="text-xs text-orange-500 font-mono">Trace: {log.traceId}</p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Decisions Made */}
                     {log.decisions && log.decisions.length > 0 && (
                       <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
@@ -333,10 +404,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                         </h5>
                         <ul className="space-y-1">
                           {log.decisions.map((decision, idx) => (
-                            <li
-                              key={idx}
-                              className="text-xs text-purple-600 flex items-start"
-                            >
+                            <li key={idx} className="text-xs text-purple-600 flex items-start">
                               <span className="mr-1">•</span>
                               <span>{decision}</span>
                             </li>
@@ -354,10 +422,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                         </h5>
                         <ul className="space-y-1">
                           {log.searchQueries.map((query, idx) => (
-                            <li
-                              key={idx}
-                              className="text-xs text-green-600 flex items-start"
-                            >
+                            <li key={idx} className="text-xs text-green-600 flex items-start">
                               <span className="mr-1">🔍</span>
                               <span>{query}</span>
                             </li>
@@ -369,9 +434,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
                     {/* Output Preview */}
                     {log.output && (
                       <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <h5 className="font-bold text-sm text-gray-700 mb-1">
-                          Output Preview
-                        </h5>
+                        <h5 className="font-bold text-sm text-gray-700 mb-1">Output Preview</h5>
                         <div className="text-xs text-gray-600 max-h-32 overflow-y-auto">
                           {typeof log.output === 'object' ? (
                             <pre className="whitespace-pre-wrap">
@@ -398,9 +461,7 @@ const BehindTheScenes: React.FC<BehindTheScenesProps> = ({
               <div className="text-center py-8 text-gray-400">
                 <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                 <p className="text-sm">No agent activity yet</p>
-                <p className="text-xs">
-                  Generate an itinerary to see the workflow
-                </p>
+                <p className="text-xs">Generate an itinerary to see the workflow</p>
               </div>
             )}
           </div>

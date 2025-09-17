@@ -8,14 +8,34 @@
     },
     "api/llm/agents.js": {
       "runtime": "edge"
+    },
+    "api/dns/verification.js": {
+      "runtime": "edge"
+    },
+    "api/deployment/dnsReadinessCheck.js": {
+      "runtime": "edge"
+    },
+    "api/monitoring/errors.js": {
+      "runtime": "edge"
     }
   },
   "env": [
-    "GROQ_API_KEY",
-    "CEREBRAS_API_KEY",
-    "GOOGLE_AI_API_KEY",
+    "GROQ_API_KEY_1",
+    "GROQ_API_KEY_2",
+    "GROQ_API_KEY_3",
+    "CEREBRAS_API_KEY_1",
+    "CEREBRAS_API_KEY_2",
+    "CEREBRAS_API_KEY_3",
+    "GOOGLE_API_KEY_1",
+    "GOOGLE_API_KEY_2",
+    "GOOGLE_API_KEY_3",
     "LANGSMITH_API_KEY",
-    "LANGSMITH_TRACE_URL"
+    "LANGSMITH_TRACE_URL",
+    "DNS_VERIFICATION_TIMEOUT",
+    "HEALTH_CHECK_INTERVAL",
+    "PROVIDER_CACHE_TTL",
+    "MAX_RETRIES",
+    "FALLBACK_TIMEOUT"
   ],
   "build": {
     "env": {
@@ -28,8 +48,13 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
       ]
     }
-  ]
+  ],
+  "regions": ["iad1", "sfo1"],
+  "framework": "vite"
 }

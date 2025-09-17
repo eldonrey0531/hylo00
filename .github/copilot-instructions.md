@@ -268,13 +268,9 @@ class AIErrorBoundary extends React.Component {
 
 ## Recent Changes
 
+- **2025-01-17**: Feature 005-dns-deployment-fixes: DNS verification, TypeScript strict mode compliance, deployment monitoring
 - **2025-09-17**: Feature 004-production-hardening planning and design completed
 - **2025-09-17**: Production hardening architecture with error boundaries and monitoring designed
-- **2025-09-17**: Comprehensive testing strategy and security hardening planned
-- **2025-09-17**: Frontend UI/UX enhancement specifications defined
-- **2025-09-17**: LangChain.js multi-LLM routing infrastructure implementation completed
-- **2025-09-17**: API contracts defined for provider routing and health monitoring
-- **2025-09-17**: Data models documented for LLM providers, routing rules, and observability
 
 ---
 

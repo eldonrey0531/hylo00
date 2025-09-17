@@ -487,3 +487,52 @@ export function isGeminiConfig(config: ProviderConfig): config is GeminiConfig {
 export function isGroqConfig(config: ProviderConfig): config is GroqConfig {
   return 'provider' in config && config.provider === 'groq';
 }
+
+// =============================================================================
+// Enhanced Provider Status Types
+// =============================================================================
+
+export type SimpleProviderStatus = 'available' | 'degraded' | 'unavailable' | 'maintenance';
+
+export interface KeyStatus {
+  readonly keyId: string;
+  readonly type: 'primary' | 'secondary' | 'tertiary';
+  readonly isActive: boolean;
+  readonly quotaUsed: number;
+  readonly quotaLimit: number;
+  readonly quotaResetTime: number;
+  readonly lastUsed: number;
+  readonly errorCount: number;
+  readonly successRate: number;
+  readonly avgLatency: number;
+}
+
+export interface ProviderMetrics {
+  readonly totalRequests: number;
+  readonly successfulRequests: number;
+  readonly failedRequests: number;
+  readonly avgLatency: number;
+  readonly totalCost: number;
+  readonly tokensUsed: number;
+}
+
+export interface RateLimitStatus {
+  readonly requestsPerMinute: number;
+  readonly currentRpm: number;
+  readonly tokensPerMinute: number;
+  readonly currentTpm: number;
+}
+
+export interface DetailedProviderStatus {
+  readonly provider: ProviderName;
+  readonly isEnabled: boolean;
+  readonly isHealthy: boolean;
+  readonly isAvailable: boolean;
+  readonly hasCapacity: boolean;
+  readonly keys: KeyStatus[];
+  readonly activeKeyId: string;
+  readonly metrics: ProviderMetrics;
+  readonly rateLimits: RateLimitStatus;
+  readonly lastHealthCheck: number;
+  readonly nextQuotaReset: number;
+}

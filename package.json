@@ -8,6 +8,7 @@
     "dev:api": "node dev-server.mjs",
     "dev:full": "concurrently \"npm run dev:api\" \"npm run dev\"",
     "build": "vite build",
+    "type-check": "tsc --noEmit",
     "deploy": "vercel",
     "deploy:prod": "vercel --prod",
     "lint": "eslint .",
@@ -23,7 +24,12 @@
     "test:performance": "vitest tests/performance",
     "test:security": "vitest tests/security",
     "test:accessibility": "vitest tests/accessibility",
-    "test:all": "npm run test:unit && npm run test:contract && npm run test:integration && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:contract && npm run test:integration && npm run test:e2e",
+    "bundle:analyze": "vite build --mode analyze",
+    "bundle:size": "bundlesize",
+    "bundle:check": "npm run build && npm run bundle:size",
+    "bundle:report": "bundlesize --report",
+    "bundle:ci": "bundlesize --ci"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -67,6 +73,8 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "bundlesize": "^0.18.1",
+    "rollup-plugin-analyzer": "^4.0.0"
   }
 }

@@ -172,9 +172,47 @@ export class GroqProvider implements LLMProvider {
     const available = await this.isAvailable();
     const hasCapacity = await this.hasCapacity();
 
-    if (!available) return 'unavailable';
-    if (!hasCapacity || this.metrics.errorRate > 0.05) return 'degraded';
-    return 'active';
+    return {
+      provider: 'groq',
+      isEnabled: this.config.enabled,
+      isHealthy: available && this.metrics.errorRate < 0.05,
+      isAvailable: available,
+      hasCapacity,
+      keys: [
+        {
+          keyId: 'primary',
+          type: 'primary',
+          isActive: true,
+          quotaUsed: 0,
+          quotaLimit: 1000000,
+          quotaResetTime: Date.now() + 86400000,
+          lastUsed: Date.now(),
+          errorCount: this.metrics.failedRequests,
+          successRate:
+            this.metrics.requestCount > 0
+              ? this.metrics.successfulRequests / this.metrics.requestCount
+              : 1,
+          avgLatency: this.metrics.averageLatencyMs,
+        },
+      ],
+      activeKeyId: 'primary',
+      metrics: {
+        totalRequests: this.metrics.requestCount,
+        successfulRequests: this.metrics.successfulRequests,
+        failedRequests: this.metrics.failedRequests,
+        avgLatency: this.metrics.averageLatencyMs,
+        totalCost: this.metrics.totalCostUsd,
+        tokensUsed: this.metrics.totalTokensProcessed,
+      },
+      rateLimits: {
+        requestsPerMinute: this.config.rateLimits.requestsPerMinute,
+        currentRpm: 0,
+        tokensPerMinute: this.config.rateLimits.tokensPerMinute,
+        currentTpm: 0,
+      },
+      lastHealthCheck: Date.now(),
+      nextQuotaReset: Date.now() + 86400000,
+    };
   }
 
   async getMetrics(): Promise<ProviderMetrics> {

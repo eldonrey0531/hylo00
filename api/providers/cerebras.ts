@@ -172,9 +172,47 @@ export class CerebrasProvider implements LLMProvider {
     const available = await this.isAvailable();
     const hasCapacity = await this.hasCapacity();
 
-    if (!available) return 'unavailable';
-    if (!hasCapacity || this.metrics.errorRate > 0.1) return 'degraded';
-    return 'active';
+    return {
+      provider: 'cerebras',
+      isEnabled: this.config.enabled,
+      isHealthy: available && this.metrics.errorRate < 0.1,
+      isAvailable: available,
+      hasCapacity,
+      keys: [
+        {
+          keyId: 'primary',
+          type: 'primary',
+          isActive: true,
+          quotaUsed: 0,
+          quotaLimit: 1000000,
+          quotaResetTime: Date.now() + 86400000,
+          lastUsed: Date.now(),
+          errorCount: this.metrics.failedRequests,
+          successRate:
+            this.metrics.requestCount > 0
+              ? this.metrics.successfulRequests / this.metrics.requestCount
+              : 1,
+          avgLatency: this.metrics.averageLatencyMs,
+        },
+      ],
+      activeKeyId: 'primary',
+      metrics: {
+        totalRequests: this.metrics.requestCount,
+        successfulRequests: this.metrics.successfulRequests,
+        failedRequests: this.metrics.failedRequests,
+        avgLatency: this.metrics.averageLatencyMs,
+        totalCost: this.metrics.totalCostUsd,
+        tokensUsed: this.metrics.totalTokensProcessed,
+      },
+      rateLimits: {
+        requestsPerMinute: this.config.rateLimits.requestsPerMinute,
+        currentRpm: 0, // Would need to track this in real implementation
+        tokensPerMinute: this.config.rateLimits.tokensPerMinute,
+        currentTpm: 0, // Would need to track this in real implementation
+      },
+      lastHealthCheck: Date.now(),
+      nextQuotaReset: Date.now() + 86400000, // 24 hours
+    };
   }
 
   async getMetrics(): Promise<ProviderMetrics> {
@@ -247,8 +285,13 @@ export class CerebrasProvider implements LLMProvider {
 export function createCerebrasProvider(env: Record<string, string | undefined>): CerebrasProvider {
   // Create a minimal config that matches the CerebrasConfig interface
   const config: CerebrasConfig = {
+    provider: 'cerebras',
+    modelName: env.CEREBRAS_MODEL || 'llama3.1-70b',
+    endpoint: env.CEREBRAS_ENDPOINT || 'https://api.cerebras.ai/v1/chat/completions',
     enabled: env.CEREBRAS_ENABLED === 'true',
-    apiKeyName: 'CEREBRAS_API_KEY',
+    apiKeys: {
+      primary: env.CEREBRAS_API_KEY || '',
+    },
     maxTokens: parseInt(env.CEREBRAS_MAX_TOKENS || '32768', 10),
     timeout: parseInt(env.CEREBRAS_TIMEOUT || '30000', 10),
     retryAttempts: parseInt(env.CEREBRAS_RETRY_ATTEMPTS || '3', 10),
@@ -258,23 +301,25 @@ export function createCerebrasProvider(env: Record<string, string | undefined>):
     },
     costs: {
       inputTokenCost: parseFloat(env.CEREBRAS_INPUT_TOKEN_COST || '0.000001'),
-      outputTokenCost: parseFloat(env.CEREBRAS_OUTPUT_TOKEN_COST || '0.000002'),
+      outputTokenCost: parseFloat(env.CEREBRAS_OUTPUT_TOKEN_COST || '0.000001'),
       requestCost: parseFloat(env.CEREBRAS_REQUEST_COST || '0'),
     },
     routing: {
-      weight: parseFloat(env.CEREBRAS_WEIGHT || '1.0'),
+      weight: parseInt(env.CEREBRAS_WEIGHT || '10', 10),
       priority: parseInt(env.CEREBRAS_PRIORITY || '1', 10),
-      preferredComplexity: 'high',
+      preferredComplexity: 'high' as const,
     },
-    provider: 'cerebras',
-    modelName: env.CEREBRAS_MODEL || 'llama3.1-70b',
-    endpoint: env.CEREBRAS_ENDPOINT || 'https://api.cerebras.ai/v1',
+    keyRotation: {
+      enabled: env.CEREBRAS_KEY_ROTATION === 'true',
+      strategy: 'round-robin' as const,
+      failoverThreshold: parseFloat(env.CEREBRAS_FAILOVER_THRESHOLD || '0.1'),
+    },
     features: {
       supportsFunctionCalling: true,
       supportsStreaming: true,
       supportsSystemPrompts: true,
-      maxContextTokens: 32768,
-      maxOutputTokens: 8192,
+      maxContextTokens: parseInt(env.CEREBRAS_MAX_CONTEXT || '128000', 10),
+      maxOutputTokens: parseInt(env.CEREBRAS_MAX_OUTPUT || '8192', 10),
     },
     optimization: {
       preferLargeContext: true,

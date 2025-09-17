@@ -172,9 +172,47 @@ export class GeminiProvider implements LLMProvider {
     const available = await this.isAvailable();
     const hasCapacity = await this.hasCapacity();
 
-    if (!available) return 'unavailable';
-    if (!hasCapacity || this.metrics.errorRate > 0.15) return 'degraded';
-    return 'active';
+    return {
+      provider: 'gemini',
+      isEnabled: this.config.enabled,
+      isHealthy: available && this.metrics.errorRate < 0.15,
+      isAvailable: available,
+      hasCapacity,
+      keys: [
+        {
+          keyId: 'primary',
+          type: 'primary',
+          isActive: true,
+          quotaUsed: 0,
+          quotaLimit: 1000000,
+          quotaResetTime: Date.now() + 86400000,
+          lastUsed: Date.now(),
+          errorCount: this.metrics.failedRequests,
+          successRate:
+            this.metrics.requestCount > 0
+              ? this.metrics.successfulRequests / this.metrics.requestCount
+              : 1,
+          avgLatency: this.metrics.averageLatencyMs,
+        },
+      ],
+      activeKeyId: 'primary',
+      metrics: {
+        totalRequests: this.metrics.requestCount,
+        successfulRequests: this.metrics.successfulRequests,
+        failedRequests: this.metrics.failedRequests,
+        avgLatency: this.metrics.averageLatencyMs,
+        totalCost: this.metrics.totalCostUsd,
+        tokensUsed: this.metrics.totalTokensProcessed,
+      },
+      rateLimits: {
+        requestsPerMinute: this.config.rateLimits.requestsPerMinute,
+        currentRpm: 0,
+        tokensPerMinute: this.config.rateLimits.tokensPerMinute,
+        currentTpm: 0,
+      },
+      lastHealthCheck: Date.now(),
+      nextQuotaReset: Date.now() + 86400000,
+    };
   }
 
   async getMetrics(): Promise<ProviderMetrics> {
@@ -250,8 +288,14 @@ export class GeminiProvider implements LLMProvider {
 export function createGeminiProvider(env: Record<string, string | undefined>): GeminiProvider {
   // Create a minimal config that matches the GeminiConfig interface
   const config: GeminiConfig = {
+    provider: 'gemini',
+    modelName: env.GEMINI_MODEL || 'gemini-1.5-flash',
+    projectId: env.GEMINI_PROJECT_ID || '',
+    location: env.GEMINI_LOCATION || 'us-central1',
     enabled: env.GEMINI_ENABLED === 'true',
-    apiKeyName: 'GEMINI_API_KEY',
+    apiKeys: {
+      primary: env.GEMINI_API_KEY || '',
+    },
     maxTokens: parseInt(env.GEMINI_MAX_TOKENS || '8192', 10),
     timeout: parseInt(env.GEMINI_TIMEOUT || '20000', 10),
     retryAttempts: parseInt(env.GEMINI_RETRY_ATTEMPTS || '3', 10),
@@ -265,20 +309,21 @@ export function createGeminiProvider(env: Record<string, string | undefined>): G
       requestCost: parseFloat(env.GEMINI_REQUEST_COST || '0'),
     },
     routing: {
-      weight: parseFloat(env.GEMINI_WEIGHT || '1.0'),
+      weight: parseInt(env.GEMINI_WEIGHT || '8', 10),
       priority: parseInt(env.GEMINI_PRIORITY || '2', 10),
-      preferredComplexity: 'medium',
+      preferredComplexity: 'medium' as const,
     },
-    provider: 'gemini',
-    modelName: env.GEMINI_MODEL || 'gemini-1.5-flash',
-    projectId: env.GEMINI_PROJECT_ID || '',
-    location: env.GEMINI_LOCATION || 'us-central1',
+    keyRotation: {
+      enabled: env.GEMINI_KEY_ROTATION === 'true',
+      strategy: 'round-robin' as const,
+      failoverThreshold: parseFloat(env.GEMINI_FAILOVER_THRESHOLD || '0.15'),
+    },
     features: {
       supportsMultimodal: true,
       supportsStreaming: true,
       supportsSafetySettings: true,
-      maxContextTokens: 1000000,
-      maxOutputTokens: 8192,
+      maxContextTokens: parseInt(env.GEMINI_MAX_CONTEXT || '1000000', 10),
+      maxOutputTokens: parseInt(env.GEMINI_MAX_OUTPUT || '8192', 10),
     },
     safetySettings: {
       harassmentThreshold: (env.GEMINI_HARASSMENT_THRESHOLD as any) || 'BLOCK_MEDIUM_AND_ABOVE',

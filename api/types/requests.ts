@@ -6,16 +6,7 @@
  */
 
 import { z } from 'zod';
-import type {
-  ComplexityLevel,
-  ProviderName,
-  ProviderStatus,
-  LLMRequest,
-  LLMResponse,
-  LLMOptions,
-  LLMRequestMetadata,
-  ApiResponse,
-} from './index.js';
+import type { LLMRequest, LLMResponse, ApiResponse } from './index.js';
 
 // =============================================================================
 // Base Schema Definitions
@@ -23,7 +14,12 @@ import type {
 
 export const ComplexityLevelSchema = z.enum(['low', 'medium', 'high']);
 export const ProviderNameSchema = z.enum(['cerebras', 'gemini', 'groq']);
-export const ProviderStatusSchema = z.enum(['active', 'degraded', 'unavailable']);
+export const SimpleProviderStatusSchema = z.enum([
+  'available',
+  'degraded',
+  'unavailable',
+  'maintenance',
+]);
 
 // =============================================================================
 // Request Schemas
@@ -225,7 +221,7 @@ export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
  */
 export const ProviderStatusInfoSchema = z.object({
   name: ProviderNameSchema,
-  status: ProviderStatusSchema,
+  status: SimpleProviderStatusSchema,
   isAvailable: z.boolean(),
   hasCapacity: z.boolean(),
   complexity: ComplexityLevelSchema,
