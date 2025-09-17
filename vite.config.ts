@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { analyzer } from 'rollup-plugin-analyzer';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  plugins: [react(), ...(mode === 'analyze' ? [analyzer({ summaryOnly: true })] : [])],
+export default defineConfig(() => ({
+  plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
