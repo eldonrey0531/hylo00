@@ -38,7 +38,7 @@
       "runtime": "edge"
     },
     "api/dns/verification.ts": {
-      "runtime": "edge"
+      "runtime": "nodejs18.x"
     },
     "api/deployment/dnsReadinessCheck.ts": {
       "runtime": "edge"

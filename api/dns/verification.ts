@@ -12,7 +12,8 @@ import {
   DNSVerificationResponseSchema,
 } from '../../src/api/types/dns';
 
-export const config = { runtime: 'edge' };
+// DNS verification uses serverless runtime to avoid import complications
+// (no export config = Node.js serverless function)
 
 /**
  * Handle DNS verification requests

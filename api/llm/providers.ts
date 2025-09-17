@@ -15,7 +15,7 @@ import type {
   SystemStatus,
   KeyStatus,
   ProviderHealth,
-} from '../types/index.js';
+} from '../../src/api/types/index.js';
 
 // =============================================================================
 // Edge Runtime Configuration
