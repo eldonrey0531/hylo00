@@ -24,41 +24,6 @@
     "QDRANT_API_KEY": "your-qdrant-api-key-here",
     "HUGGINGFACE_API_TOKEN": "your-huggingface-token-here"
   },
-  "functions": {
-    "api/llm/route.ts": {
-      "runtime": "edge"
-    },
-    "api/llm/health.ts": {
-      "runtime": "edge"
-    },
-    "api/llm/providers.ts": {
-      "runtime": "edge"
-    },
-    "api/health/system.ts": {
-      "runtime": "edge"
-    },
-    "api/dns/verification.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "api/deployment/dnsReadinessCheck.ts": {
-      "runtime": "edge"
-    },
-    "api/rag/ask-question.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "api/rag/generate-itinerary.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "api/rag/health.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "api/rag/session.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "api/rag/submit-form.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "build": {
     "env": {
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
