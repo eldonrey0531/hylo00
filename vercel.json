@@ -55,6 +55,5 @@
       ]
     }
   ],
-  "regions": ["iad1", "sfo1"],
   "framework": "vite"
 }
