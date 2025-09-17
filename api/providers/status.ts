@@ -1,4 +1,4 @@
-import { createProviderFactory } from '../providers/factory';
+import { createProviderFactory } from '../../src/api/providers/factory';
 
 export const config = { runtime: 'edge' };
 

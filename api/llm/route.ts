@@ -9,12 +9,12 @@
  * - Cost-conscious design with quota management
  */
 
-import type { LLMRequest, ProviderName } from '../types/index.js';
-import type { LangSmithConfig } from '../types/observability.js';
-import { ProviderFactory } from '../providers/factory.js';
-import { RoutingEngine } from '../utils/routing.js';
-import { FallbackHandler } from '../utils/fallback.js';
-import { createObservabilityService } from '../utils/observability.js';
+import type { LLMRequest, ProviderName } from '../../src/api/types/index.js';
+import type { LangSmithConfig } from '../../src/api/types/observability.js';
+import { ProviderFactory } from '../../src/api/providers/factory.js';
+import { RoutingEngine } from '../../src/api/utils/routing.js';
+import { FallbackHandler } from '../../src/api/utils/fallback.js';
+import { createObservabilityService } from '../../src/api/utils/observability.js';
 
 // =============================================================================
 // Edge Runtime Configuration
