@@ -4,50 +4,6 @@ export interface Destination {
   description?: string;
 }
 
-export interface ItineraryFormData {
-  destinations: string[];
-  startDate: string;
-  endDate: string;
-  travelGroup: string;
-  travelGroupOther?: string; // Added for custom travel group
-  groupSize: number;
-  budget: number;
-  budgetType: 'total' | 'per-person'; // Added to track budget type
-  currency: string;
-  interests: string[];
-  interestsOther?: string; // Added for custom interests
-  pace: 'slow' | 'moderate' | 'fast';
-  accommodation: 'hotel' | 'airbnb' | 'hostel' | 'resort' | 'camping';
-  transportation: string[];
-  dietary: string[];
-  accessibility: string[];
-  activities: string[];
-  vibe: string;
-  vibeOther?: string; // Added for custom vibe
-  preferences: {
-    flights: boolean;
-    hotels: boolean;
-    restaurants: boolean;
-    activities: boolean;
-    transportation: boolean;
-    shopping: boolean;
-    nightlife: boolean;
-    culture: boolean;
-    nature: boolean;
-    adventure: boolean;
-    relaxation: boolean;
-    photography: boolean;
-  };
-  preferenceDetails?: Record<string, string>; // Added to store preference details
-  budgetInfo?: {
-    // Added for processed budget information
-    amount: number;
-    type: 'total' | 'per-person';
-    currency: string;
-    perPerson: number;
-  };
-}
-
 export interface DayPlan {
   day: number;
   date: string;
