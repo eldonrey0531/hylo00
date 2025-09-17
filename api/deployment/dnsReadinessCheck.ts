@@ -183,20 +183,24 @@ export class DNSReadinessChecker {
 // =============================================================================
 
 export async function vercelDeploymentHook(): Promise<void> {
+  // Edge-compatible environment variable access
+  const getEnvVar = (key: string): string | undefined => {
+    return typeof process !== 'undefined' ? process.env[key] : undefined;
+  };
+
   // Only run for production deployments
-  if (process.env.VERCEL_ENV !== 'production') {
+  if (getEnvVar('VERCEL_ENV') !== 'production') {
     console.log('Skipping DNS readiness check for non-production deployment');
     return;
   }
 
   const context: DeploymentContext = {
-    deploymentId: process.env.VERCEL_DEPLOYMENT_ID || 'unknown',
-    branch: process.env.VERCEL_GIT_COMMIT_REF || 'unknown',
-    environment: (process.env.VERCEL_ENV as 'preview' | 'production') || 'preview',
-    domain: process.env.VERCEL_URL || 'unknown',
-    customDomains: process.env.VERCEL_CUSTOM_DOMAINS?.split(',') || [],
+    deploymentId: getEnvVar('VERCEL_DEPLOYMENT_ID') || 'unknown',
+    branch: getEnvVar('VERCEL_GIT_COMMIT_REF') || 'unknown',
+    environment: (getEnvVar('VERCEL_ENV') as 'preview' | 'production') || 'preview',
+    domain: getEnvVar('VERCEL_URL') || 'unknown',
+    customDomains: getEnvVar('VERCEL_CUSTOM_DOMAINS')?.split(',') || [],
   };
-
   const checker = new DNSReadinessChecker();
   const result = await checker.checkDeploymentReadiness(context);
 
@@ -209,7 +213,7 @@ export async function vercelDeploymentHook(): Promise<void> {
     });
 
     // In production, we might want to fail the deployment
-    if (process.env.VERCEL_ENV === 'production') {
+    if (getEnvVar('VERCEL_ENV') === 'production') {
       throw new Error(`DNS readiness check failed. Errors: ${result.errors.join(', ')}`);
     }
   }
