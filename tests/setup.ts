@@ -1,8 +1,16 @@
 // Test setup for Edge Runtime environment
-import { beforeAll, afterAll, vi } from 'vitest';
+import '@testing-library/jest-dom';
+import { beforeAll, afterAll, afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { setupServer } from 'msw/node';
 
-// Mock environment variables for testing
+// Setup MSW for API mocking
+export const server = setupServer();
+
 beforeAll(() => {
+  // Setup MSW - allow bypass for contract tests (endpoints don't exist yet)
+  server.listen({ onUnhandledRequest: 'bypass' });
+
   // Mock Edge Runtime globals
   global.Request = Request;
   global.Response = Response;
@@ -19,8 +27,43 @@ beforeAll(() => {
   process.env.MAX_FALLBACK_ATTEMPTS = '3';
   process.env.HEALTH_CHECK_INTERVAL_MS = '30000';
   process.env.PROVIDER_TIMEOUT_MS = '10000';
+
+  // Mock window.matchMedia for responsive design tests
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+
+  // Mock IntersectionObserver for lazy loading components
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+
+  // Mock ResizeObserver for responsive components
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+});
+
+afterEach(() => {
+  server.resetHandlers();
+  cleanup();
 });
 
 afterAll(() => {
+  server.close();
   vi.clearAllMocks();
 });

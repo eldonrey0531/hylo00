@@ -7,47 +7,172 @@
 
 ```
 1. Load plan.md from feature directory
-   → Tech stack: TypeScript 5.x, React 18, LangChain.js, Vite, Vercel Edge Runtime
-   → Structure: Web app (frontend + backend edge functions)
+   → Extract: TypeScript 5.x, LangChain.js, Vite, Vercel Edge Runtime, LangSmith
 2. Load design documents:
-   → data-model.md: LLMProvider, RoutingRule, APIKeyPool, RequestContext entities
-   → contracts/: api.yaml with 4 endpoints, api.test.ts with contract tests
-   → research.md: LangChain.js integration patterns, provider rotation strategy
+   → data-model.md: LLMProvider, RoutingRule, APIKeyPool entities
+   → contracts/api.yaml: /llm/route, /llm/providers, /llm/health endpoints
+   → research.md: Query complexity classification, API key rotation
+   → quickstart.md: Integration scenarios and test data
 3. Generate tasks by category:
-   → Setup: Edge functions, LangChain.js dependencies, environment
-   → Tests: Contract tests (4 endpoints), integration tests (7 scenarios)
-   → Core: Provider abstractions, routing engine, observability
-   → Integration: LangSmith tracing, API key management
-   → Polish: Error handling, performance optimization
+   → Setup: TypeScript config, LangChain.js dependencies, Edge Runtime setup
+   → Tests: Contract tests for 3 API endpoints, integration scenarios
+   → Core: Provider abstractions, routing engine, fallback chains
+   → Integration: LangSmith tracing, provider health monitoring
+   → Polish: Performance optimization, error handling, documentation
 4. Apply task rules:
-   → Provider modules = [P] (different files)
-   → Routing engine = sequential (shared state)
-   → Contract tests = [P] (independent endpoints)
-5. TDD order: Tests before implementation
-6. Dependencies: Models → Services → Edge Functions → Integration
+   → Different files/providers = mark [P] for parallel
+   → Shared routing files = sequential
+   → Contract tests before implementation (TDD)
+5. Dependencies: Setup → Tests → Core → Integration → Polish
 ```
 
 ## Format: `[ID] [P?] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- Include exact file paths in descriptions
-
-## Path Conventions
-
-Based on plan.md web app structure:
-
-- **Backend**: `api/` directory for Vercel Edge Functions
-- **Frontend**: `src/` directory for React components
-- **Types**: Shared TypeScript interfaces
-- **Tests**: `tests/` directory with contract/integration subdirs
+- All file paths are absolute from repository root
 
 ## Phase 3.1: Setup
 
-- [ ] T001 Create API directory structure: `api/llm/`, `api/providers/`, `api/utils/`
-- [ ] T002 Install LangChain.js dependencies: `@langchain/google-genai`, `@langchain/groq`, `langsmith`
-- [ ] T003 [P] Configure TypeScript for Edge Runtime in `api/tsconfig.json`
-- [ ] T004 [P] Setup environment variables template in `.env.example`
-- [ ] T005 [P] Configure Vitest for Edge Functions testing in `vitest.config.ts`
+- [ ] T001 Install LangChain.js dependencies (@langchain/core@^0.3.0, @langchain/google-genai, @langchain/groq, langsmith) in package.json
+- [ ] T002 [P] Configure TypeScript for Edge Runtime compatibility in api/tsconfig.json
+- [ ] T003 [P] Set up environment variables template with LLM provider API keys in .env.example
+- [ ] T004 [P] Configure Vercel deployment with Edge Functions in vercel.json
+
+## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
+
+**CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
+
+- [ ] T005 [P] Contract test POST /api/llm/route in tests/contract/llm-route.test.ts
+- [ ] T006 [P] Contract test GET /api/llm/providers in tests/contract/providers-status.test.ts
+- [ ] T007 [P] Contract test GET /api/llm/health in tests/contract/health-monitoring.test.ts
+- [ ] T008 [P] Integration test simple routing scenario in tests/integration/simple-routing.test.ts
+- [ ] T009 [P] Integration test fallback chain scenario in tests/integration/fallback-chain.test.ts
+- [ ] T010 [P] Integration test quota management scenario in tests/integration/quota-management.test.ts
+
+## Phase 3.3: Core Implementation (ONLY after tests are failing)
+
+### Provider Abstractions
+
+- [ ] T011 [P] Cerebras provider implementation in api/providers/cerebras.ts
+- [ ] T012 [P] Google Gemini provider implementation in api/providers/gemini.ts
+- [ ] T013 [P] Groq provider implementation in api/providers/groq.ts
+- [ ] T014 Provider factory and type definitions in api/providers/factory.ts
+
+### Core Types and Models
+
+- [ ] T015 [P] LLMProvider interface and types in api/types/providers.ts
+- [ ] T016 [P] RoutingRule interface and types in api/types/requests.ts
+- [ ] T017 [P] APIKeyPool interface and observability types in api/types/observability.ts
+
+### Routing Engine
+
+- [ ] T018 Query complexity analyzer in api/utils/routing.ts
+- [ ] T019 Fallback chain manager in api/utils/fallback.ts
+- [ ] T020 LangSmith observability integration in api/utils/observability.ts
+
+### API Endpoints
+
+- [ ] T021 POST /api/llm/route endpoint implementation in api/llm/route.ts
+- [ ] T022 GET /api/llm/providers status endpoint in api/llm/providers.ts
+- [ ] T023 GET /api/llm/health monitoring endpoint in api/llm/health.ts
+
+## Phase 3.4: Integration
+
+- [ ] T024 LangChain.js provider integration with routing engine
+- [ ] T025 API key rotation mechanism for quota management
+- [ ] T026 Provider health monitoring with 30-second intervals
+- [ ] T027 LangSmith tracing for all LLM operations
+- [ ] T028 Error handling and graceful degradation patterns
+
+## Phase 3.5: Polish
+
+- [ ] T029 [P] Unit tests for complexity classification in tests/unit/routing-complexity.test.ts
+- [ ] T030 [P] Unit tests for fallback logic in tests/unit/fallback-chains.test.ts
+- [ ] T031 [P] Performance tests for <150ms cold start requirement in tests/performance/edge-function.test.ts
+- [ ] T032 [P] Security audit for API key handling in tests/security/api-key-security.test.ts
+- [ ] T033 [P] Update API documentation in docs/langchain-implementation-complete.md
+- [ ] T034 Code cleanup and TypeScript strict mode compliance
+- [ ] T035 Run comprehensive validation from quickstart.md scenarios
+
+## Dependencies
+
+- Setup (T001-T004) before everything
+- Contract tests (T005-T010) before implementation (T011-T028)
+- Provider abstractions (T011-T014) before routing engine (T018-T020)
+- Core types (T015-T017) before routing engine (T018-T020)
+- Routing engine (T018-T020) before API endpoints (T021-T023)
+- Core implementation (T011-T023) before integration (T024-T028)
+- Everything before polish (T029-T035)
+
+## Parallel Execution Examples
+
+### Phase 3.1 (Setup):
+
+```bash
+# T002, T003, T004 can run in parallel:
+Task: "Configure TypeScript for Edge Runtime compatibility in api/tsconfig.json"
+Task: "Set up environment variables template with LLM provider API keys in .env.example"
+Task: "Configure Vercel deployment with Edge Functions in vercel.json"
+```
+
+### Phase 3.2 (Contract Tests):
+
+```bash
+# T005-T010 can all run in parallel:
+Task: "Contract test POST /api/llm/route in tests/contract/llm-route.test.ts"
+Task: "Contract test GET /api/llm/providers in tests/contract/providers-status.test.ts"
+Task: "Contract test GET /api/llm/health in tests/contract/health-monitoring.test.ts"
+Task: "Integration test simple routing scenario in tests/integration/simple-routing.test.ts"
+Task: "Integration test fallback chain scenario in tests/integration/fallback-chain.test.ts"
+Task: "Integration test quota management scenario in tests/integration/quota-management.test.ts"
+```
+
+### Phase 3.3 (Provider Implementations):
+
+```bash
+# T011-T013 can run in parallel (different provider files):
+Task: "Cerebras provider implementation in api/providers/cerebras.ts"
+Task: "Google Gemini provider implementation in api/providers/gemini.ts"
+Task: "Groq provider implementation in api/providers/groq.ts"
+
+# T015-T017 can run in parallel (different type files):
+Task: "LLMProvider interface and types in api/types/providers.ts"
+Task: "RoutingRule interface and types in api/types/requests.ts"
+Task: "APIKeyPool interface and observability types in api/types/observability.ts"
+```
+
+### Phase 3.5 (Polish):
+
+```bash
+# T029-T033 can run in parallel (different test files):
+Task: "Unit tests for complexity classification in tests/unit/routing-complexity.test.ts"
+Task: "Unit tests for fallback logic in tests/unit/fallback-chains.test.ts"
+Task: "Performance tests for <150ms cold start requirement in tests/performance/edge-function.test.ts"
+Task: "Security audit for API key handling in tests/security/api-key-security.test.ts"
+Task: "Update API documentation in docs/langchain-implementation-complete.md"
+```
+
+## Validation Checklist
+
+- [ ] All API endpoints from contracts/api.yaml have contract tests
+- [ ] All entities from data-model.md have implementations
+- [ ] All integration scenarios from quickstart.md have tests
+- [ ] All technical decisions from research.md are implemented
+- [ ] Performance requirements from plan.md are validated
+- [ ] Constitutional requirements for Edge-first architecture are met
+- [ ] Multi-LLM resilience with fallback chains is functional
+- [ ] Observable AI operations with LangSmith tracing is active
+
+## Post-Implementation
+
+After T035 completion:
+
+1. Run full test suite: `npm run test`
+2. Validate contract compliance: `npm run test:contract`
+3. Execute quickstart scenarios: Follow quickstart.md validation steps
+4. Deploy to Vercel staging: `vercel --env staging`
+5. Conduct end-to-end testing with real LLM providers
+6. Monitor performance and error rates in production
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 
