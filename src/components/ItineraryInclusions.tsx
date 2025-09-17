@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import React from 'react';
+
+interface InclusionPreferencesMap {
+  [inclusionId: string]: Record<string, any> | undefined;
+}
 
 interface ItineraryInclusionsProps {
   selectedInclusions: string[];
   onSelectionChange: (inclusions: string[]) => void;
+  otherText: string;
+  onOtherTextChange: (value: string) => void;
+  inclusionPreferences: InclusionPreferencesMap;
+  onInclusionPreferencesChange: (prefs: InclusionPreferencesMap) => void;
+  showOther?: boolean;
+  onToggleOther?: (visible: boolean) => void;
 }
 
 const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
   selectedInclusions,
   onSelectionChange,
+  otherText,
+  onOtherTextChange,
+  inclusionPreferences,
+  onInclusionPreferencesChange,
+  showOther,
+  onToggleOther,
 }) => {
-  const [showOtherInput, setShowOtherInput] = useState(false);
-  const [otherText, setOtherText] = useState('');
-  const [inclusionPreferences, setInclusionPreferences] = useState<
-    Record<string, any>
-  >({});
+  const derivedShowOther =
+    typeof showOther === 'boolean' ? showOther : selectedInclusions.includes('other');
 
   const inclusionOptions = [
     { id: 'flights', label: 'Flights', emoji: '✈️' },
@@ -31,50 +43,42 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
 
   const toggleInclusion = (inclusionId: string) => {
     if (inclusionId === 'other') {
-      setShowOtherInput(!showOtherInput);
-      if (!showOtherInput) {
+      const willShow = !derivedShowOther;
+      if (willShow) {
         if (!selectedInclusions.includes('other')) {
           onSelectionChange([...selectedInclusions, 'other']);
         }
       } else {
         onSelectionChange(selectedInclusions.filter((id) => id !== 'other'));
-        setOtherText('');
+        onOtherTextChange('');
       }
+      onToggleOther?.(willShow);
+      return;
+    }
+    const isCurrentlySelected = selectedInclusions.includes(inclusionId);
+    if (isCurrentlySelected) {
+      onSelectionChange(selectedInclusions.filter((id) => id !== inclusionId));
+      const newPreferences = { ...inclusionPreferences };
+      delete newPreferences[inclusionId];
+      onInclusionPreferencesChange(newPreferences);
     } else {
-      const isCurrentlySelected = selectedInclusions.includes(inclusionId);
-
-      if (isCurrentlySelected) {
-        // Remove from selection
-        onSelectionChange(
-          selectedInclusions.filter((id) => id !== inclusionId)
-        );
-        // Remove preferences for this inclusion
-        const newPreferences = { ...inclusionPreferences };
-        delete newPreferences[inclusionId];
-        setInclusionPreferences(newPreferences);
-      } else {
-        // Add to selection
-        onSelectionChange([...selectedInclusions, inclusionId]);
-      }
+      onSelectionChange([...selectedInclusions, inclusionId]);
     }
   };
 
   const updatePreference = (inclusionId: string, key: string, value: any) => {
-    setInclusionPreferences({
+    onInclusionPreferencesChange({
       ...inclusionPreferences,
       [inclusionId]: {
-        ...inclusionPreferences[inclusionId],
+        ...(inclusionPreferences[inclusionId] || {}),
         [key]: value,
       },
     });
   };
 
-  const toggleArrayPreference = (
-    inclusionId: string,
-    key: string,
-    value: string
-  ) => {
-    const currentArray = inclusionPreferences[inclusionId]?.[key] || [];
+  const toggleArrayPreference = (inclusionId: string, key: string, value: string) => {
+    const current = inclusionPreferences[inclusionId]?.[key];
+    const currentArray = Array.isArray(current) ? current : [];
     const newArray = currentArray.includes(value)
       ? currentArray.filter((item: string) => item !== value)
       : [...currentArray, value];
@@ -98,9 +102,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">✈️</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Flight preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Flight preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -113,15 +115,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 <input
                   type="text"
                   placeholder="Example: SFO, London area airports"
-                  value={
-                    inclusionPreferences[inclusionId]?.departureAirport || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.departureAirport || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'departureAirport',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'departureAirport', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] font-raleway font-bold"
                 />
@@ -133,28 +129,21 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                   (Optional) Preferred cabin class
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {[
-                    'Economy $',
-                    'Premium Economy $$',
-                    'Business $$$',
-                    'First $$$$',
-                  ].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() =>
-                        toggleArrayPreference(inclusionId, 'cabinClass', option)
-                      }
-                      className={`px-4 py-2 rounded-[10px] border-2 transition-all duration-200 font-bold font-raleway text-sm ${
-                        (
-                          inclusionPreferences[inclusionId]?.cabinClass || []
-                        ).includes(option)
-                          ? 'border-primary bg-primary text-white'
-                          : 'border-primary bg-[#ece8de] text-primary hover:bg-primary hover:text-white'
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
+                  {['Economy $', 'Premium Economy $$', 'Business $$$', 'First $$$$'].map(
+                    (option) => (
+                      <button
+                        key={option}
+                        onClick={() => toggleArrayPreference(inclusionId, 'cabinClass', option)}
+                        className={`px-4 py-2 rounded-[10px] border-2 transition-all duration-200 font-bold font-raleway text-sm ${
+                          (inclusionPreferences[inclusionId]?.cabinClass || []).includes(option)
+                            ? 'border-primary bg-primary text-white'
+                            : 'border-primary bg-[#ece8de] text-primary hover:bg-primary hover:text-white'
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -165,15 +154,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: I prefer Delta or United, 1 layover or less"
-                  value={
-                    inclusionPreferences[inclusionId]?.flightPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.flightPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'flightPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'flightPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={3}
@@ -194,9 +177,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🏨</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Accommodation preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Accommodation preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -224,17 +205,12 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                     <button
                       key={option}
                       onClick={() =>
-                        toggleArrayPreference(
-                          inclusionId,
-                          'accommodationTypes',
-                          option
-                        )
+                        toggleArrayPreference(inclusionId, 'accommodationTypes', option)
                       }
                       className={`px-4 py-3 rounded-[10px] border-2 text-left transition-all duration-200 font-bold font-raleway text-sm ${
-                        (
-                          inclusionPreferences[inclusionId]
-                            ?.accommodationTypes || []
-                        ).includes(option)
+                        (inclusionPreferences[inclusionId]?.accommodationTypes || []).includes(
+                          option
+                        )
                           ? 'border-primary bg-primary text-white'
                           : 'border-primary bg-[#ece8de] text-primary hover:bg-primary hover:text-white'
                       }`}
@@ -245,22 +221,15 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </div>
 
                 {/* Other accommodation type input */}
-                {(
-                  inclusionPreferences[inclusionId]?.accommodationTypes || []
-                ).includes('✨ Other') && (
+                {(inclusionPreferences[inclusionId]?.accommodationTypes || []).includes(
+                  '✨ Other'
+                ) && (
                   <div className="mt-4 bg-primary/10 rounded-[10px] p-4 border border-primary/20">
                     <textarea
                       placeholder="Tell us more about your preferred accommodations"
-                      value={
-                        inclusionPreferences[inclusionId]
-                          ?.otherAccommodationType || ''
-                      }
+                      value={inclusionPreferences[inclusionId]?.otherAccommodationType || ''}
                       onChange={(e) =>
-                        updatePreference(
-                          inclusionId,
-                          'otherAccommodationType',
-                          e.target.value
-                        )
+                        updatePreference(inclusionId, 'otherAccommodationType', e.target.value)
                       }
                       className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                       rows={3}
@@ -272,21 +241,12 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               {/* Special Requests */}
               <div className="bg-[#b0c29b]">
                 <label className="block text-primary font-bold mb-2 font-raleway text-base">
-                  (Optional) Special accommodation requests or preferred hotel
-                  brands
+                  (Optional) Special accommodation requests or preferred hotel brands
                 </label>
                 <textarea
                   placeholder="Example: We want 2 separate rooms, We prefer Hyatt or Marriott hotels"
-                  value={
-                    inclusionPreferences[inclusionId]?.specialRequests || ''
-                  }
-                  onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'specialRequests',
-                      e.target.value
-                    )
-                  }
+                  value={inclusionPreferences[inclusionId]?.specialRequests || ''}
+                  onChange={(e) => updatePreference(inclusionId, 'specialRequests', e.target.value)}
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={3}
                 />
@@ -306,9 +266,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🚗</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Rental car preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Rental car preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -331,17 +289,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                   ].map((option) => (
                     <button
                       key={option}
-                      onClick={() =>
-                        toggleArrayPreference(
-                          inclusionId,
-                          'vehicleTypes',
-                          option
-                        )
-                      }
+                      onClick={() => toggleArrayPreference(inclusionId, 'vehicleTypes', option)}
                       className={`px-4 py-3 rounded-[10px] border-2 text-left transition-all duration-200 font-bold font-raleway text-sm ${
-                        (
-                          inclusionPreferences[inclusionId]?.vehicleTypes || []
-                        ).includes(option)
+                        (inclusionPreferences[inclusionId]?.vehicleTypes || []).includes(option)
                           ? 'border-primary bg-primary text-white'
                           : 'border-primary bg-[#ece8de] text-primary hover:bg-primary hover:text-white'
                       }`}
@@ -359,15 +309,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: We need seats for 6 people, We prefer Budget or Avis"
-                  value={
-                    inclusionPreferences[inclusionId]?.specialRequirements || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.specialRequirements || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'specialRequirements',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'specialRequirements', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={3}
@@ -388,29 +332,20 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🛶</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Activities & Tours preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Activities & Tours preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
             <div className="px-6 pb-6 pt-4 space-y-4">
               <div className="bg-[#b0c29b]">
                 <label className="block text-primary font-bold mb-2 font-raleway text-base">
-                  (Optional) Help us understand the types of activities and
-                  tours to include
+                  (Optional) Help us understand the types of activities and tours to include
                 </label>
                 <textarea
                   placeholder="Example: I love history and culture, I want to bar hop in Barcelona"
-                  value={
-                    inclusionPreferences[inclusionId]?.activityPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.activityPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'activityPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'activityPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -431,9 +366,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🍽️</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Dining preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Dining preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -445,15 +378,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: We love street food, we want fine dining for dinner every night"
-                  value={
-                    inclusionPreferences[inclusionId]?.diningPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.diningPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'diningPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'diningPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -474,30 +401,20 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🪇</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Entertainment preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Entertainment preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
             <div className="px-6 pb-6 pt-4 space-y-4">
               <div className="bg-[#b0c29b]">
                 <label className="block text-primary font-bold mb-2 font-raleway text-base">
-                  (Optional) Help us understand the types of entertainment to
-                  include
+                  (Optional) Help us understand the types of entertainment to include
                 </label>
                 <textarea
                   placeholder="Example: We love live music, I want to attend a local cultural festival"
-                  value={
-                    inclusionPreferences[inclusionId]
-                      ?.entertainmentPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.entertainmentPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'entertainmentPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'entertainmentPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -518,9 +435,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🌲</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Nature preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Nature preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -531,15 +446,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: We love hiking and biking, my kids love to swim"
-                  value={
-                    inclusionPreferences[inclusionId]?.naturePreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.naturePreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'naturePreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'naturePreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -560,9 +469,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🚆</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Train Tickets preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Train Tickets preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -573,15 +480,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: We want to take a bullet train between Tokyo and Kyoto, I want to experience a sleeper train"
-                  value={
-                    inclusionPreferences[inclusionId]?.trainPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.trainPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'trainPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'trainPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -602,9 +503,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">🛳️</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                Cruise preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">Cruise preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -615,15 +514,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="Example: Royal Caribbean departing from Florida, Balcony Suite"
-                  value={
-                    inclusionPreferences[inclusionId]?.cruisePreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.cruisePreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'cruisePreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'cruisePreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -644,9 +537,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
               <div className="bg-[#406170] p-2 rounded-lg">
                 <span className="text-xl">{option?.emoji || '✨'}</span>
               </div>
-              <h4 className="text-xl font-bold font-raleway">
-                {option?.label} preferences
-              </h4>
+              <h4 className="text-xl font-bold font-raleway">{option?.label} preferences</h4>
             </div>
 
             {/* Content section with #b0c29b background */}
@@ -657,15 +548,9 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
                 </label>
                 <textarea
                   placeholder="What else should we include in your itinerary?"
-                  value={
-                    inclusionPreferences[inclusionId]?.generalPreferences || ''
-                  }
+                  value={inclusionPreferences[inclusionId]?.generalPreferences || ''}
                   onChange={(e) =>
-                    updatePreference(
-                      inclusionId,
-                      'generalPreferences',
-                      e.target.value
-                    )
+                    updatePreference(inclusionId, 'generalPreferences', e.target.value)
                   }
                   className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
                   rows={4}
@@ -685,9 +570,7 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
           <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
             What Should We Include in Your Itinerary?
           </h3>
-          <p className="text-primary font-bold font-raleway text-xs">
-            Select all that apply
-          </p>
+          <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -721,17 +604,15 @@ const ItineraryInclusions: React.FC<ItineraryInclusionsProps> = ({
         </div>
 
         {/* Other Input Field - Reduced spacing */}
-        {showOtherInput && (
+        {derivedShowOther && (
           <div className="bg-primary/10 rounded-[10px] p-4 border border-primary/20 mt-4">
             <div className="flex items-center space-x-2 mb-3">
               <span className="text-xl">✨</span>
-              <label className="block text-primary font-bold text-base font-raleway">
-                Other
-              </label>
+              <label className="block text-primary font-bold text-base font-raleway">Other</label>
             </div>
             <textarea
               value={otherText}
-              onChange={(e) => setOtherText(e.target.value)}
+              onChange={(e) => onOtherTextChange(e.target.value)}
               placeholder="What else should we include in your itinerary?"
               className="w-full px-4 py-3 border-3 border-[#406170] rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
               rows={3}
