@@ -286,6 +286,7 @@ export function createCerebrasProvider(env: Record<string, string | undefined>):
   // Create a minimal config that matches the CerebrasConfig interface
   const config: CerebrasConfig = {
     provider: 'cerebras',
+    apiKeyName: 'CEREBRAS_API_KEY',
     modelName: env.CEREBRAS_MODEL || 'llama3.1-70b',
     endpoint: env.CEREBRAS_ENDPOINT || 'https://api.cerebras.ai/v1/chat/completions',
     enabled: env.CEREBRAS_ENABLED === 'true',

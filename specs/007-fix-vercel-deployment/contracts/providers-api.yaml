@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Hylo Travel AI - Provider Management API
+  version: 1.0.0
+  description: API contracts for LLM provider management and status checking
+
+servers:
+  - url: https://hylo-travel-ai.vercel.app/api
+    description: Production server
+
+paths:
+  /api/providers:
+    get:
+      summary: Get status of all LLM providers
+      operationId: getProviderStatuses
+      responses:
+        '200':
+          description: Successful response with provider statuses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderStatus'
+                  timestamp:
+                    type: string
+                    format: date-time
+                required:
+                  - providers
+                  - timestamp
+
+  /api/providers/{providerId}/status:
+    get:
+      summary: Get status of specific LLM provider
+      operationId: getProviderStatus
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [cerebras, gemini, groq]
+      responses:
+        '200':
+          description: Successful response with provider status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderStatus'
+        '404':
+          description: Provider not found
+
+components:
+  schemas:
+    ProviderStatus:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [cerebras, gemini, groq]
+        status:
+          type: string
+          enum: [available, unavailable, error, rate_limited]
+        lastChecked:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+      required:
+        - name
+        - status
+        - lastChecked

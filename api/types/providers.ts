@@ -17,6 +17,7 @@ import type { ProviderName, LLMOptions, ProviderConfig, TokenUsage, ErrorInfo } 
  */
 export interface CerebrasConfig extends ProviderConfig {
   readonly provider: 'cerebras';
+  readonly apiKeyName: string;
   readonly modelName: string;
   readonly endpoint: string;
   readonly features: {
@@ -114,6 +115,7 @@ export interface CerebrasStreamChoice {
  */
 export interface GeminiConfig extends ProviderConfig {
   readonly provider: 'gemini';
+  readonly apiKeyName: string;
   readonly modelName: string;
   readonly projectId?: string;
   readonly location?: string;
@@ -256,6 +258,7 @@ export interface GeminiUsageMetadata {
  */
 export interface GroqConfig extends ProviderConfig {
   readonly provider: 'groq';
+  readonly apiKeyName: string;
   readonly modelName: string;
   readonly features: {
     readonly supportsStreaming: boolean;

@@ -289,6 +289,7 @@ export function createGeminiProvider(env: Record<string, string | undefined>): G
   // Create a minimal config that matches the GeminiConfig interface
   const config: GeminiConfig = {
     provider: 'gemini',
+    apiKeyName: 'GEMINI_API_KEY',
     modelName: env.GEMINI_MODEL || 'gemini-1.5-flash',
     projectId: env.GEMINI_PROJECT_ID || '',
     location: env.GEMINI_LOCATION || 'us-central1',

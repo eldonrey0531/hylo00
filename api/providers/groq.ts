@@ -317,6 +317,7 @@ export function createGroqProvider(env: Record<string, string | undefined>): Gro
       failoverThreshold: parseFloat(env.GROQ_FAILOVER_THRESHOLD || '0.9'),
     },
     provider: 'groq',
+    apiKeyName: 'GROQ_API_KEY',
     modelName: env.GROQ_MODEL || 'llama-3.1-70b-versatile',
     features: {
       supportsStreaming: true,
