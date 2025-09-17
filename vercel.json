@@ -19,24 +19,24 @@
       "runtime": "edge"
     }
   },
-  "env": [
-    "GROQ_API_KEY_1",
-    "GROQ_API_KEY_2",
-    "GROQ_API_KEY_3",
-    "CEREBRAS_API_KEY_1",
-    "CEREBRAS_API_KEY_2",
-    "CEREBRAS_API_KEY_3",
-    "GOOGLE_API_KEY_1",
-    "GOOGLE_API_KEY_2",
-    "GOOGLE_API_KEY_3",
-    "LANGSMITH_API_KEY",
-    "LANGSMITH_TRACE_URL",
-    "DNS_VERIFICATION_TIMEOUT",
-    "HEALTH_CHECK_INTERVAL",
-    "PROVIDER_CACHE_TTL",
-    "MAX_RETRIES",
-    "FALLBACK_TIMEOUT"
-  ],
+  "env": {
+    "GROQ_API_KEY_1": "@groq-api-key-1",
+    "GROQ_API_KEY_2": "@groq-api-key-2",
+    "GROQ_API_KEY_3": "@groq-api-key-3",
+    "CEREBRAS_API_KEY_1": "@cerebras-api-key-1",
+    "CEREBRAS_API_KEY_2": "@cerebras-api-key-2",
+    "CEREBRAS_API_KEY_3": "@cerebras-api-key-3",
+    "GOOGLE_API_KEY_1": "@google-api-key-1",
+    "GOOGLE_API_KEY_2": "@google-api-key-2",
+    "GOOGLE_API_KEY_3": "@google-api-key-3",
+    "LANGSMITH_API_KEY": "@langsmith-api-key",
+    "LANGSMITH_TRACE_URL": "@langsmith-trace-url",
+    "DNS_VERIFICATION_TIMEOUT": "30000",
+    "HEALTH_CHECK_INTERVAL": "300000",
+    "PROVIDER_CACHE_TTL": "300000",
+    "MAX_RETRIES": "3",
+    "FALLBACK_TIMEOUT": "10000"
+  },
   "build": {
     "env": {
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
