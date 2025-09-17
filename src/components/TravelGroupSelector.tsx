@@ -3,13 +3,17 @@ import React, { useState } from 'react';
 interface TravelGroupSelectorProps {
   selectedGroups: string[];
   onSelectionChange: (groups: string[]) => void;
+  otherText?: string;
+  onOtherTextChange?: (text: string) => void;
 }
 
 const TravelGroupSelector: React.FC<TravelGroupSelectorProps> = ({
   selectedGroups,
   onSelectionChange,
+  otherText = '',
+  onOtherTextChange,
 }) => {
-  const [otherText, setOtherText] = useState('');
+  const [localOtherText, setLocalOtherText] = useState(otherText);
   const [showOtherInput, setShowOtherInput] = useState(false);
 
   const groupOptions = [
@@ -32,7 +36,8 @@ const TravelGroupSelector: React.FC<TravelGroupSelectorProps> = ({
         }
       } else {
         onSelectionChange(selectedGroups.filter((id) => id !== 'other'));
-        setOtherText('');
+        setLocalOtherText('');
+        onOtherTextChange?.('');
       }
     } else {
       const newSelection = selectedGroups.includes(groupId)
@@ -42,15 +47,18 @@ const TravelGroupSelector: React.FC<TravelGroupSelectorProps> = ({
     }
   };
 
+  const handleOtherTextChange = (text: string) => {
+    setLocalOtherText(text);
+    onOtherTextChange?.(text);
+  };
+
   return (
     <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200 space-y-6">
       <div>
         <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
           TRAVEL GROUP
         </h3>
-        <p className="text-primary font-bold font-raleway text-xs">
-          Select all that apply
-        </p>
+        <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -88,16 +96,14 @@ const TravelGroupSelector: React.FC<TravelGroupSelectorProps> = ({
         <div className="bg-primary/10 rounded-[10px] p-4 border border-primary/20">
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-xl">✨</span>
-            <label className="block text-primary font-bold text-base font-raleway">
-              Other
-            </label>
+            <label className="block text-primary font-bold text-base font-raleway">Other</label>
           </div>
           <label className="block text-primary font-bold mb-3 text-sm font-raleway">
             Tell us more about your travel group
           </label>
           <textarea
-            value={otherText}
-            onChange={(e) => setOtherText(e.target.value)}
+            value={localOtherText}
+            onChange={(e) => handleOtherTextChange(e.target.value)}
             placeholder="Example: Group dynamics, how you know each other, why you're traveling together, etc."
             className="w-full px-4 py-3 border-2 border-gray-300 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold"
             rows={3}

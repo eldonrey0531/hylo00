@@ -116,21 +116,14 @@ const currencySymbols: Record<Currency, string> = {
   AUD: 'A$',
 };
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
-  formData,
-  onFormChange,
-}) => {
+const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChange }) => {
   // Local state
-  const [localFlexibleDates, setLocalFlexibleDates] = useState(
-    Boolean(formData.flexibleDates)
-  );
+  const [localFlexibleDates, setLocalFlexibleDates] = useState(Boolean(formData.flexibleDates));
   const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('total');
   const [adults, setAdults] = useState(formData.adults || 2);
   const [children, setChildren] = useState(formData.children || 0);
-  const [childrenAges, setChildrenAges] = useState<number[]>(
-    formData.childrenAges || []
-  );
+  const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
 
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
@@ -162,9 +155,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
   const adjustAdults = useCallback(
     (increment: boolean) => {
-      const newValue = increment
-        ? adults + 1
-        : Math.max(MIN_ADULTS, adults - 1);
+      const newValue = increment ? adults + 1 : Math.max(MIN_ADULTS, adults - 1);
       setAdults(newValue);
       handleInputChange('adults', newValue);
     },
@@ -173,9 +164,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
   const adjustChildren = useCallback(
     (increment: boolean) => {
-      const newChildrenCount = increment
-        ? children + 1
-        : Math.max(MIN_CHILDREN, children - 1);
+      const newChildrenCount = increment ? children + 1 : Math.max(MIN_CHILDREN, children - 1);
 
       // Adjust children ages array
       let newChildrenAges = [...childrenAges];
@@ -229,9 +218,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
             !dateUtils.isReturnDateValid(formData.departDate, formattedDate)
           ) {
             // Invalid return date - clear it and show user feedback
-            console.warn(
-              'Return date must be at least one day after departure date'
-            );
+            console.warn('Return date must be at least one day after departure date');
             handleInputChange('returnDate', '');
             return;
           }
@@ -239,9 +226,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
         // If we're updating departure date and there's already a return date, validate it
         if (field === 'departDate' && formData.returnDate) {
-          if (
-            !dateUtils.isReturnDateValid(formattedDate, formData.returnDate)
-          ) {
+          if (!dateUtils.isReturnDateValid(formattedDate, formData.returnDate)) {
             // Clear the return date if it becomes invalid
             onFormChange({
               ...formData,
@@ -309,14 +294,9 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
       if (formatted.length === 8) {
         // Special validation for return date
         if (field === 'returnDate') {
-          if (
-            formData.departDate &&
-            !dateUtils.isReturnDateValid(formData.departDate, formatted)
-          ) {
+          if (formData.departDate && !dateUtils.isReturnDateValid(formData.departDate, formatted)) {
             // Invalid return date - don't update
-            console.warn(
-              'Return date must be at least one day after departure date'
-            );
+            console.warn('Return date must be at least one day after departure date');
             return;
           }
         }
@@ -379,10 +359,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
   }, [formData.currency]);
 
   const totalTravelers = adults + children;
-  const totalDays = dateUtils.calculateDaysBetween(
-    formData.departDate,
-    formData.returnDate
-  );
+  const totalDays = dateUtils.calculateDaysBetween(formData.departDate, formData.returnDate);
   const isFlexibleDatesEnabled = localFlexibleDates;
 
   const getBudgetDisplay = useCallback(() => {
@@ -439,18 +416,14 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-primary mb-2 font-bold font-raleway text-base">
-                Depart
+                {isFlexibleDatesEnabled ? 'Trip Start (flexible)' : 'Depart'}
               </label>
-              <div
-                className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}
-              >
+              <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
                 <input
                   type="text"
                   placeholder="mm/dd/yy"
                   value={formData.departDate || ''}
-                  onChange={(e) =>
-                    handleManualDateInput('departDate', e.target.value)
-                  }
+                  onChange={(e) => handleManualDateInput('departDate', e.target.value)}
                   maxLength={8}
                   className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white"
                   aria-label="Departure date"
@@ -459,12 +432,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                   ref={departDateRef}
                   type="date"
                   min={dateUtils.getTodayString()}
-                  value={dateUtils.convertToInputFormat(
-                    formData.departDate || ''
-                  )}
-                  onChange={(e) =>
-                    handleDateChange('departDate', e.target.value)
-                  }
+                  value={dateUtils.convertToInputFormat(formData.departDate || '')}
+                  onChange={(e) => handleDateChange('departDate', e.target.value)}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   aria-hidden="true"
                 />
@@ -481,18 +450,14 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
             <div>
               <label className="block text-primary mb-2 font-bold font-raleway text-base">
-                Return
+                {isFlexibleDatesEnabled ? 'Duration' : 'Return'}
               </label>
-              <div
-                className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}
-              >
+              <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
                 <input
                   type="text"
                   placeholder="mm/dd/yy"
                   value={formData.returnDate || ''}
-                  onChange={(e) =>
-                    handleManualDateInput('returnDate', e.target.value)
-                  }
+                  onChange={(e) => handleManualDateInput('returnDate', e.target.value)}
                   maxLength={8}
                   disabled={isFlexibleDatesEnabled}
                   className={`w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base ${
@@ -507,22 +472,15 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                   ref={returnDateRef}
                   type="date"
                   min={getMinReturnDate()}
-                  value={dateUtils.convertToInputFormat(
-                    formData.returnDate || ''
-                  )}
-                  onChange={(e) =>
-                    handleDateChange('returnDate', e.target.value)
-                  }
+                  value={dateUtils.convertToInputFormat(formData.returnDate || '')}
+                  onChange={(e) => handleDateChange('returnDate', e.target.value)}
                   disabled={isFlexibleDatesEnabled}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   aria-hidden="true"
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    !isFlexibleDatesEnabled &&
-                    returnDateRef.current?.showPicker()
-                  }
+                  onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
                   disabled={isFlexibleDatesEnabled}
                   className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 ${
                     isFlexibleDatesEnabled
@@ -541,38 +499,33 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           {/* Total Days Display */}
           {totalDays && !isFlexibleDatesEnabled && (
             <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
-              <span className="text-primary font-bold font-raleway text-base">
-                Total days:{' '}
-              </span>
+              <span className="text-primary font-bold font-raleway text-base">Total days: </span>
               <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
-                <span className="font-bold text-primary font-raleway text-xl">
-                  {totalDays}
-                </span>
+                <span className="font-bold text-primary font-raleway text-xl">{totalDays}</span>
               </div>
             </div>
           )}
 
           {/* Flexible Dates Switch */}
           <div className="flex items-center mt-4">
-            <label className="relative inline-flex items-center cursor-pointer mr-3">
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={isFlexibleDatesEnabled}
                 onChange={(e) => handleFlexibleDatesChange(e.target.checked)}
                 className="sr-only peer"
-                aria-label="Toggle flexible dates"
               />
               <div
-                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
+                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
                   isFlexibleDatesEnabled
                     ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
                     : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
                 }`}
               ></div>
+              <span className="text-primary font-bold font-raleway text-sm">
+                I'm not sure or my dates are flexible
+              </span>
             </label>
-            <span className="text-primary font-bold font-raleway text-sm">
-              I'm not sure or my dates are flexible
-            </span>
           </div>
 
           {/* Flexible Dates Dropdown */}
@@ -596,15 +549,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                   <option value="" className="font-bold font-raleway">
                     Select number of days
                   </option>
-                  {Array.from(
-                    { length: MAX_PLANNED_DAYS },
-                    (_, i) => i + 1
-                  ).map((day) => (
-                    <option
-                      key={day}
-                      value={day}
-                      className="font-bold font-raleway"
-                    >
+                  {Array.from({ length: MAX_PLANNED_DAYS }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day} className="font-bold font-raleway">
                       {day} {day === 1 ? 'day' : 'days'}
                     </option>
                   ))}
@@ -622,9 +568,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-primary font-bold font-raleway text-base">
-                Adults
-              </span>
+              <span className="text-primary font-bold font-raleway text-base">Adults</span>
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => adjustAdults(false)}
@@ -649,12 +593,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-primary font-bold font-raleway text-base">
-                  Children
-                </span>
-                <div className="text-sm text-primary/70 font-bold font-raleway">
-                  Ages 0-17
-                </div>
+                <span className="text-primary font-bold font-raleway text-base">Children</span>
+                <div className="text-sm text-primary/70 font-bold font-raleway">Ages 0-17</div>
               </div>
               <div className="flex items-center space-x-3">
                 <button
@@ -680,13 +620,9 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           </div>
 
           <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
-            <span className="text-primary font-bold font-raleway text-base">
-              Total travelers:{' '}
-            </span>
+            <span className="text-primary font-bold font-raleway text-base">Total travelers: </span>
             <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
-              <span className="font-bold text-primary font-raleway text-xl">
-                {totalTravelers}
-              </span>
+              <span className="font-bold text-primary font-raleway text-xl">{totalTravelers}</span>
             </div>
           </div>
 
@@ -701,8 +637,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                   <div className="relative">
                     <select
                       value={
-                        childrenAges[index] === UNSELECTED_AGE ||
-                        childrenAges[index] === undefined
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
                           ? ''
                           : childrenAges[index]
                       }
@@ -715,38 +650,23 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                         }
                       }}
                       className={`px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] ${
-                        childrenAges[index] === UNSELECTED_AGE ||
-                        childrenAges[index] === undefined
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
                           ? 'border-red-400 text-gray-500'
                           : 'border-primary'
                       }`}
                       aria-label={`Age for child ${index + 1}`}
                       aria-invalid={
-                        childrenAges[index] === UNSELECTED_AGE ||
-                        childrenAges[index] === undefined
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
                       }
                     >
-                      <option
-                        value=""
-                        className="font-bold font-raleway text-base"
-                      >
+                      <option value="" className="font-bold font-raleway text-base">
                         Select age
                       </option>
-                      <option
-                        value={0}
-                        className="font-bold font-raleway text-base"
-                      >
+                      <option value={0} className="font-bold font-raleway text-base">
                         Under 1
                       </option>
-                      {Array.from(
-                        { length: MAX_CHILD_AGE },
-                        (_, age) => age + 1
-                      ).map((age) => (
-                        <option
-                          key={age}
-                          value={age}
-                          className="font-bold font-raleway text-base"
-                        >
+                      {Array.from({ length: MAX_CHILD_AGE }, (_, age) => age + 1).map((age) => (
+                        <option key={age} value={age} className="font-bold font-raleway text-base">
                           {age} {age === 1 ? 'year' : 'years'} old
                         </option>
                       ))}
@@ -814,9 +734,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           <div className="flex items-center space-x-2">
             <select
               value={formData.currency || 'USD'}
-              onChange={(e) =>
-                handleInputChange('currency', e.target.value as Currency)
-              }
+              onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
               className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
               aria-label="Select currency"
             >
@@ -840,9 +758,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
 
           {/* Budget Mode Switch */}
           <div className="flex items-center space-x-4">
-            <span className="text-primary font-bold font-raleway text-sm">
-              Total trip budget
-            </span>
+            <span className="text-primary font-bold font-raleway text-sm">Total trip budget</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -859,9 +775,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                 }`}
               ></div>
             </label>
-            <span className="text-primary font-bold font-raleway text-sm">
-              Per-person budget
-            </span>
+            <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
           </div>
         </div>
       </div>

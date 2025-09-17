@@ -227,6 +227,31 @@ When helping with this project:
 5. **Consider cost implications** - optimize for efficiency
 6. **Ensure security** - validate inputs, protect secrets
 
+### Spec Kit Workflow Integration
+
+When working with the Spec Kit workflow, use these patterns:
+
+**During Planning Phase:**
+
+- Use `@workspace current architecture patterns in src/ and api/` to understand existing structure
+- Use `@workspace similar feature implementations` to find reusable patterns
+- Use `@workspace constitutional compliance patterns` to ensure adherence
+- Use `@workspace TypeScript interface definitions in src/types` for type consistency
+
+**During Implementation Phase:**
+
+- Use `@workspace error boundary implementations` for progressive enhancement
+- Use `@workspace LLM provider configurations` for multi-LLM resilience
+- Use `@workspace rate limiting patterns` for cost-conscious design
+- Use `@workspace API route structure in /api` for edge-first architecture
+
+**For Context7 MCP Research:**
+When research.md needs enhancement, Context7 can provide focused documentation:
+
+- Resolve library IDs: `mcp call resolve-library-id --libraryName="[library]"`
+- Get focused docs: `mcp call get-library-docs --context7CompatibleLibraryID="/[library]/docs" --topic="[topic]" --tokens=2000`
+- Append to research: `>> $RESEARCH`
+
 ### Example Patterns to Follow
 
 **Edge Function with Streaming:**
