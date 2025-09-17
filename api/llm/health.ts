@@ -9,12 +9,12 @@
  * - Progressive enhancement with graceful degradation reporting
  */
 
-import type { ProviderName } from '../types/index.js';
-import { ProviderFactory } from '../providers/factory.js';
-import { createObservabilityService } from '../utils/observability.js';
-import type { LangSmithConfig } from '../types/observability.js';
-import { enhancedProviderStatusService } from '../services/enhancedProviderStatusService';
-import { dnsVerificationService } from '../services/dnsVerificationService';
+import type { ProviderName } from '../../src/api/types/index.js';
+import { ProviderFactory } from '../../src/api/providers/factory.js';
+import { createObservabilityService } from '../../src/api/utils/observability.js';
+import type { LangSmithConfig } from '../../src/api/types/observability.js';
+import { enhancedProviderStatusService } from '../../src/api/services/enhancedProviderStatusService';
+import { dnsVerificationService } from '../../src/api/services/dnsVerificationService';
 
 // =============================================================================
 // Edge Runtime Configuration

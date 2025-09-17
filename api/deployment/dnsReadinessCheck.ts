@@ -5,8 +5,8 @@
  * the deployment goes live, preventing DNS-related downtime.
  */
 
-import { dnsVerificationService } from '../services/dnsVerificationService';
-import { enhancedProviderStatusService } from '../services/enhancedProviderStatusService';
+import { dnsVerificationService } from '../../src/api/services/dnsVerificationService';
+import { enhancedProviderStatusService } from '../../src/api/services/enhancedProviderStatusService';
 
 // =============================================================================
 // Deployment Configuration

@@ -13,13 +13,13 @@ import {
   type HealthMetrics,
   type OverallMetrics,
   type HealthStatus,
-} from '../types';
+} from '../../src/api/types';
 import {
   withErrorHandling,
   createSuccessResponse,
   checkServiceHealth,
   type RequestContext,
-} from '../utils/edge';
+} from '../../src/api/utils/edge';
 
 // Edge Runtime configuration
 export const config = {

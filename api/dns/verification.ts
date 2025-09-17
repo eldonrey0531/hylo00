@@ -5,12 +5,12 @@
  * Provides REST API for starting, checking, and managing DNS verifications.
  */
 
-import { dnsVerificationService } from '../services/dnsVerificationService';
+import { dnsVerificationService } from '../../src/api/services/dnsVerificationService';
 import {
   DNSVerificationRequestSchema,
   DNSVerificationInitiatedSchema,
   DNSVerificationResponseSchema,
-} from '../types/dns';
+} from '../../src/api/types/dns';
 
 export const config = { runtime: 'edge' };
 
