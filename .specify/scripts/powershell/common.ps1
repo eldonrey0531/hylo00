@@ -65,7 +65,7 @@ function Test-DirHasFiles {
 }
 
 # Context7 research helper - only for research.md generation
-function Suggest-Context7Research {
+function Show-Context7Research {
     param([string]$FeatureBranch)
     
     if (Get-Command mcp -ErrorAction SilentlyContinue) {
