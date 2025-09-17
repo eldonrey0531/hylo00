@@ -1,15 +1,4 @@
 {
-  "functions": {
-    "api/llm/route.ts": {
-      "runtime": "@vercel/edge"
-    },
-    "api/health.ts": {
-      "runtime": "@vercel/edge"
-    },
-    "api/providers/status.ts": {
-      "runtime": "@vercel/edge"
-    }
-  },
   "env": {
     "GROQ_API_KEY_1": "your-groq-api-key-here",
     "GROQ_API_KEY_2": "your-groq-api-key-here",
