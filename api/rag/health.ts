@@ -183,10 +183,8 @@ export default async function handler(req: Request) {
 }
 
 // =============================================================================
-// EDGE RUNTIME CONFIGURATION
+// SERVERLESS RUNTIME CONFIGURATION
 // =============================================================================
 
-export const config = {
-  runtime: 'edge',
-  regions: ['iad1', 'sfo1', 'fra1'], // Multi-region deployment
-};
+// Uses Node.js runtime due to Qdrant and HuggingFace dependencies
+// No config export = defaults to Node.js serverless function
