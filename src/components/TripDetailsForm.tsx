@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Minus, Calendar, ChevronDown } from 'lucide-react';
-import { TravelStyleGroup } from './TravelStyleGroup';
-import { tripDetailsSchema } from '../schemas/formSchemas';
 
 // Type definitions
 type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
@@ -29,7 +27,6 @@ interface FormData {
 interface TripDetailsFormProps {
   formData: FormData;
   onFormChange: (data: FormData) => void;
-  onValidationChange?: (isValid: boolean, errors: Record<string, string>) => void;
 }
 
 // Constants
@@ -125,11 +122,7 @@ const currencySymbols: Record<Currency, string> = {
   AUD: 'A$',
 };
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
-  formData,
-  onFormChange,
-  onValidationChange,
-}) => {
+const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChange }) => {
   // Local state
   const [localFlexibleDates, setLocalFlexibleDates] = useState(Boolean(formData.flexibleDates));
   const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
@@ -141,22 +134,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
 
-  // Form validation using Zod schema
-  const validateForm = useCallback(() => {
-    try {
-      tripDetailsSchema.parse(formData);
-      return { isValid: true, errors: {} };
-    } catch (error: any) {
-      const errors: Record<string, string> = {};
-      if (error.errors) {
-        error.errors.forEach((err: any) => {
-          errors[err.path.join('.')] = err.message;
-        });
-      }
-      return { isValid: false, errors };
-    }
-  }, [formData]);
-
   // Sync local state when formData changes from parent
   useEffect(() => {
     setLocalFlexibleDates(Boolean(formData.flexibleDates));
@@ -164,13 +141,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
     setChildren(formData.children || 0);
     setChildrenAges(formData.childrenAges || []);
     setBudgetRange(formData.budget || 5000);
-
-    // Validate form and notify parent
-    if (onValidationChange) {
-      const validation = validateForm();
-      onValidationChange(validation.isValid, validation.errors);
-    }
-  }, [formData, validateForm, onValidationChange]);
+  }, [formData]);
 
   // Memoized handlers
   const handleInputChange = useCallback(
@@ -862,45 +833,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
             <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
           </div>
         </div>
-      </div>
-
-      {/* Travel Style Progressive Disclosure */}
-      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-6">
-        <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
-          TRAVEL STYLE
-        </h3>
-        <p className="text-primary font-raleway text-base mb-6">
-          Help us personalize your trip by telling us about your travel preferences
-        </p>
-
-        <div className="flex gap-4 justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              handleInputChange('travelStyleChoice', 'answer-questions');
-            }}
-            className="bg-primary text-white px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary/90 transition-colors duration-200 min-w-[200px]"
-          >
-            Answer style questions
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              handleInputChange('travelStyleChoice', 'skip-to-details');
-            }}
-            className="bg-[#ece8de] text-primary border-2 border-primary px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary hover:text-white transition-colors duration-200 min-w-[200px]"
-          >
-            Skip ahead
-          </button>
-        </div>
-
-        {/* Travel Style Questions - Conditionally Rendered */}
-        {formData.travelStyleChoice === 'answer-questions' && (
-          <div className="mt-6 space-y-6 transition-all duration-300 ease-in-out">
-            <TravelStyleGroup onFormChange={onFormChange} formData={formData} />
-          </div>
-        )}
       </div>
     </div>
   );
