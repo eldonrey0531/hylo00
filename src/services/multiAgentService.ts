@@ -1,4 +1,5 @@
 import { createRoutingGroqClient } from './llmRoutingService';
+import { TravelStyleData } from '../components/TravelStyle/types';
 
 // Create client for LangChain-integrated API - auto-detects environment
 const groq = createRoutingGroqClient({
@@ -18,6 +19,7 @@ export interface TravelFormData {
   dinnerChoices: string[];
   nickname: string;
   contact: any;
+  travelStyle?: TravelStyleData; // New TravelStyle integration
 }
 
 export interface AgentLog {
@@ -162,6 +164,44 @@ ${JSON.stringify(inclusionPrefs, null, 2)}
 CONTACT INFORMATION:
 - Name: ${formData.contact?.name || 'Not provided'}
 - Email: ${formData.contact?.email || 'Not provided'}
+
+TRAVEL STYLE PREFERENCES:
+${
+  formData.travelStyle
+    ? `
+- Travel Pace: ${formData.travelStyle.pace || 'Not specified'}
+- Activity Level: ${formData.travelStyle.activityLevel || 'Not specified'}
+- Planning Style: ${formData.travelStyle.planningPreference || 'Not specified'}
+- Budget Style: ${formData.travelStyle.budgetStyle || 'Not specified'}
+- Cultural Interest: ${formData.travelStyle.culturalInterest || 'Not specified'}
+- Accommodation Types: ${
+        formData.travelStyle.accommodationTypes?.length > 0
+          ? formData.travelStyle.accommodationTypes.join(', ')
+          : 'Not specified'
+      }
+- Dining Preferences: ${
+        formData.travelStyle.diningPreferences?.length > 0
+          ? formData.travelStyle.diningPreferences.join(', ')
+          : 'Not specified'
+      }
+- Transport Preferences: ${
+        formData.travelStyle.transportPreferences?.length > 0
+          ? formData.travelStyle.transportPreferences.join(', ')
+          : 'Not specified'
+      }
+- Travel Interests: ${
+        formData.travelStyle.interests?.length > 0
+          ? formData.travelStyle.interests.join(', ')
+          : 'Not specified'
+      }
+- Trip Purpose: ${
+        formData.travelStyle.tripPurpose?.length > 0
+          ? formData.travelStyle.tripPurpose.join(', ')
+          : 'Not specified'
+      }
+`
+    : '- No detailed travel style preferences provided'
+}
 
 INSTRUCTIONS:
 Return a JSON object with the following structure. Include ALL values including defaults:
