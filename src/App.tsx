@@ -2,9 +2,6 @@ import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetails from './components/TripDetails';
 import { FormData } from './components/TripDetails/types';
-import TravelGroupSelector from './components/TravelGroupSelector';
-import TravelInterests from './components/TravelInterests';
-import ItineraryInclusions from './components/ItineraryInclusions';
 import TravelExperience from './components/travel-style/TravelExperience';
 import TripVibe from './components/travel-style/TripVibe';
 import SampleDays from './components/travel-style/SampleDays';
@@ -27,12 +24,18 @@ function App() {
     childrenAges: [],
     budget: 5000,
     currency: 'USD',
+    flexibleBudget: false,
     travelStyleChoice: 'not-selected',
     travelStyleAnswers: {},
+    // Additional fields for new components
+    selectedGroups: [],
+    selectedInterests: [],
+    selectedInclusions: [],
+    customGroupText: '',
+    customInterestsText: '',
+    customInclusionsText: '',
+    inclusionPreferences: {},
   });
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [selectedInclusions, setSelectedInclusions] = useState<string[]>([]);
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
   const [selectedVibes, setSelectedVibes] = useState<string[]>([]);
   const [selectedSampleDays, setSelectedSampleDays] = useState<string[]>([]);
@@ -40,12 +43,8 @@ function App() {
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
 
-  // Custom text inputs for "other" options
-  const [customGroupText, setCustomGroupText] = useState<string>('');
-  const [customInterestsText, setCustomInterestsText] = useState<string>('');
+  // Custom text inputs for "other" options (remaining for travel style components)
   const [customVibesText, setCustomVibesText] = useState<string>('');
-  const [customInclusionsText, setCustomInclusionsText] = useState<string>('');
-  const [inclusionPreferences, setInclusionPreferences] = useState<Record<string, any>>({});
 
   const [generatedItinerary, setGeneratedItinerary] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -56,9 +55,9 @@ function App() {
   const handleGenerateItinerary = async () => {
     const travelData: TravelFormData = {
       tripDetails: formData,
-      groups: selectedGroups,
-      interests: selectedInterests,
-      inclusions: selectedInclusions,
+      groups: formData.selectedGroups || [],
+      interests: formData.selectedInterests || [],
+      inclusions: formData.selectedInclusions || [],
       experience: selectedExperience,
       vibes: selectedVibes,
       sampleDays: selectedSampleDays,
@@ -100,9 +99,9 @@ function App() {
   // Prepare form data for behind the scenes view
   const completeFormData: TravelFormData = {
     tripDetails: formData,
-    groups: selectedGroups,
-    interests: selectedInterests,
-    inclusions: selectedInclusions,
+    groups: formData.selectedGroups || [],
+    interests: formData.selectedInterests || [],
+    inclusions: formData.selectedInclusions || [],
     experience: selectedExperience,
     vibes: selectedVibes,
     sampleDays: selectedSampleDays,
@@ -125,34 +124,8 @@ function App() {
             </div>
           </div>
 
-          {/* Trip Details Form */}
-          <TripDetails formData={formData} onFormChange={setFormData} />
-
-          {/* Travel Group */}
-          <TravelGroupSelector
-            selectedGroups={selectedGroups}
-            onSelectionChange={setSelectedGroups}
-            otherText={customGroupText}
-            onOtherTextChange={setCustomGroupText}
-          />
-
-          {/* Travel Interests */}
-          <TravelInterests
-            selectedInterests={selectedInterests}
-            onSelectionChange={setSelectedInterests}
-            otherText={customInterestsText}
-            onOtherTextChange={setCustomInterestsText}
-          />
-
-          {/* What Should We Include in Your Itinerary */}
-          <ItineraryInclusions
-            selectedInclusions={selectedInclusions}
-            onSelectionChange={setSelectedInclusions}
-            otherText={customInclusionsText}
-            onOtherTextChange={setCustomInclusionsText}
-            inclusionPreferences={inclusionPreferences}
-            onInclusionPreferencesChange={setInclusionPreferences}
-          />
+          {/* Trip Details Form - Unified with all form components */}
+          <TripDetails formData={formData} onFormChange={setFormData} showAdditionalForms={true} />
 
           {/* Travel Style Header - Full Width No Rounded Corners */}
           <div className="bg-trip-details text-primary py-4 px-6 shadow-lg -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-16">

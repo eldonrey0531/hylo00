@@ -4,6 +4,9 @@ import LocationForm from './LocationForm';
 import DatesForm from './DatesForm';
 import TravelersForm from './TravelersForm';
 import BudgetForm from './BudgetForm';
+import TravelGroupSelector from './TravelGroupSelector';
+import TravelInterests from './TravelInterests';
+import ItineraryInclusions from './ItineraryInclusions';
 import { FormData } from './types';
 import { validationUtils } from './utils';
 
@@ -11,12 +14,14 @@ interface TripDetailsProps {
   formData: FormData;
   onFormChange: (data: FormData) => void;
   enableValidation?: boolean;
+  showAdditionalForms?: boolean;
 }
 
 const TripDetails: React.FC<TripDetailsProps> = ({
   formData,
   onFormChange,
   enableValidation = true,
+  showAdditionalForms = false,
 }) => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isFormValid, setIsFormValid] = useState(false);
@@ -114,6 +119,20 @@ const TripDetails: React.FC<TripDetailsProps> = ({
 
       {/* Budget Box */}
       <BudgetForm {...baseProps} />
+
+      {/* Additional Forms - Can be conditionally rendered */}
+      {showAdditionalForms && (
+        <>
+          {/* Travel Group Selector */}
+          <TravelGroupSelector {...baseProps} />
+
+          {/* Travel Interests */}
+          <TravelInterests {...baseProps} />
+
+          {/* Itinerary Inclusions */}
+          <ItineraryInclusions {...baseProps} />
+        </>
+      )}
     </div>
   );
 };
