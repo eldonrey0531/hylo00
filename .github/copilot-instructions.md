@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions - Hylo Travel AI Platform
+﻿# GitHub Copilot Instructions - Hylo Travel AI Platform
 
 ## Project Context
 Hylo is a travel planning platform using React + TypeScript frontend with Vercel Edge Functions backend. Multi-agent AI system for personalized itinerary generation.
@@ -61,14 +61,14 @@ Hylo is a travel planning platform using React + TypeScript frontend with Vercel
 ## Key File Locations
 ```
 src/
-├── components/TripDetails/
-│   ├── TravelersForm.tsx              # Main target for centering
-│   └── PreferenceModals/              # Modal styling targets
-│       ├── AccommodationPreferences.tsx
-│       └── RentalCarPreferences.tsx
-├── types/                             # TypeScript interfaces
-├── hooks/                             # Custom React hooks  
-└── utils/validation/                  # Zod schemas
+â”œâ”€â”€ components/TripDetails/
+â”‚   â”œâ”€â”€ TravelersForm.tsx              # Main target for centering
+â”‚   â””â”€â”€ PreferenceModals/              # Modal styling targets
+â”‚       â”œâ”€â”€ AccommodationPreferences.tsx
+â”‚       â””â”€â”€ RentalCarPreferences.tsx
+â”œâ”€â”€ types/                             # TypeScript interfaces
+â”œâ”€â”€ hooks/                             # Custom React hooks  
+â””â”€â”€ utils/validation/                  # Zod schemas
 
 api/                                   # Edge functions
 tests/                                 # Test files
