@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useReducer, useMemo, useState, memo } from 'react';
+import React, { useRef, useEffect, useCallback, useReducer, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -183,7 +183,7 @@ const currencySymbols: Record<Currency, string> = {
   AUD: 'A$',
 };
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onFormChange }) => {
+const EnhancedTripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChange }) => {
   // Initialize React Hook Form with Zod resolver
   const {
     control,
@@ -681,6 +681,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
       </div>
     </form>
   );
-});
+};
 
-export default TripDetailsForm;
+export default EnhancedTripDetailsForm;

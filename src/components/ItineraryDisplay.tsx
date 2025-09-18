@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Mail, MapPin, Clock, DollarSign, Calendar, CheckCircle } from 'lucide-react';
+import { Download, Mail, MapPin, CheckCircle } from 'lucide-react';
 import ResilientLoading from './ResilientLoading';
 
 interface ItineraryDisplayProps {

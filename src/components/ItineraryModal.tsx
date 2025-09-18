@@ -35,16 +35,23 @@ const ItineraryModal: React.FC<ItineraryModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <dialog
+      open={true}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop:bg-black backdrop:bg-opacity-50"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      }}
       aria-labelledby="modal-title"
+      aria-describedby="modal-description"
     >
       <div
         className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        tabIndex={-1}
       >
         {/* Header */}
         <div className="sticky top-0 bg-primary text-white px-8 py-6 rounded-t-2xl">
@@ -117,7 +124,7 @@ const ItineraryModal: React.FC<ItineraryModalProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </dialog>
   );
 };
 
