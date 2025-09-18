@@ -1,36 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Minus, Calendar, ChevronDown } from 'lucide-react';
 
-// Enhanced component imports (conditionally loaded)
-const EnhancedDateInput = React.lazy(() =>
-  import('./enhanced/EnhancedDateInput').then((module) => ({ default: module.EnhancedDateInput }))
-);
-const EnhancedBudgetSlider = React.lazy(() =>
-  import('./enhanced/EnhancedBudgetSlider').then((module) => ({
-    default: module.EnhancedBudgetSlider,
-  }))
-);
-const EnhancedPreferenceModal = React.lazy(() =>
-  import('./enhanced/EnhancedPreferenceModal').then((module) => ({
-    default: module.EnhancedPreferenceModal,
-  }))
-);
-const TravelStyleProgressiveDisclosure = React.lazy(() =>
-  import('./enhanced/TravelStyleProgressiveDisclosure').then((module) => ({
-    default: module.TravelStyleProgressiveDisclosure,
-  }))
-);
-
-// Feature flags for gradual rollout
-const FEATURE_FLAGS = {
-  ENHANCED_DATE_INPUT: process.env['REACT_APP_ENHANCED_DATE_INPUT'] === 'false' ? false : true,
-  ENHANCED_BUDGET_SLIDER:
-    process.env['REACT_APP_ENHANCED_BUDGET_SLIDER'] === 'false' ? false : true,
-  ENHANCED_PREFERENCE_MODAL:
-    process.env['REACT_APP_ENHANCED_PREFERENCE_MODAL'] === 'false' ? false : true,
-  ENHANCED_TRAVEL_STYLE: process.env['REACT_APP_ENHANCED_TRAVEL_STYLE'] === 'false' ? false : true,
-};
-
 // Type definitions
 type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
 type BudgetMode = 'total' | 'per-person';
@@ -160,15 +130,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   const [adults, setAdults] = useState(formData.adults || 2);
   const [children, setChildren] = useState(formData.children || 0);
   const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
-
-  // Enhanced component state
-  const [showPreferenceModal, setShowPreferenceModal] = useState(false);
-  const [preferenceModalType, setPreferenceModalType] = useState<'accommodations' | 'rental-car'>(
-    'accommodations'
-  );
-  const [travelStyleChoice, setTravelStyleChoice] = useState<
-    'answer-questions' | 'skip-to-details' | 'not-selected'
-  >('not-selected');
 
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
@@ -463,120 +424,99 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
               <label className="block text-primary mb-2 font-bold font-raleway text-base">
                 {isFlexibleDatesEnabled ? 'Trip Start (flexible)' : 'Depart'}
               </label>
-              {FEATURE_FLAGS.ENHANCED_DATE_INPUT ? (
-                <React.Suspense
-                  fallback={
-                    <div className="w-full px-4 py-3 border-3 border-primary rounded-[10px] bg-gray-100 animate-pulse">
-                      Loading enhanced date input...
-                    </div>
-                  }
+              <div
+                className={`relative cursor-pointer ${isFlexibleDatesEnabled ? 'hidden' : ''}`}
+                onClick={() => !isFlexibleDatesEnabled && departDateRef.current?.showPicker()}
+              >
+                <input
+                  type="text"
+                  placeholder="mm/dd/yy"
+                  value={formData.departDate || ''}
+                  onChange={(e) => handleManualDateInput('departDate', e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  maxLength={8}
+                  className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white cursor-pointer"
+                  aria-label="Departure date"
+                  disabled={isFlexibleDatesEnabled}
+                />
+                <input
+                  ref={departDateRef}
+                  type="date"
+                  min={dateUtils.getTodayString()}
+                  value={dateUtils.convertToInputFormat(formData.departDate || '')}
+                  onChange={(e) => handleDateChange('departDate', e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    !isFlexibleDatesEnabled && departDateRef.current?.showPicker();
+                  }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 hover:bg-gray-100 cursor-pointer text-primary"
+                  aria-label="Open departure date picker"
+                  disabled={isFlexibleDatesEnabled}
                 >
-                  <EnhancedDateInput
-                    value={formData.departDate || ''}
-                    onChange={(value) => handleManualDateInput('departDate', value)}
-                    placeholder="mm/dd/yy"
-                    enableClickZoneExpansion={true}
-                    showValidationFeedback={true}
-                    aria-label="Departure date"
-                  />
-                </React.Suspense>
-              ) : (
-                <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
-                  <input
-                    type="text"
-                    placeholder="mm/dd/yy"
-                    value={formData.departDate || ''}
-                    onChange={(e) => handleManualDateInput('departDate', e.target.value)}
-                    maxLength={8}
-                    className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white"
-                    aria-label="Departure date"
-                  />
-                  <input
-                    ref={departDateRef}
-                    type="date"
-                    min={dateUtils.getTodayString()}
-                    value={dateUtils.convertToInputFormat(formData.departDate || '')}
-                    onChange={(e) => handleDateChange('departDate', e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    aria-hidden="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => departDateRef.current?.showPicker()}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 hover:bg-gray-100 cursor-pointer text-primary"
-                    aria-label="Open departure date picker"
-                  >
-                    <Calendar className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
+                  <Calendar className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-primary mb-2 font-bold font-raleway text-base">
                 {isFlexibleDatesEnabled ? 'Duration' : 'Return'}
               </label>
-              {FEATURE_FLAGS.ENHANCED_DATE_INPUT ? (
-                <React.Suspense
-                  fallback={
-                    <div className="w-full px-4 py-3 border-3 border-primary rounded-[10px] bg-gray-100 animate-pulse">
-                      Loading enhanced date input...
-                    </div>
-                  }
+              <div
+                className={`relative ${
+                  isFlexibleDatesEnabled ? 'hidden cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
+              >
+                <input
+                  type="text"
+                  placeholder="mm/dd/yy"
+                  value={formData.returnDate || ''}
+                  onChange={(e) => handleManualDateInput('returnDate', e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  maxLength={8}
+                  disabled={isFlexibleDatesEnabled}
+                  className={`w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base ${
+                    isFlexibleDatesEnabled
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white cursor-pointer'
+                  }`}
+                  aria-label="Return date"
+                  aria-disabled={isFlexibleDatesEnabled}
+                />
+                <input
+                  ref={returnDateRef}
+                  type="date"
+                  min={getMinReturnDate()}
+                  value={dateUtils.convertToInputFormat(formData.returnDate || '')}
+                  onChange={(e) => handleDateChange('returnDate', e.target.value)}
+                  disabled={isFlexibleDatesEnabled}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    !isFlexibleDatesEnabled && returnDateRef.current?.showPicker();
+                  }}
+                  disabled={isFlexibleDatesEnabled}
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 ${
+                    isFlexibleDatesEnabled
+                      ? 'cursor-not-allowed text-gray-400'
+                      : 'hover:bg-gray-100 cursor-pointer text-primary'
+                  }`}
+                  aria-label="Open return date picker"
+                  aria-disabled={isFlexibleDatesEnabled}
                 >
-                  <EnhancedDateInput
-                    value={formData.returnDate || ''}
-                    onChange={(value) => handleManualDateInput('returnDate', value)}
-                    placeholder="mm/dd/yy"
-                    enableClickZoneExpansion={true}
-                    showValidationFeedback={true}
-                    aria-label="Return date"
-                    disabled={isFlexibleDatesEnabled}
-                  />
-                </React.Suspense>
-              ) : (
-                <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
-                  <input
-                    type="text"
-                    placeholder="mm/dd/yy"
-                    value={formData.returnDate || ''}
-                    onChange={(e) => handleManualDateInput('returnDate', e.target.value)}
-                    maxLength={8}
-                    disabled={isFlexibleDatesEnabled}
-                    className={`w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base ${
-                      isFlexibleDatesEnabled
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white'
-                    }`}
-                    aria-label="Return date"
-                    aria-disabled={isFlexibleDatesEnabled}
-                  />
-                  <input
-                    ref={returnDateRef}
-                    type="date"
-                    min={getMinReturnDate()}
-                    value={dateUtils.convertToInputFormat(formData.returnDate || '')}
-                    onChange={(e) => handleDateChange('returnDate', e.target.value)}
-                    disabled={isFlexibleDatesEnabled}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    aria-hidden="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
-                    disabled={isFlexibleDatesEnabled}
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 ${
-                      isFlexibleDatesEnabled
-                        ? 'cursor-not-allowed text-gray-400'
-                        : 'hover:bg-gray-100 cursor-pointer text-primary'
-                    }`}
-                    aria-label="Open return date picker"
-                    aria-disabled={isFlexibleDatesEnabled}
-                  >
-                    <Calendar className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
+                  <Calendar className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -785,55 +725,33 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
         </div>
 
         {/* Budget Slider */}
-        {FEATURE_FLAGS.ENHANCED_BUDGET_SLIDER ? (
-          <React.Suspense
-            fallback={
-              <div className="space-y-4">
-                <div className="bg-gray-100 rounded-lg p-8 animate-pulse text-center">
-                  Loading enhanced budget slider...
-                </div>
-              </div>
-            }
-          >
-            <EnhancedBudgetSlider
-              value={budgetRange}
-              onChange={handleBudgetChange}
-              min={0}
+        <div className="space-y-4">
+          <div className="slider-container">
+            <input
+              type="range"
+              min="0"
               max={MAX_BUDGET}
               step={BUDGET_STEP}
-              currency={formData.currency as Currency}
-              enableRealTimeSync={true}
-              showFlexibleToggle={true}
+              value={budgetRange}
+              onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
+              onInput={(e) => handleBudgetChange(parseInt((e.target as HTMLInputElement).value))}
+              className="w-full slider-primary"
+              aria-label="Budget range"
+              aria-valuemin={0}
+              aria-valuemax={MAX_BUDGET}
+              aria-valuenow={budgetRange}
             />
-          </React.Suspense>
-        ) : (
-          <div className="space-y-4">
-            <div className="slider-container">
-              <input
-                type="range"
-                min="0"
-                max={MAX_BUDGET}
-                step={BUDGET_STEP}
-                value={budgetRange}
-                onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
-                className="w-full slider-primary"
-                aria-label="Budget range"
-                aria-valuemin={0}
-                aria-valuemax={MAX_BUDGET}
-                aria-valuenow={budgetRange}
-              />
-            </div>
-
-            {/* Budget labels */}
-            <div
-              className="flex justify-between text-base font-bold font-raleway px-3"
-              style={{ color: '#406170' }}
-            >
-              <span>{getCurrencySymbol()}0</span>
-              <span>{getCurrencySymbol()}10,000+</span>
-            </div>
           </div>
-        )}
+
+          {/* Budget labels */}
+          <div
+            className="flex justify-between text-base font-bold font-raleway px-3"
+            style={{ color: '#406170' }}
+          >
+            <span>{getCurrencySymbol()}0</span>
+            <span>{getCurrencySymbol()}10,000+</span>
+          </div>
+        </div>
 
         {/* Currency and Budget Mode Row */}
         <div className="flex items-center justify-between gap-6 mt-6">
@@ -907,53 +825,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </div>
         </div>
       </div>
-
-      {/* Enhanced Preference Modal */}
-      {FEATURE_FLAGS.ENHANCED_PREFERENCE_MODAL && showPreferenceModal && (
-        <React.Suspense fallback={<div>Loading preference modal...</div>}>
-          <EnhancedPreferenceModal
-            isOpen={showPreferenceModal}
-            onClose={() => setShowPreferenceModal(false)}
-            inclusionType={
-              preferenceModalType === 'accommodations' ? 'accommodations' : 'rental-car'
-            }
-            initialData={formData}
-            onDataChange={(data) => onFormChange({ ...formData, ...data })}
-            onSubmit={(data) => {
-              onFormChange({ ...formData, ...data });
-              setShowPreferenceModal(false);
-            }}
-            enableInteractionFixes={true}
-            enableOtherInput={true}
-            enableMultiSelect={preferenceModalType === 'rental-car'}
-            multiSelectFields={preferenceModalType === 'rental-car' ? ['vehicleTypes'] : []}
-          />
-        </React.Suspense>
-      )}
-
-      {/* Enhanced Travel Style Component */}
-      {FEATURE_FLAGS.ENHANCED_TRAVEL_STYLE && (
-        <div className="mt-8">
-          <React.Suspense fallback={<div>Loading travel style component...</div>}>
-            <TravelStyleProgressiveDisclosure
-              onChoiceSelect={(choice) => {
-                setTravelStyleChoice(choice);
-                handleInputChange('travelStyleChoice', choice);
-              }}
-              onSkipToNickname={() => {
-                // Handle skip to nickname logic
-                console.log('Skip to nickname');
-              }}
-              onComplete={(data) => {
-                handleInputChange('travelStyleAnswers', data);
-              }}
-              initialChoice={travelStyleChoice}
-              enableProgressTracking={true}
-              allowBackNavigation={true}
-            />
-          </React.Suspense>
-        </div>
-      )}
     </div>
   );
 };
