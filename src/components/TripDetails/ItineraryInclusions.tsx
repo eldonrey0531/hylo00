@@ -3,12 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { BaseFormProps, ITINERARY_INCLUSIONS } from './types';
 
-const ItineraryInclusions: React.FC<BaseFormProps> = ({
-  formData,
-  onFormChange,
-  validationErrors,
-  onValidation,
-}) => {
+const ItineraryInclusions: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   const [localOtherText, setLocalOtherText] = useState(formData.customInclusionsText || '');
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
@@ -22,15 +17,6 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
   useEffect(() => {
     setLocalOtherText(formData.customInclusionsText || '');
   }, [formData.customInclusionsText]);
-
-  const validateInclusions = useCallback(() => {
-    if (onValidation) {
-      // Basic validation - at least one inclusion should be selected
-      const isValid = selectedInclusions.length > 0;
-      const errors = isValid ? [] : ['Please select at least one itinerary inclusion'];
-      onValidation('selectedInclusions', isValid, errors);
-    }
-  }, [selectedInclusions, onValidation]);
 
   const toggleSection = useCallback((inclusionId: string) => {
     setExpandedSections((prev) =>
@@ -49,58 +35,19 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
           newSelection = [...selectedInclusions, 'other'];
         } else {
           // Removing other: remove from selection & clear text
-          newSelection = selectedInclusions.filter((id) => id !== 'other');
+          newSelection = selectedInclusions.filter((i) => i !== 'other');
           setLocalOtherText('');
-          onFormChange({
-            selectedInclusions: newSelection,
-            customInclusionsText: '',
-          });
-          // Validate after change
-          setTimeout(validateInclusions, 100);
-          return;
+          onFormChange({ customInclusionsText: '' });
         }
       } else {
-        const isCurrentlySelected = selectedInclusions.includes(inclusionId);
-
-        if (isCurrentlySelected) {
-          newSelection = selectedInclusions.filter((id) => id !== inclusionId);
-          // Clear preferences for this inclusion when deselected
-          const newPreferences = { ...inclusionPreferences };
-          delete newPreferences[inclusionId];
-          onFormChange({
-            selectedInclusions: newSelection,
-            inclusionPreferences: newPreferences,
-          });
-        } else {
-          newSelection = [...selectedInclusions, inclusionId];
-          onFormChange({ selectedInclusions: newSelection });
-        }
-
-        // Validate after change
-        setTimeout(validateInclusions, 100);
-        return;
+        newSelection = selectedInclusions.includes(inclusionId)
+          ? selectedInclusions.filter((i) => i !== inclusionId)
+          : [...selectedInclusions, inclusionId];
       }
 
       onFormChange({ selectedInclusions: newSelection });
-
-      // Validate after change
-      setTimeout(validateInclusions, 100);
     },
-    [selectedInclusions, inclusionPreferences, onFormChange, validateInclusions]
-  );
-
-  const updatePreference = useCallback(
-    (inclusionId: string, key: string, value: any) => {
-      const newPreferences = {
-        ...inclusionPreferences,
-        [inclusionId]: {
-          ...(inclusionPreferences[inclusionId] || {}),
-          [key]: value,
-        },
-      };
-      onFormChange({ inclusionPreferences: newPreferences });
-    },
-    [inclusionPreferences, onFormChange]
+    [selectedInclusions, onFormChange]
   );
 
   const handleOtherTextChange = useCallback(
@@ -111,79 +58,48 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
     [onFormChange]
   );
 
+  const handlePreferenceChange = useCallback(
+    (inclusionId: string, preference: string) => {
+      const newPreferences = {
+        ...inclusionPreferences,
+        [inclusionId]: preference,
+      };
+      onFormChange({ inclusionPreferences: newPreferences });
+    },
+    [inclusionPreferences, onFormChange]
+  );
+
   const renderBasicPreferences = (inclusionId: string) => {
-    if (!selectedInclusions.includes(inclusionId)) return null;
-
     const isExpanded = expandedSections.includes(inclusionId);
-    const option = ITINERARY_INCLUSIONS.find((opt) => opt.id === inclusionId);
-
-    if (!option || inclusionId === 'other') return null;
+    const preference = inclusionPreferences[inclusionId] || '';
+    const inclusionLabel =
+      ITINERARY_INCLUSIONS.find((i) => i.id === inclusionId)?.label || inclusionId;
 
     return (
-      <div className="mt-3 border-3 border-primary rounded-[10px] overflow-hidden">
+      <div key={inclusionId} className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-3">
         <button
           onClick={() => toggleSection(inclusionId)}
-          className="w-full px-4 py-3 bg-[#ece8de] flex items-center justify-between hover:bg-primary/10 transition-colors duration-200"
-          aria-expanded={isExpanded}
-          aria-controls={`${inclusionId}-preferences`}
+          className="w-full flex justify-between items-center text-primary font-bold font-raleway text-sm"
         >
-          <div className="flex items-center space-x-3">
-            <span className="text-xl">{option.emoji}</span>
-            <span className="font-bold text-primary font-raleway text-base">
-              {option.label} Preferences
-            </span>
-          </div>
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-primary" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-primary" />
-          )}
+          <span>{inclusionLabel} Preferences</span>
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
 
         {isExpanded && (
-          <div id={`${inclusionId}-preferences`} className="p-4 bg-white">
-            <div className="space-y-3">
-              <div>
-                <label className="block text-primary font-bold mb-2 font-raleway text-sm">
-                  Special requests or preferences
-                </label>
-                <textarea
-                  value={inclusionPreferences[inclusionId]?.notes || ''}
-                  onChange={(e) => updatePreference(inclusionId, 'notes', e.target.value)}
-                  placeholder={`Any specific preferences for ${option.label.toLowerCase()}...`}
-                  className="w-full px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-primary font-bold mb-2 font-raleway text-sm">
-                  Budget level
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {['Budget $', 'Mid-range $$', 'Luxury $$$', 'Ultra-luxury $$$$'].map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => updatePreference(inclusionId, 'budgetLevel', level)}
-                      className={`px-3 py-1 rounded-[10px] border-2 transition-all duration-200 font-bold font-raleway text-xs ${
-                        inclusionPreferences[inclusionId]?.budgetLevel === level
-                          ? 'border-primary bg-primary text-white'
-                          : 'border-primary bg-[#ece8de] text-primary hover:bg-primary hover:text-white'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="mt-3">
+            <textarea
+              value={preference}
+              onChange={(e) => handlePreferenceChange(inclusionId, e.target.value)}
+              placeholder={`Any specific preferences for ${inclusionLabel.toLowerCase()}?`}
+              className="w-full px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white resize-none font-raleway font-bold text-sm"
+              rows={2}
+              aria-label={`${inclusionLabel} preferences`}
+            />
           </div>
         )}
       </div>
     );
   };
-
-  const hasError = validationErrors?.['selectedInclusions'];
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
@@ -194,15 +110,6 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
         <p className="text-primary font-bold font-raleway text-xs">
           What should be included in your itinerary?
         </p>
-        {hasError && (
-          <p
-            className="text-sm text-red-600 font-bold font-raleway mt-2 flex items-center"
-            role="alert"
-          >
-            <span className="mr-1">⚠️</span>
-            {hasError}
-          </p>
-        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -218,8 +125,6 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
                 ${
                   isSelected
                     ? 'border-primary bg-primary text-white shadow-md'
-                    : hasError
-                    ? 'border-red-500 bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                     : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                 }
               `}
@@ -229,7 +134,7 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
               <span className="text-xl">{option.emoji}</span>
               <span
                 className={`text-xs font-bold text-center leading-tight font-raleway ${
-                  isSelected ? 'text-white' : hasError ? 'text-red-600' : 'text-primary'
+                  isSelected ? 'text-white' : 'text-primary'
                 }`}
               >
                 {option.label}
@@ -238,16 +143,6 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
           );
         })}
       </div>
-
-      {/* Selected count display */}
-      {selectedInclusions.length > 0 && (
-        <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-3 text-center mt-4">
-          <span className="text-primary font-bold font-raleway text-sm">
-            Selected: {selectedInclusions.length} inclusion
-            {selectedInclusions.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-      )}
 
       {/* Preferences for selected inclusions */}
       {selectedInclusions.filter((id) => id !== 'other').length > 0 && (
@@ -276,16 +171,6 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({
             rows={3}
             aria-label="Describe other inclusions"
           />
-        </div>
-      )}
-
-      {/* Success indicator */}
-      {selectedInclusions.length > 0 && !hasError && (
-        <div className="mt-3 text-center">
-          <span className="text-sm text-green-600 font-bold font-raleway flex items-center justify-center">
-            <span className="mr-1">✓</span>
-            Itinerary inclusions look good!
-          </span>
         </div>
       )}
     </div>
