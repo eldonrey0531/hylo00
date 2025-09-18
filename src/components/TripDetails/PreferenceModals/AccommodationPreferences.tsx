@@ -52,7 +52,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 
   return (
     <div className="w-full bg-[#ece8de] rounded-[36px] py-6">
-      <div className="w-full flex items-center space-x-3 mb-6 bg-[#406170] px-6 py-4 rounded-t-[33px]">
+      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
         <span className="text-2xl">🏨</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Accommodation Preferences
