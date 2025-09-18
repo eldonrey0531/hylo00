@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetails from './components/TripDetails';
 import { FormData } from './components/TripDetails/types';
 import TravelStyle from './components/TravelStyle';
 import { TravelStyleData } from './components/TravelStyle/types';
-import TravelStyleErrorBoundary from './components/TravelStyle/TravelStyleErrorBoundary';
 import TravelExperience from './components/travel-style/TravelExperience';
 import TripVibe from './components/travel-style/TripVibe';
 import SampleDays from './components/travel-style/SampleDays';
@@ -46,24 +45,8 @@ function App() {
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
 
-  // TravelStyle form data with persistence
-  const [travelStyleData, setTravelStyleData] = useState<TravelStyleData>(() => {
-    try {
-      const saved = localStorage.getItem('hylo-travel-style-data');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  // Persist TravelStyle data to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('hylo-travel-style-data', JSON.stringify(travelStyleData));
-    } catch {
-      // Silently fail if localStorage is not available
-    }
-  }, [travelStyleData]);
+  // TravelStyle form data
+  const [travelStyleData, setTravelStyleData] = useState<TravelStyleData>({});
 
   // Custom text inputs for "other" options (remaining for travel style components)
   const [customVibesText, setCustomVibesText] = useState<string>('');
@@ -150,15 +133,13 @@ function App() {
           {/* Trip Details Form - Unified with all form components */}
           <TripDetails formData={formData} onFormChange={setFormData} showAdditionalForms={true} />
 
-          {/* New TravelStyle Component with Error Boundary */}
-          <TravelStyleErrorBoundary>
-            <TravelStyle
-              styleData={travelStyleData}
-              onStyleChange={setTravelStyleData}
-              enableValidation={true}
-              showGenerateButton={false}
-            />
-          </TravelStyleErrorBoundary>
+          {/* New TravelStyle Component */}
+          <TravelStyle
+            styleData={travelStyleData}
+            onStyleChange={setTravelStyleData}
+            enableValidation={true}
+            showGenerateButton={false}
+          />
 
           {/* Travel Style Header - Full Width No Rounded Corners */}
           <div className="bg-trip-details text-primary py-4 px-6 shadow-lg -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-16">

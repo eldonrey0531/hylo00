@@ -1,6 +1,24 @@
 // src/components/TravelStyle/types.ts
 // Comprehensive shared types and constants for TravelStyle components
 
+// Core preference typesravelStyle/types.ts
+// Comprehensive shared types and constants for TravelStyle components
+
+import {
+  validateTravelStyleData as zodValidateTravelStyleData,
+  validateCoreRequiredSections,
+} from '../../schemas/travelStyleSchemas';
+
+// Core preference typesonents/TravelStyle/types.ts
+// Comprehensive shared types and constants for TravelStyle components
+
+import {
+  validateTravelStyleData,
+  validateCoreRequiredSections,
+  travelStyleDataSchema,
+  type TravelStyleDataType,
+} from '../../schemas/travelStyleSchemas';
+
 // Core preference types
 export type TravelPace = 'fast' | 'moderate' | 'slow' | 'flexible';
 export type ActivityLevel = 'very-active' | 'active' | 'moderate' | 'relaxed';
