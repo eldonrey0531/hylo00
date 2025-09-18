@@ -1,14 +1,13 @@
 // src/components/TripDetails/ItineraryInclusions.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { BaseFormProps, ITINERARY_INCLUSIONS } from './types';
-import FlightPreferencesModal from './PreferenceModals/FlightPreferencesModal';
-import AccommodationPreferencesModal from './PreferenceModals/AccommodationPreferencesModal';
-import RentalCarPreferencesModal from './PreferenceModals/RentalCarPreferencesModal';
-import SimplePreferenceModal from './PreferenceModals/SimplePreferenceModal';
+import FlightPreferences from './PreferenceModals/FlightPreferences';
+import AccommodationPreferences from './PreferenceModals/AccommodationPreferences';
+import RentalCarPreferences from './PreferenceModals/RentalCarPreferences';
+import SimplePreferences from './PreferenceModals/SimplePreferences';
 
 const ItineraryInclusions: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   const [localOtherText, setLocalOtherText] = useState(formData.customInclusionsText || '');
-  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Extract inclusion selections from formData
   const selectedInclusions = formData.selectedInclusions || [];
@@ -132,136 +131,105 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({ formData, onFormChange }
         )}
       </div>
 
-      {/* External Preference Sections - Outside the main form */}
-      {selectedInclusions.filter((id) => id !== 'other').length > 0 && (
-        <div className="space-y-4">
-          {selectedInclusions
-            .filter((id) => id !== 'other')
-            .map((inclusionId) => {
-              const inclusion = ITINERARY_INCLUSIONS.find((i) => i.id === inclusionId);
-              if (!inclusion) return null;
-
-              const hasPreferences = inclusionPreferences[inclusionId];
-
+      {/* Inline Preference Forms - Outside the main form */}
+      {selectedInclusions
+        .filter((id) => id !== 'other')
+        .map((inclusionId) => {
+          switch (inclusionId) {
+            case 'flights':
               return (
-                <div
+                <FlightPreferences
                   key={inclusionId}
-                  className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{inclusion.emoji}</span>
-                      <h4 className="text-lg font-bold text-primary uppercase tracking-wide font-raleway">
-                        {inclusion.label} Preferences
-                      </h4>
-                    </div>
-                    <button
-                      onClick={() => setActiveModal(inclusionId)}
-                      className={`px-4 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm ${
-                        hasPreferences
-                          ? 'border-primary bg-primary text-white'
-                          : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
-                      }`}
-                    >
-                      {hasPreferences ? 'Edit Preferences' : 'Set Preferences'}
-                    </button>
-                  </div>
-                  
-                  {hasPreferences && (
-                    <div className="mt-4 p-3 bg-primary/5 rounded-[10px] border border-primary/20">
-                      <p className="text-primary font-raleway text-sm">
-                        ✓ Preferences configured
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  preferences={inclusionPreferences[inclusionId] || {}}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
               );
-            })}
-        </div>
-      )}
-
-      {/* Modals */}
-      <FlightPreferencesModal
-        isOpen={activeModal === 'flights'}
-        onClose={() => setActiveModal(null)}
-        preferences={inclusionPreferences['flights'] || {}}
-        onSave={(preferences) => handlePreferencesSave('flights', preferences)}
-      />
-
-      <AccommodationPreferencesModal
-        isOpen={activeModal === 'accommodations'}
-        onClose={() => setActiveModal(null)}
-        preferences={inclusionPreferences['accommodations'] || {}}
-        onSave={(preferences) => handlePreferencesSave('accommodations', preferences)}
-      />
-
-      <RentalCarPreferencesModal
-        isOpen={activeModal === 'rental-car'}
-        onClose={() => setActiveModal(null)}
-        preferences={inclusionPreferences['rental-car'] || {}}
-        onSave={(preferences) => handlePreferencesSave('rental-car', preferences)}
-      />
-
-      {/* Simple text modals for other categories */}
-      <SimplePreferenceModal
-        isOpen={activeModal === 'activities'}
-        onClose={() => setActiveModal(null)}
-        title="Activities & Tours Preferences"
-        emoji="🛶"
-        placeholder="Example: I love history and culture, I want to bar hop in Barcelona"
-        preferences={inclusionPreferences['activities'] || ''}
-        onSave={(preferences) => handlePreferencesSave('activities', preferences)}
-      />
-
-      <SimplePreferenceModal
-        isOpen={activeModal === 'dining'}
-        onClose={() => setActiveModal(null)}
-        title="Dining Preferences"
-        emoji="🍽️"
-        placeholder="Example: We love street food, we want fine dining for dinner every night"
-        preferences={inclusionPreferences['dining'] || ''}
-        onSave={(preferences) => handlePreferencesSave('dining', preferences)}
-      />
-
-      <SimplePreferenceModal
-        isOpen={activeModal === 'entertainment'}
-        onClose={() => setActiveModal(null)}
-        title="Entertainment Preferences"
-        emoji="🪇"
-        placeholder="Example: We love live music, I want to attend a local cultural festival"
-        preferences={inclusionPreferences['entertainment'] || ''}
-        onSave={(preferences) => handlePreferencesSave('entertainment', preferences)}
-      />
-
-      <SimplePreferenceModal
-        isOpen={activeModal === 'nature'}
-        onClose={() => setActiveModal(null)}
-        title="Nature Preferences"
-        emoji="🌲"
-        placeholder="Example: We love hiking and biking, my kids love to swim"
-        preferences={inclusionPreferences['nature'] || ''}
-        onSave={(preferences) => handlePreferencesSave('nature', preferences)}
-      />
-
-      <SimplePreferenceModal
-        isOpen={activeModal === 'train'}
-        onClose={() => setActiveModal(null)}
-        title="Train Tickets Preferences"
-        emoji="🚆"
-        placeholder="Example: We want to take a bullet train between Tokyo and Kyoto, I want to experience a sleeper train"
-        preferences={inclusionPreferences['train'] || ''}
-        onSave={(preferences) => handlePreferencesSave('train', preferences)}
-      />
-
-      <SimplePreferenceModal
-        isOpen={activeModal === 'cruise'}
-        onClose={() => setActiveModal(null)}
-        title="Cruise Preferences"
-        emoji="🛳️"
-        placeholder="Example: Royal Caribbean departing from Florida, Balcony Suite"
-        preferences={inclusionPreferences['cruise'] || ''}
-        onSave={(preferences) => handlePreferencesSave('cruise', preferences)}
-      />
+            case 'accommodations':
+              return (
+                <AccommodationPreferences
+                  key={inclusionId}
+                  preferences={inclusionPreferences[inclusionId] || {}}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'rental-car':
+              return (
+                <RentalCarPreferences
+                  key={inclusionId}
+                  preferences={inclusionPreferences[inclusionId] || {}}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'activities':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Activities & Tours Preferences"
+                  emoji="🛶"
+                  placeholder="Example: I love history and culture, I want to bar hop in Barcelona"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'dining':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Dining Preferences"
+                  emoji="🍽️"
+                  placeholder="Example: We love street food, we want fine dining for dinner every night"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'entertainment':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Entertainment Preferences"
+                  emoji="🪇"
+                  placeholder="Example: We love live music, I want to attend a local cultural festival"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'nature':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Nature Preferences"
+                  emoji="🌲"
+                  placeholder="Example: We love hiking and biking, my kids love to swim"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'train':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Train Tickets Preferences"
+                  emoji="🚆"
+                  placeholder="Example: We want to take a bullet train between Tokyo and Kyoto, I want to experience a sleeper train"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            case 'cruise':
+              return (
+                <SimplePreferences
+                  key={inclusionId}
+                  title="Cruise Preferences"
+                  emoji="🛳️"
+                  placeholder="Example: Royal Caribbean departing from Florida, Balcony Suite"
+                  preferences={inclusionPreferences[inclusionId] || ''}
+                  onSave={(preferences) => handlePreferencesSave(inclusionId, preferences)}
+                />
+              );
+            default:
+              return null;
+          }
+        })}
     </>
   );
 };
