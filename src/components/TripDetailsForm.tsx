@@ -479,15 +479,20 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
                   />
                 </React.Suspense>
               ) : (
-                <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
+                <div
+                  className={`relative cursor-pointer ${isFlexibleDatesEnabled ? 'hidden' : ''}`}
+                  onClick={() => !isFlexibleDatesEnabled && departDateRef.current?.showPicker()}
+                >
                   <input
                     type="text"
                     placeholder="mm/dd/yy"
                     value={formData.departDate || ''}
                     onChange={(e) => handleManualDateInput('departDate', e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     maxLength={8}
-                    className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white"
+                    className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white cursor-pointer"
                     aria-label="Departure date"
+                    disabled={isFlexibleDatesEnabled}
                   />
                   <input
                     ref={departDateRef}
@@ -500,9 +505,13 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
                   />
                   <button
                     type="button"
-                    onClick={() => departDateRef.current?.showPicker()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      !isFlexibleDatesEnabled && departDateRef.current?.showPicker();
+                    }}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 hover:bg-gray-100 cursor-pointer text-primary"
                     aria-label="Open departure date picker"
+                    disabled={isFlexibleDatesEnabled}
                   >
                     <Calendar className="h-5 w-5" />
                   </button>
@@ -533,18 +542,24 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
                   />
                 </React.Suspense>
               ) : (
-                <div className={`relative ${isFlexibleDatesEnabled ? 'hidden' : ''}`}>
+                <div
+                  className={`relative ${
+                    isFlexibleDatesEnabled ? 'hidden cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
+                >
                   <input
                     type="text"
                     placeholder="mm/dd/yy"
                     value={formData.returnDate || ''}
                     onChange={(e) => handleManualDateInput('returnDate', e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     maxLength={8}
                     disabled={isFlexibleDatesEnabled}
                     className={`w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base ${
                       isFlexibleDatesEnabled
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white'
+                        : 'bg-white cursor-pointer'
                     }`}
                     aria-label="Return date"
                     aria-disabled={isFlexibleDatesEnabled}
@@ -561,7 +576,10 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
                   />
                   <button
                     type="button"
-                    onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      !isFlexibleDatesEnabled && returnDateRef.current?.showPicker();
+                    }}
                     disabled={isFlexibleDatesEnabled}
                     className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 ${
                       isFlexibleDatesEnabled
@@ -775,71 +793,74 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </h3>
         </div>
 
-        {/* Budget Display */}
-        <div className="text-center mb-6">
-          <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
-            {getBudgetDisplay()}
-          </div>
-        </div>
+        {!formData.flexibleBudget && (
+          <>
+            {/* Budget Display */}
+            <div className="text-center mb-6">
+              <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
+                {getBudgetDisplay()}
+              </div>
+            </div>
 
-        {/* Budget Slider */}
-        {FEATURE_FLAGS.ENHANCED_BUDGET_SLIDER ? (
-          <React.Suspense
-            fallback={
+            {/* Budget Slider */}
+            {FEATURE_FLAGS.ENHANCED_BUDGET_SLIDER ? (
+              <React.Suspense
+                fallback={
+                  <div className="space-y-4">
+                    <div className="bg-gray-100 rounded-lg p-8 animate-pulse text-center">
+                      Loading enhanced budget slider...
+                    </div>
+                  </div>
+                }
+              >
+                <EnhancedBudgetSlider
+                  value={budgetRange}
+                  onChange={handleBudgetChange}
+                  min={0}
+                  max={MAX_BUDGET}
+                  step={BUDGET_STEP}
+                  currency={formData.currency as Currency}
+                  enableRealTimeSync={true}
+                  showFlexibleToggle={true}
+                />
+              </React.Suspense>
+            ) : (
               <div className="space-y-4">
-                <div className="bg-gray-100 rounded-lg p-8 animate-pulse text-center">
-                  Loading enhanced budget slider...
+                <div className="slider-container">
+                  <input
+                    type="range"
+                    min="0"
+                    max={MAX_BUDGET}
+                    step={BUDGET_STEP}
+                    value={budgetRange}
+                    onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
+                    onInput={(e) => handleBudgetChange(parseInt((e.target as HTMLInputElement).value))}
+                    className="w-full slider-primary"
+                    aria-label="Budget range"
+                    aria-valuemin={0}
+                    aria-valuemax={MAX_BUDGET}
+                    aria-valuenow={budgetRange}
+                  />
+                </div>
+
+                {/* Budget labels */}
+                <div
+                  className="flex justify-between text-base font-bold font-raleway px-3"
+                  style={{ color: '#406170' }}
+                >
+                  <span>{getCurrencySymbol()}0</span>
+                  <span>{getCurrencySymbol()}10,000+</span>
                 </div>
               </div>
-            }
-          >
-            <EnhancedBudgetSlider
-              value={budgetRange}
-              onChange={handleBudgetChange}
-              min={0}
-              max={MAX_BUDGET}
-              step={BUDGET_STEP}
-              currency={formData.currency as Currency}
-              enableRealTimeSync={true}
-              showFlexibleToggle={true}
-            />
-          </React.Suspense>
-        ) : (
-          <div className="space-y-4">
-            <div className="slider-container">
-              <input
-                type="range"
-                min="0"
-                max={MAX_BUDGET}
-                step={BUDGET_STEP}
-                value={budgetRange}
-                onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
-                className="w-full slider-primary"
-                aria-label="Budget range"
-                aria-valuemin={0}
-                aria-valuemax={MAX_BUDGET}
-                aria-valuenow={budgetRange}
-              />
-            </div>
+            )}
 
-            {/* Budget labels */}
-            <div
-              className="flex justify-between text-base font-bold font-raleway px-3"
-              style={{ color: '#406170' }}
-            >
-              <span>{getCurrencySymbol()}0</span>
-              <span>{getCurrencySymbol()}10,000+</span>
-            </div>
-          </div>
-        )}
-
-        {/* Currency and Budget Mode Row */}
-        <div className="flex items-center justify-between gap-6 mt-6">
-          {/* Currency Dropdown */}
-          <div className="flex items-center space-x-2">
-            <select
-              value={formData.currency || 'USD'}
-              onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
+            {/* Currency and Budget Mode Row */}
+            <div className="flex items-center justify-between gap-6 mt-6">
+              {/* Currency Dropdown */}
+              <div className="flex items-center space-x-2">
+                <select
+                  value={formData.currency || 'USD'}
+                  onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
               className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
               aria-label="Select currency"
             >
@@ -882,27 +903,30 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
             </label>
             <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
           </div>
+          </>
+        )}
 
-          {/* Budget Flexibility Toggle */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-            <span className="text-primary font-bold font-raleway text-sm">Budget flexibility</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.flexibleBudget || false}
-                onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
-                className="sr-only peer"
-                aria-label="Toggle budget flexibility"
-              />
-              <div
-                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                  formData.flexibleBudget
-                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                }`}
-              ></div>
-            </label>
-          </div>
+        {/* Budget Flexibility Toggle */}
+        <div className="flex items-center mt-4 pt-4 border-t border-gray-200">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.flexibleBudget || false}
+              onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
+              className="sr-only peer"
+              aria-label="Toggle budget flexibility"
+            />
+            <div
+              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
+                formData.flexibleBudget
+                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+              }`}
+            ></div>
+            <span className="ml-3 text-primary font-bold font-raleway text-sm">
+              I'm not sure or my budget is flexible
+            </span>
+          </label>
         </div>
       </div>
 
