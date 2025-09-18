@@ -127,6 +127,9 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   const [localFlexibleDates, setLocalFlexibleDates] = useState(Boolean(formData.flexibleDates));
   const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('total');
+  const [isFlexibleBudgetEnabled, setIsFlexibleBudgetEnabled] = useState(
+    Boolean(formData.flexibleBudget)
+  );
   const [adults, setAdults] = useState(formData.adults || 2);
   const [children, setChildren] = useState(formData.children || 0);
   const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
@@ -137,6 +140,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   // Sync local state when formData changes from parent
   useEffect(() => {
     setLocalFlexibleDates(Boolean(formData.flexibleDates));
+    setIsFlexibleBudgetEnabled(Boolean(formData.flexibleBudget));
     setAdults(formData.adults || 2);
     setChildren(formData.children || 0);
     setChildrenAges(formData.childrenAges || []);
@@ -355,6 +359,33 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
     [formData, onFormChange]
   );
 
+  const handleFlexibleBudgetChange = useCallback(
+    (checked: boolean) => {
+      try {
+        // Update local state immediately for responsive UI
+        setIsFlexibleBudgetEnabled(checked);
+
+        // Create updated form data
+        const updatedFormData: FormData = { ...formData };
+        updatedFormData.flexibleBudget = checked;
+
+        if (!checked && !updatedFormData.budget) {
+          // Set default budget when disabling flexible budget
+          updatedFormData.budget = 5000;
+          setBudgetRange(5000);
+        }
+
+        // Update parent with all changes at once
+        onFormChange(updatedFormData);
+      } catch (error) {
+        console.error('Error toggling flexible budget:', error);
+        // Reset local state on error
+        setIsFlexibleBudgetEnabled(!checked);
+      }
+    },
+    [formData, onFormChange]
+  );
+
   const handleBudgetModeChange = useCallback((checked: boolean) => {
     setBudgetMode(checked ? 'per-person' : 'total');
   }, []);
@@ -407,6 +438,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           placeholder='Example: "New York", "Thailand", "Spain and Portugal"'
           value={formData.location || ''}
           onChange={(e) => handleInputChange('location', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white placeholder-gray-500 font-bold font-raleway text-base"
           aria-label="Trip location"
         />
@@ -717,112 +749,129 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </h3>
         </div>
 
-        {/* Budget Display */}
-        <div className="text-center mb-6">
-          <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
-            {getBudgetDisplay()}
-          </div>
-        </div>
+        {/* Only show budget controls when flexible budget is disabled */}
+        {!isFlexibleBudgetEnabled && (
+          <>
+            {/* Budget Display */}
+            <div className="text-center mb-6">
+              <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
+                {getBudgetDisplay()}
+              </div>
+            </div>
 
-        {/* Budget Slider */}
-        <div className="space-y-4">
-          <div className="slider-container">
+            {/* Budget Slider */}
+            <div className="space-y-4">
+              <div className="slider-container">
+                <input
+                  type="range"
+                  min="0"
+                  max={MAX_BUDGET}
+                  step={BUDGET_STEP}
+                  value={budgetRange}
+                  onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
+                  onInput={(e) =>
+                    handleBudgetChange(parseInt((e.target as HTMLInputElement).value))
+                  }
+                  className="w-full slider-primary"
+                  aria-label="Budget range"
+                  aria-valuemin={0}
+                  aria-valuemax={MAX_BUDGET}
+                  aria-valuenow={budgetRange}
+                />
+              </div>
+
+              {/* Budget labels */}
+              <div
+                className="flex justify-between text-base font-bold font-raleway px-3"
+                style={{ color: '#406170' }}
+              >
+                <span>{getCurrencySymbol()}0</span>
+                <span>{getCurrencySymbol()}10,000+</span>
+              </div>
+            </div>
+
+            {/* Currency and Budget Mode Row */}
+            <div className="flex items-center justify-between gap-6 mt-6">
+              {/* Currency Dropdown */}
+              <div className="flex items-center space-x-2">
+                <select
+                  value={formData.currency || 'USD'}
+                  onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
+                  className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
+                  aria-label="Select currency"
+                >
+                  <option value="USD" className="font-bold font-raleway text-sm">
+                    $ USD
+                  </option>
+                  <option value="EUR" className="font-bold font-raleway text-sm">
+                    € EUR
+                  </option>
+                  <option value="GBP" className="font-bold font-raleway text-sm">
+                    £ GBP
+                  </option>
+                  <option value="CAD" className="font-bold font-raleway text-sm">
+                    C$ CAD
+                  </option>
+                  <option value="AUD" className="font-bold font-raleway text-sm">
+                    A$ AUD
+                  </option>
+                </select>
+              </div>
+
+              {/* Budget Mode Switch */}
+              <div className="flex items-center space-x-4">
+                <span className="text-primary font-bold font-raleway text-sm">
+                  Total trip budget
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={budgetMode === 'per-person'}
+                    onChange={(e) => handleBudgetModeChange(e.target.checked)}
+                    className="sr-only peer"
+                    aria-label="Toggle budget mode"
+                  />
+                  <div
+                    className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
+                      budgetMode === 'per-person'
+                        ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                        : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                    }`}
+                  ></div>
+                </label>
+                <span className="text-primary font-bold font-raleway text-sm">
+                  Per-person budget
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Flexible Budget Toggle - Always visible */}
+        <div
+          className={`flex items-center ${
+            !isFlexibleBudgetEnabled ? 'mt-6 pt-4 border-t border-gray-200' : ''
+          }`}
+        >
+          <label className="relative inline-flex items-center cursor-pointer">
             <input
-              type="range"
-              min="0"
-              max={MAX_BUDGET}
-              step={BUDGET_STEP}
-              value={budgetRange}
-              onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
-              onInput={(e) => handleBudgetChange(parseInt((e.target as HTMLInputElement).value))}
-              className="w-full slider-primary"
-              aria-label="Budget range"
-              aria-valuemin={0}
-              aria-valuemax={MAX_BUDGET}
-              aria-valuenow={budgetRange}
+              type="checkbox"
+              checked={isFlexibleBudgetEnabled}
+              onChange={(e) => handleFlexibleBudgetChange(e.target.checked)}
+              className="sr-only peer"
+              aria-label="Toggle budget flexibility"
             />
-          </div>
-
-          {/* Budget labels */}
-          <div
-            className="flex justify-between text-base font-bold font-raleway px-3"
-            style={{ color: '#406170' }}
-          >
-            <span>{getCurrencySymbol()}0</span>
-            <span>{getCurrencySymbol()}10,000+</span>
-          </div>
-        </div>
-
-        {/* Currency and Budget Mode Row */}
-        <div className="flex items-center justify-between gap-6 mt-6">
-          {/* Currency Dropdown */}
-          <div className="flex items-center space-x-2">
-            <select
-              value={formData.currency || 'USD'}
-              onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
-              className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
-              aria-label="Select currency"
-            >
-              <option value="USD" className="font-bold font-raleway text-sm">
-                $ USD
-              </option>
-              <option value="EUR" className="font-bold font-raleway text-sm">
-                € EUR
-              </option>
-              <option value="GBP" className="font-bold font-raleway text-sm">
-                £ GBP
-              </option>
-              <option value="CAD" className="font-bold font-raleway text-sm">
-                C$ CAD
-              </option>
-              <option value="AUD" className="font-bold font-raleway text-sm">
-                A$ AUD
-              </option>
-            </select>
-          </div>
-
-          {/* Budget Mode Switch */}
-          <div className="flex items-center space-x-4">
-            <span className="text-primary font-bold font-raleway text-sm">Total trip budget</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={budgetMode === 'per-person'}
-                onChange={(e) => handleBudgetModeChange(e.target.checked)}
-                className="sr-only peer"
-                aria-label="Toggle budget mode"
-              />
-              <div
-                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                  budgetMode === 'per-person'
-                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                }`}
-              ></div>
-            </label>
-            <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
-          </div>
-
-          {/* Budget Flexibility Toggle */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-            <span className="text-primary font-bold font-raleway text-sm">Budget flexibility</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.flexibleBudget || false}
-                onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
-                className="sr-only peer"
-                aria-label="Toggle budget flexibility"
-              />
-              <div
-                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                  formData.flexibleBudget
-                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                }`}
-              ></div>
-            </label>
-          </div>
+            <div
+              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
+                isFlexibleBudgetEnabled
+                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+              }`}
+            ></div>
+            <span className="text-primary font-bold font-raleway text-sm">
+              I'm not sure or my budget is flexible
+            </span>
+          </label>
         </div>
       </div>
 
