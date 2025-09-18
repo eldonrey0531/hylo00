@@ -1,9 +1,7 @@
 import { generateMultiAgentItinerary, AgentLog } from './multiAgentService';
-import { TravelStyleData } from '../components/TravelStyle/types';
-import { FormData } from '../components/TripDetails/types';
 
 export interface TravelFormData {
-  tripDetails: FormData;
+  tripDetails: any;
   groups: string[];
   interests: string[];
   inclusions: string[];
@@ -12,8 +10,7 @@ export interface TravelFormData {
   sampleDays: string[];
   dinnerChoices: string[];
   nickname: string;
-  contact: Record<string, unknown>;
-  travelStyle?: TravelStyleData; // New TravelStyle integration
+  contact: any;
 }
 
 // Main entry point that uses the multi-agent system

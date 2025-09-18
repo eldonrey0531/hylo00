@@ -4,24 +4,23 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { TravelStyleData, validateTravelStyleCompletion, getTravelStyleProgress } from './types';
 
-// Import all form components
-import PacePreference from './PacePreference';
-import ActivityLevel from './ActivityLevel';
-import PlanningStyle from './PlanningStyle';
-import AccommodationType from './AccommodationType';
-import CulturalInterest from './CulturalInterest';
-import BudgetStyle from './BudgetStyle';
-import DiningPreferences from './DiningPreferences';
-import TransportPreferences from './TransportPreferences';
-import TravelInterestsSelector from './TravelInterestsSelector';
-import TripPurpose from './TripPurpose';
-import GenerateItineraryButton from './GenerateItineraryButton';
+// Import all form components (will be implemented in Phase 2)
+// import PacePreference from './PacePreference';
+// import ActivityLevel from './ActivityLevel';
+// import PlanningStyle from './PlanningStyle';
+// import AccommodationType from './AccommodationType';
+// import CulturalInterest from './CulturalInterest';
+// import BudgetStyle from './BudgetStyle';
+// import DiningPreferences from './DiningPreferences';
+// import TransportPreferences from './TransportPreferences';
+// import TravelInterestsSelector from './TravelInterestsSelector';
+// import TripPurpose from './TripPurpose';
+// import GenerateItineraryButton from './GenerateItineraryButton';
 
 interface TravelStyleProps {
   styleData: TravelStyleData;
   onStyleChange: (data: TravelStyleData) => void;
   enableValidation?: boolean;
-  isLoading?: boolean;
   visibleSections?: {
     pace?: boolean;
     activityLevel?: boolean;
@@ -42,7 +41,6 @@ const TravelStyle: React.FC<TravelStyleProps> = ({
   styleData,
   onStyleChange,
   enableValidation = true,
-  isLoading = false,
   visibleSections = {
     pace: true,
     activityLevel: true,
@@ -107,20 +105,7 @@ const TravelStyle: React.FC<TravelStyleProps> = ({
   const progress = getTravelStyleProgress(styleData);
 
   return (
-    <div className="space-y-6 relative">
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-[36px]">
-          <div className="text-center">
-            <div className="animate-spin text-6xl mb-4">🔄</div>
-            <p className="text-primary font-bold font-raleway text-lg">
-              Processing your travel style...
-            </p>
-            <p className="text-primary/70 font-raleway text-sm mt-2">This won't take long!</p>
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-6">
       {/* Progress Header */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
         <div className="text-center">
@@ -186,29 +171,71 @@ const TravelStyle: React.FC<TravelStyleProps> = ({
         </div>
       )}
 
-      {/* Core Travel Style Components */}
-      {visibleSections.pace && <PacePreference {...baseProps} />}
-      {visibleSections.activityLevel && <ActivityLevel {...baseProps} />}
-      {visibleSections.planningStyle && <PlanningStyle {...baseProps} />}
-      {visibleSections.culturalInterest && <CulturalInterest {...baseProps} />}
-      {visibleSections.budgetStyle && <BudgetStyle {...baseProps} />}
+      {/* PLACEHOLDER: Form Components will be added in Phase 2 */}
+      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
+        <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
+          Travel Style Components
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-primary font-raleway">
+          {visibleSections.pace && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">🏃 Pace Preference</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+          {visibleSections.activityLevel && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">🥾 Activity Level</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+          {visibleSections.planningStyle && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">📋 Planning Style</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+          {visibleSections.accommodationType && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">🏨 Accommodation</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+          {visibleSections.culturalInterest && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">🏛️ Cultural Interest</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+          {visibleSections.budgetStyle && (
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <span className="font-bold">💰 Budget Style</span>
+              <p className="text-sm">Will be implemented in Phase 2</p>
+            </div>
+          )}
+        </div>
+      </div>
 
-      {/* Multi-select Preference Components */}
-      {visibleSections.accommodationType && <AccommodationType {...baseProps} />}
-      {visibleSections.interests && <TravelInterestsSelector {...baseProps} />}
-
-      {/* Optional Preference Components */}
-      {visibleSections.diningPreferences && <DiningPreferences {...baseProps} />}
-      {visibleSections.transportPreferences && <TransportPreferences {...baseProps} />}
-      {visibleSections.purpose && <TripPurpose {...baseProps} />}
-
-      {/* Generate Button */}
+      {/* Generate Button (Phase 3) */}
       {showGenerateButton && (
-        <GenerateItineraryButton
-          styleData={styleData}
-          onGenerate={onGenerate || (() => {})}
-          className="mt-6"
-        />
+        <div className="text-center">
+          <button
+            onClick={onGenerate}
+            disabled={!isFormValid}
+            className={`
+              px-8 py-4 rounded-[36px] font-bold font-raleway text-lg transition-all duration-200
+              ${
+                isFormValid
+                  ? 'bg-primary text-white hover:scale-105 shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }
+            `}
+          >
+            {isFormValid
+              ? '🚀 Generate My Personalized Itinerary'
+              : '⏳ Complete Travel Style First'}
+          </button>
+        </div>
       )}
     </div>
   );
