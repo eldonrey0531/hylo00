@@ -120,14 +120,9 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
           </div>
         </div>
 
-        {/* Total Travelers Display - Softer border approach */}
-        <div className="pt-4 mt-3 border-t-3 border-[#406170] bg-[#406170]/5 -mx-6 px-6 rounded-b-[36px]">
-          <div className="flex justify-between items-center pb-2">
-            <span className="text-primary font-bold font-raleway text-base">Total travelers</span>
-            <div className="w-10 h-10 rounded-full border-3 border-[#406170] bg-white flex items-center justify-center shadow-sm">
-              <span className="text-xl font-bold text-[#406170] font-raleway">{totalTravelers}</span>
-            </div>
-          </div>
+        {/* Total Travelers Display - Centered with thick border */}
+        <div className="text-center border-4 border-primary p-4 font-raleway font-bold mt-3 rounded-[20px] bg-primary/5">
+          <span className="text-primary text-lg">Total travelers: {totalTravelers}</span>
         </div>
       </div>
 
