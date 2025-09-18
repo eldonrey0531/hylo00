@@ -16,27 +16,27 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
 
   const adjustAdults = useCallback(
     (increment: boolean) => {
-      const newValue = increment ? adults + 1 : Math.max(MIN_ADULTS, adults - 1);
-      setAdults(newValue);
-      onFormChange({ adults: newValue });
+      const newAdults = increment ? adults + 1 : Math.max(MIN_ADULTS, adults - 1);
+      setAdults(newAdults);
+      onFormChange({ adults: newAdults });
     },
     [adults, onFormChange]
   );
 
   const adjustChildren = useCallback(
     (increment: boolean) => {
-      const newChildrenCount = increment ? children + 1 : Math.max(MIN_CHILDREN, children - 1);
+      const newChildren = increment ? children + 1 : Math.max(MIN_CHILDREN, children - 1);
+      setChildren(newChildren);
 
-      let newChildrenAges = [...childrenAges];
+      const newAges = [...childrenAges];
       if (increment) {
-        newChildrenAges.push(UNSELECTED_AGE);
-      } else if (newChildrenAges.length > newChildrenCount) {
-        newChildrenAges = newChildrenAges.slice(0, newChildrenCount);
+        newAges.push(UNSELECTED_AGE);
+      } else if (newAges.length > newChildren) {
+        newAges.splice(newChildren);
       }
 
-      setChildren(newChildrenCount);
-      setChildrenAges(newChildrenAges);
-      onFormChange({ children: newChildrenCount, childrenAges: newChildrenAges });
+      setChildrenAges(newAges);
+      onFormChange({ children: newChildren, childrenAges: newAges });
     },
     [children, childrenAges, onFormChange]
   );
@@ -55,10 +55,6 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   );
 
   const totalTravelers = adults + children;
-  const hasUnselectedChildrenAges =
-    children > 0 &&
-    (childrenAges.length !== children ||
-      childrenAges.some((age) => age === UNSELECTED_AGE || age === undefined));
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
@@ -118,13 +114,13 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Total Travelers Display */}
-      <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
-        <span className="text-primary font-bold font-raleway text-base">Total travelers: </span>
-        <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
-          <span className="font-bold text-primary font-raleway text-xl">{totalTravelers}</span>
+        {/* Total Travelers Display */}
+        <div className="pt-3 border-t-2 border-primary/20">
+          <div className="flex justify-between items-center">
+            <span className="text-primary font-bold font-raleway text-sm">Total Travelers</span>
+            <span className="text-xl font-bold text-primary font-raleway">{totalTravelers}</span>
+          </div>
         </div>
       </div>
 
@@ -149,15 +145,8 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
                       updateChildAge(index, parseInt(value));
                     }
                   }}
-                  className={`px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] ${
-                    childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
-                      ? 'border-red-400 text-gray-500'
-                      : 'border-primary'
-                  }`}
+                  className="px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] border-primary"
                   aria-label={`Age for child ${index + 1}`}
-                  aria-invalid={
-                    childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
-                  }
                 >
                   <option value="" className="font-bold font-raleway text-base">
                     Select age
@@ -175,11 +164,6 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
               </div>
             </div>
           ))}
-          {hasUnselectedChildrenAges && (
-            <p className="text-sm text-red-600 font-bold font-raleway mt-2">
-              Please select ages for all children
-            </p>
-          )}
         </div>
       )}
     </div>
