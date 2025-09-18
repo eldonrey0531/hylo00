@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
-import TripDetailsForm from './components/TripDetailsForm';
+import TripDetails from './components/TripDetails';
+import { FormData } from './components/TripDetails/types';
 import TravelGroupSelector from './components/TravelGroupSelector';
 import TravelInterests from './components/TravelInterests';
 import ItineraryInclusions from './components/ItineraryInclusions';
@@ -14,26 +15,6 @@ import BehindTheScenes from './components/BehindTheScenes';
 import AIErrorBoundary from './components/AIErrorBoundary';
 import HealthMonitor from './components/HealthMonitor';
 import { GenerateItineraryButton } from './components/GenerateItineraryButton';
-
-// Import FormData type from TripDetailsForm
-type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
-interface FormData {
-  location: string;
-  departDate: string;
-  returnDate: string;
-  flexibleDates: boolean;
-  plannedDays?: number;
-  adults: number;
-  children: number;
-  childrenAges: number[];
-  budget: number;
-  currency: Currency;
-  flexibleBudget?: boolean;
-  accommodationOther?: string;
-  rentalCarPreferences?: string[];
-  travelStyleChoice?: 'answer-questions' | 'skip-to-details' | 'not-selected';
-  travelStyleAnswers?: Record<string, any>;
-}
 
 function App() {
   const [formData, setFormData] = useState<FormData>({
@@ -145,7 +126,7 @@ function App() {
           </div>
 
           {/* Trip Details Form */}
-          <TripDetailsForm formData={formData} onFormChange={setFormData} />
+          <TripDetails formData={formData} onFormChange={setFormData} />
 
           {/* Travel Group */}
           <TravelGroupSelector
