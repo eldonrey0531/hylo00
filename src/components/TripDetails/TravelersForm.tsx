@@ -118,10 +118,10 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
         {/* Total Travelers Display - Added Border Line */}
         <div className="pt-3 border-t-3 border-primary">
           <div className="flex justify-center items-center">
-            <span className="text-primary font-bold font-raleway text-base mr-3">Total Travelers</span>
-            <div className="w-10 h-10 rounded-full border-3 border-primary bg-primary flex items-center justify-center">
-              <span className="text-xl font-bold text-white font-raleway">{totalTravelers}</span>
+            <div className="w-10 h-10 rounded-full border-3 border-[#406170] bg-white flex items-center justify-center mr-3">
+              <span className="text-xl font-bold text-[#406170] font-raleway">{totalTravelers}</span>
             </div>
+            <span className="text-primary font-bold font-raleway text-base">Total travelers: {totalTravelers}</span>
           </div>
         </div>
       </div>
