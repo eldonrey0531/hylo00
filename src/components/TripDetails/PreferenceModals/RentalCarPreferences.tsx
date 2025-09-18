@@ -9,10 +9,10 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
   preferences = {},
   onSave,
 }) => {
-  const [vehicleType, setVehicleType] = useState(preferences.vehicleType || '');
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(preferences.vehicleTypes || []);
   const [specialRequirements, setSpecialRequirements] = useState(preferences.specialRequirements || '');
 
-  const vehicleTypes = [
+  const vehicleTypeOptions = [
     'Economy',
     'Compact',
     'Mid-size',
@@ -24,13 +24,19 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
   ];
 
   useEffect(() => {
-    setVehicleType(preferences.vehicleType || '');
+    setVehicleTypes(preferences.vehicleTypes || []);
     setSpecialRequirements(preferences.specialRequirements || '');
   }, [preferences]);
 
+  const toggleVehicleType = (type: string) => {
+    setVehicleTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
   const handleSave = () => {
     onSave({
-      vehicleType,
+      vehicleTypes,
       specialRequirements,
     });
   };
@@ -38,13 +44,13 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
   // Auto-save when any field changes
   useEffect(() => {
     handleSave();
-  }, [vehicleType, specialRequirements]);
+  }, [vehicleTypes, specialRequirements]);
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-4">
-      <div className="flex items-center space-x-3 mb-6">
+    <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
+      <div className="flex items-center space-x-3 mb-6 bg-transparent">
         <span className="text-3xl">🚗</span>
-        <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+        <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Rental Car Preferences
         </h3>
       </div>
@@ -53,15 +59,15 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
         {/* Vehicle Type */}
         <div>
           <label className="block text-primary font-bold font-raleway text-base mb-3">
-            Preferred vehicle type
+            Preferred vehicle type(s) (select all that apply)
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            {vehicleTypes.map((type) => (
+          <div className="flex flex-wrap gap-2">
+            {vehicleTypeOptions.map((type) => (
               <button
                 key={type}
-                onClick={() => setVehicleType(type)}
-                className={`p-3 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm ${
-                  vehicleType === type
+                onClick={() => toggleVehicleType(type)}
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                  vehicleTypes.includes(type)
                     ? 'border-primary bg-primary text-white'
                     : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
                 }`}
