@@ -1,9 +1,9 @@
-// src/components/TripDetails/TravelersForm.tsx
+// src/components/TripDetails/VacationTypesForm.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { Plus, Minus, ChevronDown } from 'lucide-react';
 import { BaseFormProps, MIN_ADULTS, MIN_CHILDREN, MAX_CHILD_AGE, UNSELECTED_AGE } from './types';
 
-const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
+const VacationTypesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   const [adults, setAdults] = useState(formData.adults || 2);
   const [children, setChildren] = useState(formData.children || 0);
   const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
@@ -58,9 +58,11 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-      <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
-        TRAVELERS
-      </h3>
+      <div className="-mx-6 -mt-6 mb-6 bg-primary px-6 py-4 rounded-t-[33px]">
+        <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
+          VACATION TYPES
+        </h3>
+      </div>
       <div className="space-y-4">
         {/* Adults Counter */}
         <div className="flex items-center justify-between">
@@ -115,13 +117,13 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
           </div>
         </div>
 
-        {/* Total Travelers Display - Updated Layout */}
+        {/* Total Travelers Display - Added Border Line */}
         <div className="pt-3 border-t-3 border-primary">
-          <div className="flex justify-between items-center">
-            <span className="text-primary font-bold font-raleway text-base">Total travelers</span>
-            <div className="w-10 h-10 rounded-full border-3 border-[#406170] bg-white flex items-center justify-center">
+          <div className="flex justify-center items-center">
+            <div className="w-10 h-10 rounded-full border-3 border-[#406170] bg-white flex items-center justify-center mr-3">
               <span className="text-xl font-bold text-[#406170] font-raleway">{totalTravelers}</span>
             </div>
+            <span className="text-primary font-bold font-raleway text-base">Total travelers: {totalTravelers}</span>
           </div>
         </div>
       </div>
@@ -172,4 +174,4 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   );
 };
 
-export default TravelersForm;
+export default VacationTypesForm;
