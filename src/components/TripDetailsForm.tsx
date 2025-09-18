@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Minus, Calendar, ChevronDown } from 'lucide-react';
+import { TravelStyleGroup } from './TravelStyleGroup';
+import { tripDetailsSchema } from '../schemas/formSchemas';
 
 // Type definitions
 type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
@@ -27,6 +29,7 @@ interface FormData {
 interface TripDetailsFormProps {
   formData: FormData;
   onFormChange: (data: FormData) => void;
+  onValidationChange?: (isValid: boolean, errors: Record<string, string>) => void;
 }
 
 // Constants
@@ -122,7 +125,11 @@ const currencySymbols: Record<Currency, string> = {
   AUD: 'A$',
 };
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChange }) => {
+const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
+  formData,
+  onFormChange,
+  onValidationChange,
+}) => {
   // Local state
   const [localFlexibleDates, setLocalFlexibleDates] = useState(Boolean(formData.flexibleDates));
   const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
@@ -134,6 +141,22 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
 
+  // Form validation using Zod schema
+  const validateForm = useCallback(() => {
+    try {
+      tripDetailsSchema.parse(formData);
+      return { isValid: true, errors: {} };
+    } catch (error: any) {
+      const errors: Record<string, string> = {};
+      if (error.errors) {
+        error.errors.forEach((err: any) => {
+          errors[err.path.join('.')] = err.message;
+        });
+      }
+      return { isValid: false, errors };
+    }
+  }, [formData]);
+
   // Sync local state when formData changes from parent
   useEffect(() => {
     setLocalFlexibleDates(Boolean(formData.flexibleDates));
@@ -141,7 +164,13 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
     setChildren(formData.children || 0);
     setChildrenAges(formData.childrenAges || []);
     setBudgetRange(formData.budget || 5000);
-  }, [formData]);
+
+    // Validate form and notify parent
+    if (onValidationChange) {
+      const validation = validateForm();
+      onValidationChange(validation.isValid, validation.errors);
+    }
+  }, [formData, validateForm, onValidationChange]);
 
   // Memoized handlers
   const handleInputChange = useCallback(
@@ -717,41 +746,71 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </h3>
         </div>
 
-        {/* Budget Display */}
-        <div className="text-center mb-6">
-          <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
-            {getBudgetDisplay()}
-          </div>
-        </div>
-
-        {/* Budget Slider */}
-        <div className="space-y-4">
-          <div className="slider-container">
+        {/* Budget Flexibility Toggle */}
+        <div className="flex items-center mb-6">
+          <label className="relative inline-flex items-center cursor-pointer">
             <input
-              type="range"
-              min="0"
-              max={MAX_BUDGET}
-              step={BUDGET_STEP}
-              value={budgetRange}
-              onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
-              onInput={(e) => handleBudgetChange(parseInt((e.target as HTMLInputElement).value))}
-              className="w-full slider-primary"
-              aria-label="Budget range"
-              aria-valuemin={0}
-              aria-valuemax={MAX_BUDGET}
-              aria-valuenow={budgetRange}
+              type="checkbox"
+              checked={formData.flexibleBudget || false}
+              onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
+              className="sr-only peer"
+              aria-label="Toggle budget flexibility"
             />
-          </div>
-
-          {/* Budget labels */}
-          <div
-            className="flex justify-between text-base font-bold font-raleway px-3"
-            style={{ color: '#406170' }}
-          >
-            <span>{getCurrencySymbol()}0</span>
-            <span>{getCurrencySymbol()}10,000+</span>
-          </div>
+            <div
+              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
+                formData.flexibleBudget
+                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+              }`}
+            ></div>
+            <span className="text-primary font-bold font-raleway text-sm">
+              I'm not sure or my budget is flexible
+            </span>
+          </label>
         </div>
+
+        {/* Budget Display and Slider - Hidden when flexible */}
+        {!formData.flexibleBudget && (
+          <>
+            {/* Budget Display */}
+            <div className="text-center mb-6">
+              <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
+                {getBudgetDisplay()}
+              </div>
+            </div>
+
+            {/* Budget Slider */}
+            <div className="space-y-4">
+              <div className="slider-container">
+                <input
+                  type="range"
+                  min="0"
+                  max={MAX_BUDGET}
+                  step={BUDGET_STEP}
+                  value={budgetRange}
+                  onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
+                  onInput={(e) =>
+                    handleBudgetChange(parseInt((e.target as HTMLInputElement).value))
+                  }
+                  className="w-full slider-primary"
+                  aria-label="Budget range"
+                  aria-valuemin={0}
+                  aria-valuemax={MAX_BUDGET}
+                  aria-valuenow={budgetRange}
+                />
+              </div>
+
+              {/* Budget labels */}
+              <div
+                className="flex justify-between text-base font-bold font-raleway px-3"
+                style={{ color: '#406170' }}
+              >
+                <span>{getCurrencySymbol()}0</span>
+                <span>{getCurrencySymbol()}10,000+</span>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Currency and Budget Mode Row */}
         <div className="flex items-center justify-between gap-6 mt-6">
@@ -802,27 +861,6 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
             </label>
             <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
           </div>
-
-          {/* Budget Flexibility Toggle */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-            <span className="text-primary font-bold font-raleway text-sm">Budget flexibility</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.flexibleBudget || false}
-                onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
-                className="sr-only peer"
-                aria-label="Toggle budget flexibility"
-              />
-              <div
-                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                  formData.flexibleBudget
-                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                }`}
-              ></div>
-            </label>
-          </div>
         </div>
       </div>
 
@@ -839,8 +877,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           <button
             type="button"
             onClick={() => {
-              // Show travel style questions logic can be added here
-              console.log('Answer style questions selected');
+              handleInputChange('travelStyleChoice', 'answer-questions');
             }}
             className="bg-primary text-white px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary/90 transition-colors duration-200 min-w-[200px]"
           >
@@ -850,14 +887,20 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           <button
             type="button"
             onClick={() => {
-              // Skip to trip details logic can be added here
-              console.log('Skip to trip details selected');
+              handleInputChange('travelStyleChoice', 'skip-to-details');
             }}
             className="bg-[#ece8de] text-primary border-2 border-primary px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary hover:text-white transition-colors duration-200 min-w-[200px]"
           >
-            Skip to trip details
+            Skip ahead
           </button>
         </div>
+
+        {/* Travel Style Questions - Conditionally Rendered */}
+        {formData.travelStyleChoice === 'answer-questions' && (
+          <div className="mt-6 space-y-6 transition-all duration-300 ease-in-out">
+            <TravelStyleGroup onFormChange={onFormChange} formData={formData} />
+          </div>
+        )}
       </div>
     </div>
   );

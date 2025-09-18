@@ -1,70 +1,135 @@
-# Hylo Travel AI Constitution
+# HYLO Travel AI Platform Constitution
 
 ## Core Principles
 
 ### I. Edge-First Architecture
 
-Every API function runs on Vercel Edge Runtime with global distribution; No Node.js dependencies in edge functions; Client-side API keys forbidden - all LLM calls routed through secure backend endpoints; Sub-50ms cold starts globally with optimized bundle splitting
+All API endpoints run on Vercel Edge Runtime for global distribution; No client-side API keys - all secrets managed server-side; Edge functions handle LLM routing, health monitoring, and RAG operations; Progressive enhancement with graceful degradation
 
-### II. Multi-LLM Resilience
+### II. Multi-Agent AI Orchestration
 
-Multiple LLM providers (Cerebras, Gemini, Groq) with automatic failover; Intelligent complexity-based provider routing with fallback chains; Circuit breaker patterns prevent cascading failures; Graceful degradation maintains user experience during outages
+Multi-agent pipeline for itinerary generation (Data Gatherer → Information Gatherer → Planning Strategist → Content Compiler); Intelligent LLM provider routing based on complexity analysis; Fallback chains ensure resilience (Cerebras → Gemini → Groq); Real-time web search integration for current information
 
-### III. Observable AI Operations (NON-NEGOTIABLE)
+### III. Test-First Development (NON-NEGOTIABLE)
 
-LangSmith integration for comprehensive request tracing mandatory; All LLM operations logged with complexity analysis, provider selection reasoning, and cost tracking; Real-time monitoring via BehindTheScenes component; Performance metrics (P50/P95/P99) tracked across all providers
+TDD mandatory: Tests written → Review → Tests fail → Then implement; Minimum 80% code coverage requirement; Contract tests for all API endpoints; Integration tests for multi-agent workflows; Component tests with React Testing Library
 
-### IV. Type-Safe Development
+### IV. Observable AI Operations
 
-Strict TypeScript with Zod runtime validation for all API inputs/outputs; Constitutional compliance verified at compile-time and runtime; Input sanitization and validation at every boundary; Edge-compatible type definitions throughout
+Comprehensive tracing via LangSmith integration; Cost tracking per LLM operation with budget alerts; Performance metrics (latency, tokens, throughput); Structured logging at all service boundaries; Health monitoring dashboard for system visibility
 
-### V. Cost-Conscious Design
+### V. Type-Safe Development
 
-Provider selection optimized by query complexity (Groq: speed, Cerebras: reasoning, Gemini: balance); Token usage and cost tracking per request; Quota management with free tier optimization; Budget alerts and utilization monitoring
+TypeScript strict mode throughout frontend and backend; Zod schemas for runtime validation matching compile-time types; Shared type definitions between client and server; API contracts validated at build time
+
+### VI. Component-Based Architecture
+
+React 18+ with functional components and hooks; Form optimization with React Hook Form + Zod validation; Tailwind CSS for utility-first styling; Reusable UI components with clear separation of concerns
+
+### VII. Cost-Conscious Design
+
+Daily budget limits enforced ($10/day default); Token usage optimization in LLM operations; Provider selection based on cost/performance trade-offs; Caching strategies to reduce redundant API calls
 
 ## Technical Standards
 
-### Provider Configuration
+### Frontend Stack
 
-- **Cerebras**: Complex reasoning, high-context operations (≤30s timeout)
-- **Gemini**: Balanced workloads, multimodal support (≤20s timeout)
-- **Groq**: Fast responses, simple queries (≤10s timeout)
-- Minimum 2 providers required for production deployment
+- **Framework**: React 18+ with TypeScript 5.x
+- **Build Tool**: Vite for fast HMR and optimized builds
+- **Styling**: Tailwind CSS with custom design tokens
+- **Forms**: React Hook Form with Zod validation
+- **State**: Local state with useState/useReducer
+- **Icons**: Lucide React for consistent iconography
+- **Testing**: Vitest + React Testing Library
 
-### Observability Requirements
+### Backend Stack
 
-- LangSmith tracing enabled for all LLM operations
-- Structured logging with request IDs for audit trails
-- Health monitoring endpoints (`/api/health/*`) required
-- Error categorization and resolution tracking
+- **Runtime**: Vercel Edge Functions (Edge Runtime)
+- **LLM Providers**: Cerebras, Google Gemini, Groq
+- **Observability**: LangSmith for tracing
+- **Validation**: Zod schemas for all endpoints
+- **Search**: Web search service integration
+- **RAG**: Vector storage with Qdrant (future)
 
-### Security & Validation
+### API Design
 
-- Zod schemas for all request/response validation
-- CORS configuration for cross-origin requests
-- Rate limiting via edge middleware
-- No sensitive data in client-side code
+- RESTful endpoints under `/api` namespace
+- Streaming responses for real-time generation
+- Health endpoints for monitoring
+- Rate limiting and quota management
+- CORS configuration for edge functions
 
-## Multi-Agent Architecture
+### Development Workflow
 
-### Agent Orchestration
+#### Code Quality Gates
 
-Four specialized agents with distinct responsibilities:
+1. TypeScript compilation must succeed
+2. ESLint passes with no errors
+3. All tests pass (unit, integration, E2E)
+4. Zod schema validation coverage
+5. Bundle size within limits (<200KB warning)
 
-1. **Data Gatherer**: Form validation and data extraction
-2. **Information Gatherer**: Real-time web search integration
-3. **Planning Strategist**: Data-driven itinerary framework
-4. **Content Compiler**: Final personalized output assembly
+## Infrastructure Requirements
 
-### Agent Compliance
+### Deployment Platform
 
-- Each agent logs decisions, reasoning, and model usage
-- Progressive enhancement - system functions with agent failures
-- Real-time progress tracking via agent monitoring interface
-- Complexity-appropriate model selection per agent
+- **Hosting**: Vercel with automatic deployments
+- **Edge Functions**: Global distribution
+- **Environment**: Development, Preview, Production
+- **DNS**: Verification and readiness checks
+- **Monitoring**: Real-time health dashboards
+
+### Performance Standards
+
+- API response time: <2s p95 for simple queries
+- Streaming latency: <500ms to first token
+- Frontend FCP: <1.5s on 3G networks
+- Bundle size: <200KB for initial load
+- Error rate: <1% for production
+
+### Security & Compliance
+
+- Environment variables for all secrets
+- Input sanitization on all endpoints
+- Rate limiting per IP/session
+- CORS properly configured
+- No PII in logs or traces
+
+## Project-Specific Conventions
+
+### File Organization
+
+```
+api/              # Edge functions
+src/
+  ├── components/ # React components
+  ├── services/   # Business logic
+  ├── api/        # API client code
+  ├── types/      # TypeScript types
+  ├── hooks/      # Custom React hooks
+  └── utils/      # Utilities
+tests/            # Test files
+.specify/         # Project management
+```
+
+### Naming Conventions
+
+- Components: PascalCase (e.g., TripDetailsForm)
+- Services: camelCase with 'Service' suffix
+- Types: PascalCase with descriptive names
+- API routes: kebab-case endpoints
+- Test files: _.test.ts or _.spec.ts
+
+### AI Agent Conventions
+
+- Each agent has single responsibility
+- Agents communicate via structured data
+- Token limits enforced per agent
+- Costs tracked per agent operation
+- Fallback strategies documented
 
 ## Governance
 
-Constitutional requirements supersede all other development practices; All code reviews must verify compliance with four core principles; Provider routing decisions must include transparency reasoning; Breaking changes require migration plan and constitutional amendment.
+Constitution supersedes all development practices; Amendments require team consensus and testing; All PRs must verify constitutional compliance via checks; Complexity violations must be justified in PR description; Use CLAUDE.md for AI-assisted development guidance
 
-**Version**: 1.0.0 | **Ratified**: 2024-01-15 | **Last Amended**: 2024-01-15
+**Version**: 2.0.0 | **Ratified**: 2025-01-20 | **Last Amended**: 2025-01-20
