@@ -10,33 +10,32 @@
    → If not found: ERROR "No implementation plan found"
    → Extract: tech stack, libraries, structure
 2. Load optional design documents:
-   → data-model.md: Extract entities → model tasks
-   → contracts/: Each file → contract test task
+   → data-model.md: Extract entities → model implementation tasks
+   → contracts/: Each file → endpoint implementation task
    → research.md: Extract decisions → setup tasks
 3. Generate tasks by category:
-   → Setup: project init, dependencies, linting
-   → Tests: contract tests, integration tests
-   → Core: models, services, CLI commands
-   → Integration: DB, middleware, logging
-   → Polish: unit tests, performance, docs
+   → Setup: project init, dependencies, configuration
+   → Core Implementation: models, services, components, endpoints
+   → Integration: DB connections, middleware, form integration
+   → Validation & Polish: tests, documentation, performance
 4. Apply task rules:
    → Different files = mark [P] for parallel
    → Same file = sequential (no [P])
-   → Tests before implementation (TDD)
+   → Implementation before tests
 5. Number tasks sequentially (T001, T002...)
 6. Generate dependency graph
 7. Create parallel execution examples
 8. Validate task completeness:
-   → All contracts have tests?
-   → All entities have models?
-   → All endpoints implemented?
+   → All entities have implementation tasks?
+   → All endpoints have implementation tasks?
+   → Core implementation before integration?
 9. Return: SUCCESS (tasks ready for execution)
 ```
 
 ## Format: `[ID] [P?] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- Include exact file paths in descriptions
+- Include exact file paths and validation methods in descriptions
 
 ## Path Conventions
 
@@ -48,6 +47,86 @@
 ## Phase 3.1: Setup
 
 - [ ] T001 Create project structure per implementation plan
+- [ ] T002 Install dependencies from package.json/requirements.txt
+- [ ] T003 Configure linting and formatting rules
+
+## Phase 3.2: Core Implementation
+
+- [ ] T004 [P] Implement [Entity1] model in src/models/entity1.js
+  - **Validation**: `node -c src/models/entity1.js`
+- [ ] T005 [P] Implement [Entity2] model in src/models/entity2.js
+  - **Validation**: `node -c src/models/entity2.js`
+- [ ] T006 Implement [Service1] in src/services/service1.js
+  - **Validation**: `node -c src/services/service1.js`
+- [ ] T007 Implement [Component1] in src/components/Component1.jsx
+  - **Validation**: `npm run build` (check compilation)
+
+## Phase 3.3: Integration
+
+- [ ] T008 Integrate [Component1] with existing forms
+  - **Validation**: `npm start` and manual UI check
+- [ ] T009 Connect services to database/APIs
+  - **Validation**: `curl -X GET http://localhost:3000/api/health`
+
+## Phase 3.4: Validation & Polish
+
+- [ ] T010 [P] Write unit tests for models in tests/models/
+  - **Validation**: `npm test -- --testPathPattern=models`
+- [ ] T011 [P] Write integration tests in tests/integration/
+  - **Validation**: `npm test -- --testPathPattern=integration`
+- [ ] T012 Performance optimization and documentation
+  - **Validation**: Bundle size check, performance metrics
+
+## Parallel Execution Examples
+
+```bash
+# Run core implementation tasks in parallel
+Task: "T004 - Implement Entity1 model"
+Task: "T005 - Implement Entity2 model"
+# These can run together since they're different files
+
+# Run validation tasks in parallel
+Task: "T010 - Unit tests for models"
+Task: "T011 - Integration tests"
+# These can run together since they're different test suites
+```
+
+## Notes
+
+- [P] tasks = different files, no dependencies
+- Focus on implementing working code first, validate with compilation and runtime checks
+- Write tests after core implementation is complete
+- Commit after each task or logical group of tasks
+- Avoid vague tasks; each task should specify exact file paths and validation methods
+
+## Task Generation Rules
+
+_Applied during main() execution_
+
+1. **From Contracts**:
+   - Each contract file → endpoint implementation task
+   - Each endpoint → validation task (runtime check)
+2. **From Data Model**:
+   - Each entity → model implementation task [P]
+   - Relationships → service layer tasks
+3. **From User Stories**:
+   - Each story → integration implementation task
+   - Quickstart scenarios → validation tasks (post-implementation)
+4. **Ordering**:
+   - Setup → Core Implementation → Integration → Validation & Polish
+   - Dependencies block parallel execution
+
+## Validation Checklist
+
+_GATE: Checked by main() before returning_
+
+- [ ] All entities have model implementation tasks
+- [ ] All endpoints have implementation tasks
+- [ ] Core implementation tasks come before integration tasks
+- [ ] Validation & polish tasks come after implementation
+- [ ] Parallel tasks truly independent (different files)
+- [ ] Each task specifies exact file path and validation method
+- [ ] No task modifies same file as another [P] task
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
 
@@ -130,9 +209,10 @@ _Applied during main() execution_
 
 _GATE: Checked by main() before returning_
 
-- [ ] All contracts have corresponding tests
-- [ ] All entities have model tasks
-- [ ] All tests come before implementation
-- [ ] Parallel tasks truly independent
-- [ ] Each task specifies exact file path
+- [ ] All entities have model implementation tasks
+- [ ] All endpoints have implementation tasks
+- [ ] Core implementation tasks come before integration tasks
+- [ ] Validation & polish tasks come after implementation
+- [ ] Parallel tasks truly independent (different files)
+- [ ] Each task specifies exact file path and validation method
 - [ ] No task modifies same file as another [P] task

@@ -184,18 +184,19 @@ export class DNSReadinessChecker {
 
 export async function vercelDeploymentHook(): Promise<void> {
   // Only run for production deployments
-  if ((globalThis as any).VERCEL_ENV !== 'production') {
+  if (process.env.VERCEL_ENV !== 'production') {
     console.log('Skipping DNS readiness check for non-production deployment');
     return;
   }
 
   const context: DeploymentContext = {
-    deploymentId: (globalThis as any).VERCEL_DEPLOYMENT_ID || 'unknown',
-    branch: (globalThis as any).VERCEL_GIT_COMMIT_REF || 'unknown',
-    environment: ((globalThis as any).VERCEL_ENV as 'preview' | 'production') || 'preview',
-    domain: (globalThis as any).VERCEL_URL || 'unknown',
-    customDomains: (globalThis as any).VERCEL_CUSTOM_DOMAINS?.split(',') || [],
+    deploymentId: process.env.VERCEL_DEPLOYMENT_ID || 'unknown',
+    branch: process.env.VERCEL_GIT_COMMIT_REF || 'unknown',
+    environment: (process.env.VERCEL_ENV as 'preview' | 'production') || 'preview',
+    domain: process.env.VERCEL_URL || 'unknown',
+    customDomains: process.env.VERCEL_CUSTOM_DOMAINS?.split(',') || [],
   };
+
   const checker = new DNSReadinessChecker();
   const result = await checker.checkDeploymentReadiness(context);
 
@@ -208,7 +209,7 @@ export async function vercelDeploymentHook(): Promise<void> {
     });
 
     // In production, we might want to fail the deployment
-    if ((globalThis as any).VERCEL_ENV === 'production') {
+    if (process.env.VERCEL_ENV === 'production') {
       throw new Error(`DNS readiness check failed. Errors: ${result.errors.join(', ')}`);
     }
   }
