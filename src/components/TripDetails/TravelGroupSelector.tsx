@@ -59,7 +59,8 @@ const TravelGroupSelector: React.FC<BaseFormProps> = ({ formData, onFormChange }
         <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* Updated Grid Layout: 4 columns, 2 rows */}
+      <div className="grid grid-cols-4 gap-3">
         {TRAVEL_GROUPS.map((option) => {
           const isSelected = selectedGroups.includes(option.id);
 
