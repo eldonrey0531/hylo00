@@ -1,160 +1,114 @@
-# GitHub Copilot Instructions for HYLO Travel AI Platform
+# GitHub Copilot Instructions - Hylo Travel AI Platform
 
-## Programming Language
-- All code suggestions must be in **TypeScript**.
-- Use strict TypeScript with proper type annotations.
-- Prefer interfaces over type aliases for object definitions.
+## Project Context
+Hylo is a travel planning platform using React + TypeScript frontend with Vercel Edge Functions backend. Multi-agent AI system for personalized itinerary generation.
 
-## Code Style
-- Follow the existing codebase patterns and ESLint configuration.
-- Use **camelCase** for variables and functions.
-- Use **PascalCase** for React components and TypeScript interfaces.
-- Use **kebab-case** for file names and API endpoints.
-- Use template literals with `${}` for string interpolation.
-- Prefer `const` over `let`, avoid `var`.
-- Use arrow functions for inline callbacks.
-- Include JSDoc comments for complex functions and components.
+## Current Stack
+- **Frontend**: React 18.3.1, TypeScript 5.5.3, Vite, Tailwind CSS 3.4.1
+- **Forms**: React Hook Form 7.62.0 + Zod 3.25.76 validation
+- **Icons**: Lucide React 0.344.0
+- **Testing**: Vitest 3.2.4 + React Testing Library 16.3.0
+- **AI**: Cerebras, Google Gemini, Groq SDK integrations
+- **Backend**: Vercel Edge Functions, LangSmith tracing
 
 ## Architecture Patterns
-- **Edge-First**: All API endpoints must run on Vercel Edge Runtime.
-- **Multi-Agent AI**: Follow the 4-agent pipeline pattern (Data Gatherer → Information Gatherer → Planning Strategist → Content Compiler).
-- **Type-Safe Development**: Use Zod schemas for API validation.
-- **Observable Operations**: Include LangSmith tracing for LLM calls.
-- **Fallback Chains**: Implement provider resilience (Cerebras → Gemini → Groq).
+- **TDD**: Tests before implementation (required)
+- **Type Safety**: TypeScript strict mode, Zod runtime validation
+- **Edge-First**: All APIs run on Vercel Edge Runtime  
+- **Component-Based**: Functional React components with hooks
+- **Multi-Agent**: LLM orchestration for travel planning
 
-## React Patterns
-- Use functional components with hooks.
-- Prefer `useState` and `useReducer` for state management.
-- Use React Hook Form with Zod for form validation.
-- Include proper error boundaries with recovery mechanisms.
-- Use Tailwind CSS classes for styling.
-- Follow the existing component structure in `src/components/`.
+## Code Style
+- **Components**: PascalCase, functional with TypeScript interfaces
+- **Files**: Use existing file structure in src/components/TripDetails/
+- **Styling**: Tailwind utilities, design tokens (primary, border-primary)
+- **Forms**: React Hook Form patterns with Zod schemas
+- **Tests**: .test.tsx files, React Testing Library patterns
 
-## API Development
-- All API routes must be Edge Functions in the `api/` directory.
-- Use proper CORS headers for cross-origin requests.
-- Implement proper error handling with structured responses.
-- Include request ID generation for tracing.
-- Use environment variable validation with Zod schemas.
+## Current Feature: UI Improvements (Branch: 001-ui-improvements-for)
+**Context**: Updating travel form components for better visual presentation and file cleanup.
 
-## File Organization
+**Key Components**:
+- `TravelersForm.tsx`: Needs centered "Total travelers: X" display with thick border
+- `PreferenceModals/AccommodationPreferences.tsx`: Remove border interruptions
+- `PreferenceModals/RentalCarPreferences.tsx`: Remove border interruptions
 
-### Project Structure (Edge-First & Multi-Agent Focused)
+**Requirements**:
+- Center text alignment for traveler count
+- Thick prominent borders using existing design tokens  
+- Full-width modal backgrounds without border interruptions
+- Remove duplicate files in wrong locations
+- Preserve all existing functionality and accessibility
 
+**Styling Approach**:
+- Use Tailwind classes: `text-center`, `border-4`, `border-primary`
+- Maintain `font-raleway` and `font-bold` for consistency
+- Remove conflicting border classes from modals
+- Ensure `w-full` for full-width backgrounds
+
+## Constitutional Requirements
+- **TDD Mandatory**: Write failing tests first
+- **TypeScript Strict**: No any types, proper interfaces
+- **Performance**: No additional re-renders, maintain <2s API response
+- **Accessibility**: Preserve ARIA labels, keyboard navigation
+- **Cost Conscious**: No impact on LLM costs for UI changes
+
+## Recent Changes (Keep Updated)
+1. **2025-09-19**: UI improvements specification created
+2. **2025-09-19**: Implementation planning completed  
+3. **Feature Focus**: TravelersForm styling + preference modal backgrounds
+
+## Key File Locations
 ```
-hylo/
-├── api/                    # Vercel Edge Functions (MANDATORY Edge Runtime)
-│   ├── generate-itinerary/ # Main multi-agent orchestration endpoint
-│   ├── web-search/         # Real-time information gathering
-│   ├── cerebras/           # Primary LLM provider endpoint
-│   ├── gemini/             # Fallback LLM provider
-│   └── groq/               # Final fallback LLM provider
-│
-├── src/
-│   ├── components/         # React Components (PascalCase)
-│   │   ├── ui/             # Base UI components (Button, Input, etc.)
-│   │   ├── TripDetails/    # Travel form components
-│   │   ├── ItineraryDisplay/ # Results display components
-│   │   └── layout/         # Layout and navigation
-│   │
-│   ├── services/           # Business Logic Layer
-│   │   ├── multiAgentService.ts      # 4-agent orchestration
-│   │   ├── llmRoutingService.ts      # Provider routing logic
-│   │   ├── itineraryService.ts       # Main service facade
-│   │   ├── webSearchService.ts       # Real-time data gathering
-│   │   └── observabilityService.ts   # LangSmith tracing
-│   │
-│   ├── api/                # Client-Side API Layer
-│   │   ├── client.ts       # Base API client configuration
-│   │   └── types.ts        # API request/response types
-│   │
-│   ├── types/              # TypeScript Definitions
-│   │   ├── index.ts        # Main type exports
-│   │   ├── itinerary.ts    # Travel itinerary types
-│   │   └── rag.ts          # AI/LLM related types
-│   │
-│   ├── hooks/              # Custom React Hooks
-│   │   ├── useFormData.ts  # Form state management
-│   │   └── useItinerary.ts # Itinerary generation hook
-│   │
-│   └── utils/              # Utility Functions
-│       ├── validation.ts   # Zod schemas
-│       └── constants.ts    # App constants
-│
-├── public/                 # Static Assets
-└── .github/               # GitHub Configuration
-    └── copilot-instructions.md
+src/
+├── components/TripDetails/
+│   ├── TravelersForm.tsx              # Main target for centering
+│   └── PreferenceModals/              # Modal styling targets
+│       ├── AccommodationPreferences.tsx
+│       └── RentalCarPreferences.tsx
+├── types/                             # TypeScript interfaces
+├── hooks/                             # Custom React hooks  
+└── utils/validation/                  # Zod schemas
+
+api/                                   # Edge functions
+tests/                                 # Test files
+specs/001-ui-improvements-for/         # Current feature docs
 ```
 
-### Naming Conventions (Speed-Focused)
+## Avoid
+- Adding new dependencies for UI-only changes
+- Breaking existing TypeScript interfaces
+- Changing component prop structures
+- Impacting AI/LLM functionality
+- Modifying API contracts for frontend changes
+- Using inline styles instead of Tailwind
+- Removing accessibility features
 
+## When Suggesting Code
+1. **Show TypeScript interfaces** for component props
+2. **Include Tailwind classes** in examples  
+3. **Provide test examples** using React Testing Library
+4. **Maintain existing patterns** from codebase
+5. **Consider responsive design** (mobile, tablet, desktop)
+6. **Preserve functionality** while improving visuals
+
+## Example Pattern
 ```typescript
-// Files: kebab-case
-user-profile.tsx
-multi-agent-service.ts
-web-search.ts
-
-// Components: PascalCase
-UserProfile.tsx
-TripDetailsForm.tsx
-ItineraryDisplay.tsx
-
-// Functions: camelCase
-generateItinerary()
-handleFormSubmit()
-executeAgent()
-
-// Constants: SCREAMING_SNAKE_CASE
-MAX_BUDGET_AMOUNT
-DEFAULT_TRIP_DURATION
-```
-
-### File Templates (Copy-Paste Ready)
-
-#### Edge Function Template
-```typescript
-// api/[endpoint]/index.ts
-export const config = { runtime: 'edge' };
-
-export default async function handler(req: Request) {
-  // TODO: Add your Edge function logic
+// Preferred component pattern
+interface TravelersFormProps extends BaseFormProps {
+  formData: { adults: number; children: number };
+  onFormChange: (data: Partial<FormData>) => void;
 }
+
+const TravelersForm: React.FC<TravelersFormProps> = ({ formData, onFormChange }) => {
+  const totalTravelers = formData.adults + formData.children;
+  
+  return (
+    <div className="text-center border-4 border-primary p-4 font-raleway font-bold">
+      Total travelers: {totalTravelers}
+    </div>
+  );
+};
 ```
 
-#### Service Template
-```typescript
-// src/services/[name]Service.ts
-export class NameService {
-  // TODO: Add service methods
-}
-```
-
-#### Component Template
-```typescript
-// src/components/[Name]/[Name].tsx
-export function ComponentName() {
-  // TODO: Add component logic
-  return <div></div>;
-}
-```
-
-## LLM Integration
-- Use the routing service pattern from `src/services/llmRoutingService.ts`.
-- Include complexity analysis for provider selection.
-- Implement proper fallback handling.
-- Track costs and token usage.
-- Include observability tracing.
-
-## Constitutional Compliance
-- **Edge Runtime Only**: No Node.js APIs, client-side secrets.
-- **Multi-LLM Resilience**: Always include fallback providers.
-- **Observable AI Operations**: Include tracing and cost tracking.
-- **Type Safety**: Use TypeScript with Zod validation.
-- **Progressive Enhancement**: Graceful degradation patterns.
-
-## Common Patterns
-- Use `createRoutingGroqClient()` for LLM calls.
-- Follow the multi-agent service pattern from `multiAgentService.ts`.
-- Use the form data interfaces from `src/types/index.ts`.
-- Include proper error boundaries and loading states.
-- Use the existing styling patterns with Tailwind and custom CSS variables.
+*Last Updated: 2025-09-19 | Current Feature: UI Improvements | Constitution v2.0.0*
