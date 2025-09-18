@@ -2,8 +2,6 @@ import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetails from './components/TripDetails';
 import { FormData } from './components/TripDetails/types';
-import TravelStyle from './components/TravelStyle';
-import { TravelStyleData } from './components/TravelStyle/types';
 import TravelExperience from './components/travel-style/TravelExperience';
 import TripVibe from './components/travel-style/TripVibe';
 import SampleDays from './components/travel-style/SampleDays';
@@ -44,9 +42,6 @@ function App() {
   const [dinnerChoices, setDinnerChoices] = useState<string[]>([]);
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
-
-  // TravelStyle form data
-  const [travelStyleData, setTravelStyleData] = useState<TravelStyleData>({});
 
   // Custom text inputs for "other" options (remaining for travel style components)
   const [customVibesText, setCustomVibesText] = useState<string>('');
@@ -113,7 +108,6 @@ function App() {
     dinnerChoices: dinnerChoices,
     nickname: tripNickname,
     contact: contactInfo,
-    travelStyle: travelStyleData, // New TravelStyle integration
   };
 
   return (
@@ -132,14 +126,6 @@ function App() {
 
           {/* Trip Details Form - Unified with all form components */}
           <TripDetails formData={formData} onFormChange={setFormData} showAdditionalForms={true} />
-
-          {/* New TravelStyle Component */}
-          <TravelStyle
-            styleData={travelStyleData}
-            onStyleChange={setTravelStyleData}
-            enableValidation={true}
-            showGenerateButton={false}
-          />
 
           {/* Travel Style Header - Full Width No Rounded Corners */}
           <div className="bg-trip-details text-primary py-4 px-6 shadow-lg -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-16">

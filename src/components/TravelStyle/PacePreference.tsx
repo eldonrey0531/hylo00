@@ -55,16 +55,13 @@ const PacePreference: React.FC<BaseStyleFormProps> = ({
               key={option.value}
               onClick={() => handlePaceSelect(option.value as TravelPace)}
               className={`
-                h-32 p-4 rounded-[10px] border-3 transition-all duration-300 ease-in-out transform 
-                hover:scale-105 hover:shadow-xl hover:-translate-y-1 active:scale-95 
-                flex flex-col items-center justify-center space-y-2 text-center
-                focus:outline-none focus:ring-4 focus:ring-primary/30 focus:ring-offset-2
+                h-32 p-4 rounded-[10px] border-3 transition-all duration-200 hover:scale-105 hover:shadow-lg flex flex-col items-center justify-center space-y-2 text-center
                 ${
                   isSelected
-                    ? 'border-primary bg-primary text-white shadow-lg animate-pulse'
+                    ? 'border-primary bg-primary text-white shadow-md'
                     : hasError
-                    ? 'border-red-500 bg-[#ece8de] hover:border-primary hover:shadow-lg text-primary hover:bg-red-50'
-                    : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-lg text-primary hover:bg-amber-50'
+                    ? 'border-red-500 bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
+                    : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                 }
               `}
               aria-label={`Select ${option.label} travel pace`}
