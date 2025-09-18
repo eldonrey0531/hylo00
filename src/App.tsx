@@ -4,18 +4,52 @@ import TripDetailsForm from './components/TripDetailsForm';
 import TravelGroupSelector from './components/TravelGroupSelector';
 import TravelInterests from './components/TravelInterests';
 import ItineraryInclusions from './components/ItineraryInclusions';
-import TravelExperience from './components/TravelExperience';
-import TripVibe from './components/TripVibe';
-import SampleDays from './components/SampleDays';
-import DinnerChoice from './components/DinnerChoice';
-import TripNickname from './components/TripNickname';
+import TravelExperience from './components/travel-style/TravelExperience';
+import TripVibe from './components/travel-style/TripVibe';
+import SampleDays from './components/travel-style/SampleDays';
+import DinnerChoice from './components/travel-style/DinnerChoice';
+import TripNickname from './components/travel-style/TripNickname';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import BehindTheScenes from './components/BehindTheScenes';
 import AIErrorBoundary from './components/AIErrorBoundary';
 import HealthMonitor from './components/HealthMonitor';
+import { GenerateItineraryButton } from './components/GenerateItineraryButton';
+import { FormErrorDisplay } from './components/FormErrorDisplay';
+
+// Import FormData type from TripDetailsForm
+type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
+interface FormData {
+  location: string;
+  departDate: string;
+  returnDate: string;
+  flexibleDates: boolean;
+  plannedDays?: number;
+  adults: number;
+  children: number;
+  childrenAges: number[];
+  budget: number;
+  currency: Currency;
+  flexibleBudget?: boolean;
+  accommodationOther?: string;
+  rentalCarPreferences?: string[];
+  travelStyleChoice?: 'answer-questions' | 'skip-to-details' | 'not-selected';
+  travelStyleAnswers?: Record<string, any>;
+}
 
 function App() {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<FormData>({
+    location: '',
+    departDate: '',
+    returnDate: '',
+    flexibleDates: false,
+    adults: 2,
+    children: 0,
+    childrenAges: [],
+    budget: 5000,
+    currency: 'USD',
+    travelStyleChoice: 'not-selected',
+    travelStyleAnswers: {},
+  });
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [selectedInclusions, setSelectedInclusions] = useState<string[]>([]);
@@ -25,6 +59,10 @@ function App() {
   const [dinnerChoices, setDinnerChoices] = useState<string[]>([]);
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
+
+  // Form validation state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Custom text inputs for "other" options
   const [customGroupText, setCustomGroupText] = useState<string>('');
@@ -112,7 +150,17 @@ function App() {
           </div>
 
           {/* Trip Details Form */}
-          <TripDetailsForm formData={formData} onFormChange={setFormData} />
+          <TripDetailsForm
+            formData={formData}
+            onFormChange={setFormData}
+            onValidationChange={(isValid, errors) => {
+              setIsFormValid(isValid);
+              setFormErrors(errors);
+            }}
+          />
+
+          {/* Form Validation Errors */}
+          <FormErrorDisplay errors={formErrors} />
 
           {/* Travel Group */}
           <TravelGroupSelector
@@ -137,7 +185,7 @@ function App() {
             otherText={customInclusionsText}
             onOtherTextChange={setCustomInclusionsText}
             inclusionPreferences={inclusionPreferences}
-            onPreferencesChange={setInclusionPreferences}
+            onInclusionPreferencesChange={setInclusionPreferences}
           />
 
           {/* Travel Style Header - Full Width No Rounded Corners */}
@@ -185,7 +233,12 @@ function App() {
               </h4>
               <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
             </div>
-            <TripVibe selectedVibes={selectedVibes} onSelectionChange={setSelectedVibes} />
+            <TripVibe
+              selectedVibes={selectedVibes}
+              onSelectionChange={setSelectedVibes}
+              otherText={customVibesText}
+              onOtherTextChange={setCustomVibesText}
+            />
           </div>
 
           {/* Sample Days */}
@@ -212,26 +265,11 @@ function App() {
           </div>
 
           {/* Generate Button */}
-          <div className="pt-6">
-            <button
-              onClick={handleGenerateItinerary}
-              disabled={isGenerating}
-              className={`w-full px-8 py-4 rounded-[36px] font-raleway font-bold text-xl shadow-lg transition-all duration-300 flex items-center justify-center ${
-                isGenerating
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#f68854] hover:bg-[#e57743] hover:shadow-xl transform hover:scale-105'
-              } text-[#406170]`}
-            >
-              {isGenerating ? (
-                <>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#406170] mr-3"></div>
-                  GENERATING YOUR ITINERARY...
-                </>
-              ) : (
-                'GENERATE MY PERSONALIZED ITINERARY ✨'
-              )}
-            </button>
-          </div>
+          <GenerateItineraryButton
+            isSubmitting={isGenerating}
+            onClick={handleGenerateItinerary}
+            disabled={!isFormValid}
+          />
 
           {/* Itinerary Results Section - Directly below the button */}
           <div ref={itineraryRef}>

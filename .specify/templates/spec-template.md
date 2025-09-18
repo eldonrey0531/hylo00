@@ -6,18 +6,17 @@
 **Input**: User description: "$ARGUMENTS"
 
 ## Execution Flow (main)
-
 ```
 1. Parse user description from Input
    → If empty: ERROR "No feature description provided"
 2. Extract key concepts from description
-   → Identify: actors, actions, data, constraints, validation needs
+   → Identify: actors, actions, data, constraints
 3. For each unclear aspect:
    → Mark with [NEEDS CLARIFICATION: specific question]
-4. Fill User Scenarios & Validation section
-   → Focus on behavior validation rather than test creation
+4. Fill User Scenarios & Testing section
+   → If no clear user flow: ERROR "Cannot determine user scenarios"
 5. Generate Functional Requirements
-   → Each requirement must be implementable and validatable
+   → Each requirement must be testable
    → Mark ambiguous requirements
 6. Identify Key Entities (if data involved)
 7. Run Review Checklist
@@ -29,105 +28,82 @@
 ---
 
 ## ⚡ Quick Guidelines
-
 - ✅ Focus on WHAT users need and WHY
-- ✅ Include validation criteria for implementation
 - ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
-- 👥 Written for business stakeholders and developers
+- 👥 Written for business stakeholders, not developers
 
 ### Section Requirements
-
 - **Mandatory sections**: Must be completed for every feature
 - **Optional sections**: Include only when relevant to the feature
 - When a section doesn't apply, remove it entirely (don't leave as "N/A")
 
 ### For AI Generation
-
 When creating this spec from a user prompt:
-
 1. **Mark all ambiguities**: Use [NEEDS CLARIFICATION: specific question] for any assumption you'd need to make
-2. **Focus on validation**: Describe how to verify the feature works, not how to test it
-3. **Think like a developer**: Requirements should be specific enough to implement without guessing
+2. **Don't guess**: If the prompt doesn't specify something (e.g., "login system" without auth method), mark it
+3. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
 4. **Common underspecified areas**:
    - User types and permissions
-   - Data validation rules
-   - Performance expectations
+   - Data retention/deletion policies  
+   - Performance targets and scale
    - Error handling behaviors
-   - Success criteria for implementation
+   - Integration requirements
+   - Security/compliance needs
 
 ---
 
-## User Scenarios & Validation _(mandatory)_
+## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
-
 [Describe the main user journey in plain language]
 
-### Implementation Validation Scenarios
-
-1. **When** [action is performed], **Verify** [expected outcome is achieved]
-2. **When** [condition exists], **Verify** [system behaves as expected]
+### Acceptance Scenarios
+1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+2. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
 ### Edge Cases
+- What happens when [boundary condition]?
+- How does system handle [error scenario]?
 
-- How should system behave when [unusual input] is provided?
-- What should happen when [resource limitation] occurs?
-
-## Requirements _(mandatory)_
+## Requirements *(mandatory)*
 
 ### Functional Requirements
+- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
+- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
+- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
+- **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
-- **FR-001**: System MUST [specific capability] with validation: [how to verify]
-- **FR-002**: System MUST [specific capability] with validation: [how to verify]
-- **FR-003**: Users MUST be able to [key interaction] with validation: [how to verify]
+*Example of marking unclear requirements:*
+- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
+- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
-_Example of marking unclear requirements:_
-
-- **FR-004**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-005**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Implementation Constraints _(include if specific constraints exist)_
-
-- Must integrate with [existing system] without breaking changes
-- Must comply with [specific regulation or standard]
-- Must maintain backward compatibility with [existing feature]
-
-### Performance Expectations _(include if relevant)_
-
-- Should handle [number] concurrent users with [response time]
-- Should process [amount] of data within [time constraint]
-
-### Key Entities _(include if feature involves data)_
-
+### Key Entities *(include if feature involves data)*
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
 ---
 
 ## Review & Acceptance Checklist
-
-_GATE: Automated checks run during main() execution_
+*GATE: Automated checks run during main() execution*
 
 ### Content Quality
-
 - [ ] No implementation details (languages, frameworks, APIs)
 - [ ] Focused on user value and business needs
-- [ ] Includes validation criteria for implementation
+- [ ] Written for non-technical stakeholders
 - [ ] All mandatory sections completed
 
 ### Requirement Completeness
-
 - [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] Requirements are implementable and validatable
-- [ ] Validation criteria are clear and measurable
+- [ ] Requirements are testable and unambiguous  
+- [ ] Success criteria are measurable
 - [ ] Scope is clearly bounded
 - [ ] Dependencies and assumptions identified
 
 ---
 
 ## Execution Status
-
-_Updated by main() during processing_
+*Updated by main() during processing*
 
 - [ ] User description parsed
 - [ ] Key concepts extracted
@@ -136,15 +112,5 @@ _Updated by main() during processing_
 - [ ] Requirements generated
 - [ ] Entities identified
 - [ ] Review checklist passed
-
----
-
-## Implementation Notes
-
-_This section is added during the planning phase, not in the initial spec_
-
-**Technical Approach**: [Added during /plan phase based on research]
-**Key Decisions**: [Added during /plan phase based on technical constraints]
-**Validation Strategy**: [Added during /plan phase describing how to verify implementation]
 
 ---

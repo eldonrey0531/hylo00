@@ -18,8 +18,4 @@ if ($Json) {
     Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
     Write-Output "SPECS_DIR: $($paths.FEATURE_DIR)"
     Write-Output "BRANCH: $($paths.CURRENT_BRANCH)"
-    Write-Output ""
-    Write-Output "💡 For implementation planning, use @workspace:"
-    Write-Output "   @workspace current project architecture in src/ and api/"
-    Write-Output "   @workspace similar feature implementations"
 }
