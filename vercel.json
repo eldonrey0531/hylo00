@@ -22,11 +22,6 @@
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
     }
   },
-  "functions": {
-    "api/dns/verification.ts": {
-      "runtime": "edge"
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
