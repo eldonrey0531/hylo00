@@ -50,10 +50,10 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
   }, [selectedTypes, otherType, specialRequests]);
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-4">
-      <div className="flex items-center space-x-3 mb-6">
+    <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
+      <div className="flex items-center space-x-3 mb-6 bg-transparent">
         <span className="text-3xl">🏨</span>
-        <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+        <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Accommodation Preferences
         </h3>
       </div>
@@ -65,20 +65,19 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
             Preferred accommodation type(s)
           </label>
           <p className="text-primary font-bold font-raleway text-xs mb-4">Select all that apply</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-2">
             {accommodationTypes.map((type) => (
-              <label
+              <button
                 key={type}
-                className="flex items-center space-x-3 cursor-pointer p-3 rounded-[10px] border-2 border-gray-200 hover:border-primary transition-colors"
+                onClick={() => toggleType(type)}
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                  selectedTypes.includes(type)
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
+                }`}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedTypes.includes(type)}
-                  onChange={() => toggleType(type)}
-                  className="w-5 h-5 text-primary border-3 border-primary rounded focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-primary font-raleway font-bold text-sm">{type}</span>
-              </label>
+                {type}
+              </button>
             ))}
           </div>
         </div>

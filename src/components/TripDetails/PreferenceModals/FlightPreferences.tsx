@@ -10,19 +10,25 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
   onSave,
 }) => {
   const [departureAirports, setDepartureAirports] = useState(preferences.departureAirports || '');
-  const [cabinClass, setCabinClass] = useState(preferences.cabinClass || '');
+  const [cabinClasses, setCabinClasses] = useState<string[]>(preferences.cabinClasses || []);
   const [flightPreferences, setFlightPreferences] = useState(preferences.flightPreferences || '');
 
   useEffect(() => {
     setDepartureAirports(preferences.departureAirports || '');
-    setCabinClass(preferences.cabinClass || '');
+    setCabinClasses(preferences.cabinClasses || []);
     setFlightPreferences(preferences.flightPreferences || '');
   }, [preferences]);
+
+  const toggleCabinClass = (classValue: string) => {
+    setCabinClasses((prev) =>
+      prev.includes(classValue) ? prev.filter((c) => c !== classValue) : [...prev, classValue]
+    );
+  };
 
   const handleSave = () => {
     onSave({
       departureAirports,
-      cabinClass,
+      cabinClasses,
       flightPreferences,
     });
   };
@@ -30,13 +36,13 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
   // Auto-save when any field changes
   useEffect(() => {
     handleSave();
-  }, [departureAirports, cabinClass, flightPreferences]);
+  }, [departureAirports, cabinClasses, flightPreferences]);
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-4">
-      <div className="flex items-center space-x-3 mb-6">
+    <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
+      <div className="flex items-center space-x-3 mb-6 bg-transparent">
         <span className="text-3xl">✈️</span>
-        <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+        <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Flight Preferences
         </h3>
       </div>
@@ -59,9 +65,9 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
         {/* Cabin Class */}
         <div>
           <label className="block text-primary font-bold font-raleway text-base mb-3">
-            (Optional) Preferred cabin class
+            (Optional) Preferred cabin class (select all that apply)
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-2">
             {[
               { value: 'economy', label: 'Economy $' },
               { value: 'premium-economy', label: 'Premium Economy $$' },
@@ -70,9 +76,9 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
             ].map((option) => (
               <button
                 key={option.value}
-                onClick={() => setCabinClass(option.value)}
-                className={`p-3 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm ${
-                  cabinClass === option.value
+                onClick={() => toggleCabinClass(option.value)}
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                  cabinClasses.includes(option.value)
                     ? 'border-primary bg-primary text-white'
                     : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
                 }`}
