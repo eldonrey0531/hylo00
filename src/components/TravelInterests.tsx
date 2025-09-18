@@ -75,7 +75,9 @@ const TravelInterests: React.FC<TravelInterestsProps> = ({
         <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
           TRAVEL INTERESTS
         </h3>
-        <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
+        <p className="text-primary font-bold font-raleway text-xs">
+          Select all that apply to this trip
+        </p>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">

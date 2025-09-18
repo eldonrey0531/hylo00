@@ -15,14 +15,7 @@
     "HEALTH_CHECK_INTERVAL": "300000",
     "PROVIDER_CACHE_TTL": "300000",
     "MAX_RETRIES": "3",
-    "FALLBACK_TIMEOUT": "10000",
-    "SUPABASE_URL": "your-supabase-url-here",
-    "SUPABASE_ANON_KEY": "your-supabase-anon-key-here",
-    "UPSTASH_REDIS_REST_URL": "your-upstash-redis-url-here",
-    "UPSTASH_REDIS_REST_TOKEN": "your-upstash-redis-token-here",
-    "QDRANT_URL": "your-qdrant-url-here",
-    "QDRANT_API_KEY": "your-qdrant-api-key-here",
-    "HUGGINGFACE_API_TOKEN": "your-huggingface-token-here"
+    "FALLBACK_TIMEOUT": "10000"
   },
   "build": {
     "env": {

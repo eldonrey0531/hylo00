@@ -6,6 +6,7 @@
  */
 
 import type { LLMProvider, ProviderName, ProviderMetrics } from '../types/index.js';
+import { ProviderStatusSchema } from '../types/index.js';
 import { CerebrasProvider, createCerebrasProvider } from './cerebras.js';
 import { GeminiProvider, createGeminiProvider } from './gemini.js';
 import { GroqProvider, createGroqProvider } from './groq.js';

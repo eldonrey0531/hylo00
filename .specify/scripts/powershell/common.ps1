@@ -63,17 +63,3 @@ function Test-DirHasFiles {
         return $false
     }
 }
-
-# Context7 research helper - only for research.md generation
-function Show-Context7Research {
-    param([string]$FeatureBranch)
-    
-    if (Get-Command mcp -ErrorAction SilentlyContinue) {
-        Write-Output ""
-        Write-Output "📚 Context7 available for research.md documentation:"
-        Write-Output "   Use: mcp call resolve-library-id --libraryName=`"[library]`""
-        Write-Output "   Then: mcp call get-library-docs --context7CompatibleLibraryID=`"/[library]/docs`" --topic=`"[topic]`" --tokens=2000"
-        Write-Output "   Append to research: >> `$RESEARCH""
-        Write-Output ""
-    }
-}

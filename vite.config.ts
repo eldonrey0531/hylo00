@@ -19,6 +19,23 @@ export default defineConfig(() => ({
       '@/tests': path.resolve(__dirname, './tests'),
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/utils/test-helpers.tsx'],
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', '.git', '.cache'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/utils/test-helpers.ts',
+        '**/*.d.ts',
+        '**/*.config.{js,ts}',
+        'dist/',
+      ],
+    },
+  },
   server: {
     port: 5173,
     host: true,

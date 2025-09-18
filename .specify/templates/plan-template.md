@@ -1,7 +1,7 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.**Output**: data-model.md, /contracts/* (design docs only), implementation-guide.md, agent-specific filed`
 
 ## Execution Flow (/plan command scope)
 
@@ -18,7 +18,7 @@
    → Update Progress Tracking: Initial Constitution Check
 5. Execute Phase 0 → research.md
    → If NEEDS CLARIFICATION remain: ERROR "Resolve unknowns"
-6. Execute Phase 1 → contracts, data-model.md, quickstart.md, agent-specific template file `.github/copilot-instructions.md` for GitHub Copilot.
+6. Execute Phase 1 → contracts, data-model.md, implementation-guide.md (replaces quickstart.md), agent-specific template file `.github/copilot-instructions.md` for GitHub Copilot.
 7. Re-evaluate Constitution Check section
    → If new violations: Refactor design, return to Phase 1
    → Update Progress Tracking: Post-Design Constitution Check
@@ -62,7 +62,7 @@ specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
 ├── data-model.md        # Phase 1 output (/plan command)
-├── quickstart.md        # Phase 1 output (/plan command)
+├── implementation-guide.md # Phase 1 output (replaces quickstart.md)
 ├── contracts/           # Phase 1 output (/plan command)
 └── tasks.md             # Phase 2 output (/tasks command - NOT created by /plan)
 ```
@@ -74,13 +74,14 @@ specs/[###-feature]/
 src/
 ├── models/
 ├── services/
+├── api/
 ├── cli/
-└── lib/
+└── utils/
 
-tests/
-├── contract/
+tests/               # Tests will be created after implementation
+├── unit/
 ├── integration/
-└── unit/
+└── contract/
 
 # Option 2: Web application (when "frontend" + "backend" detected)
 backend/
@@ -127,6 +128,7 @@ ios/ or android/
 3. **Consolidate findings** in `research.md` using format:
    - Decision: [what was chosen]
    - Rationale: [why chosen]
+   - Implementation approach: [how to implement]
    - Alternatives considered: [what else evaluated]
 
 **Output**: research.md with all NEEDS CLARIFICATION resolved
@@ -153,24 +155,20 @@ _Prerequisites: research.md complete_
    - Validation rules from requirements
    - State transitions if applicable
 
-2. **Generate API contracts** from functional requirements:
+2. **Design component architecture** from functional requirements:
 
-   - For each user action → endpoint
-   - Use standard REST/GraphQL patterns
-   - Output OpenAPI/GraphQL schema to `/contracts/`
+   - Component hierarchy and props
+   - State management patterns
+   - Integration points with existing code
+   - Output design documentation to `/contracts/` (if API endpoints needed)
 
-3. **Generate contract tests** from contracts:
+3. **Create implementation guide** (replaces quickstart.md):
 
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
+   - Focus on implementation sequence, not test scenarios
+   - Key integration points and dependencies
+   - Potential implementation pitfalls and solutions
 
-4. **Extract test scenarios** from user stories:
-
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
-
-5. **Update agent file incrementally** (O(1) operation):
+4. **Update agent file incrementally** (O(1) operation):
    - Run `.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot` for your AI assistant
    - If exists: Add only NEW tech from current plan
    - Preserve manual additions between markers
@@ -178,7 +176,7 @@ _Prerequisites: research.md complete_
    - Keep under 150 lines for token efficiency
    - Output to repository root
 
-**Output**: data-model.md, /contracts/\*, failing tests, quickstart.md, agent-specific file
+**Output**: data-model.md, /contracts/\* (design docs only), implementation-guide.md, agent-specific file
 
 ## Phase 2: Task Planning Approach
 
@@ -187,19 +185,20 @@ _This section describes what the /tasks command will do - DO NOT execute during 
 **Task Generation Strategy**:
 
 - Load `.specify/templates/tasks-template.md` as base
-- Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each contract → contract test task [P]
-- Each entity → model creation task [P]
-- Each user story → integration test task
-- Implementation tasks to make tests pass
+- Generate tasks from Phase 1 design docs (data model, design docs, implementation guide)
+- Each entity → model implementation task [P]
+- Each component → implementation task
+- Integration tasks to connect components to existing code
+- Testing tasks will be created in the final "Validation & Polish" phase
 
 **Ordering Strategy**:
 
-- TDD order: Tests before implementation
+- Implementation-first order: Core components before integration
 - Dependency order: Models before services before UI
 - Mark [P] for parallel execution (independent files)
+- Testing and validation tasks come after implementation
 
-**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
+**Estimated Output**: 15-20 numbered, ordered implementation tasks in tasks.md
 
 **IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
 
@@ -209,7 +208,7 @@ _These phases are beyond the scope of the /plan command_
 
 **Phase 3**: Task execution (/tasks command creates tasks.md)  
 **Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
+**Phase 5**: Validation (run tests, execute implementation guide, performance validation)
 
 ## Complexity Tracking
 
