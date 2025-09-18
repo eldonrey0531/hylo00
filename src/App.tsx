@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetailsForm from './components/TripDetailsForm';
 import TravelGroupSelector from './components/TravelGroupSelector';
@@ -14,7 +14,6 @@ import BehindTheScenes from './components/BehindTheScenes';
 import AIErrorBoundary from './components/AIErrorBoundary';
 import HealthMonitor from './components/HealthMonitor';
 import { GenerateItineraryButton } from './components/GenerateItineraryButton';
-import { FormErrorDisplay } from './components/FormErrorDisplay';
 
 // Import FormData type from TripDetailsForm
 type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
@@ -59,10 +58,6 @@ function App() {
   const [dinnerChoices, setDinnerChoices] = useState<string[]>([]);
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
-
-  // Form validation state
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isFormValid, setIsFormValid] = useState(false);
 
   // Custom text inputs for "other" options
   const [customGroupText, setCustomGroupText] = useState<string>('');
@@ -150,17 +145,7 @@ function App() {
           </div>
 
           {/* Trip Details Form */}
-          <TripDetailsForm
-            formData={formData}
-            onFormChange={setFormData}
-            onValidationChange={(isValid, errors) => {
-              setIsFormValid(isValid);
-              setFormErrors(errors);
-            }}
-          />
-
-          {/* Form Validation Errors */}
-          <FormErrorDisplay errors={formErrors} />
+          <TripDetailsForm formData={formData} onFormChange={setFormData} />
 
           {/* Travel Group */}
           <TravelGroupSelector
@@ -265,11 +250,7 @@ function App() {
           </div>
 
           {/* Generate Button */}
-          <GenerateItineraryButton
-            isSubmitting={isGenerating}
-            onClick={handleGenerateItinerary}
-            disabled={!isFormValid}
-          />
+          <GenerateItineraryButton isSubmitting={isGenerating} onClick={handleGenerateItinerary} />
 
           {/* Itinerary Results Section - Directly below the button */}
           <div ref={itineraryRef}>
