@@ -51,7 +51,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
   }, [selectedTypes, otherType, specialRequests]);
 
   return (
-    <div className="w-full bg-[#ece8de] rounded-[36px] py-6">
+    <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
       <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
         <span className="text-2xl">🏨</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
@@ -59,10 +59,10 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
         </h3>
       </div>
 
-      <div className="space-y-6 px-6">
+      <div className="space-y-6 px-6 bg-[#b0c29b]">
         {/* Accommodation Types */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             Preferred accommodation type(s)
           </label>
           <p className="text-primary font-bold font-raleway text-xs mb-4">Select all that apply</p>
@@ -71,7 +71,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
               <button
                 key={type}
                 onClick={() => toggleType(type)}
-                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm text-left flex items-center ${
                   selectedTypes.includes(type)
                     ? 'border-primary bg-primary text-white'
                     : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
@@ -87,8 +87,8 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
                   setOtherType(''); // Start with empty input
                 }
               }}
-              className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
-                otherType !== ''
+              className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm text-left flex items-center ${
+                showOtherInput
                   ? 'border-primary bg-primary text-white'
                   : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
               }`}
@@ -101,7 +101,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
               type="text"
               value={otherType}
               onChange={(e) => setOtherType(e.target.value)}
-              placeholder="Specify other accommodation type..."
+              placeholder="Tell us more about your preferred accommodations"
               className="mt-3 w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] font-raleway font-bold"
             />
           )}
@@ -109,7 +109,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 
         {/* Special Requests */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             (Optional) Special accommodation requests or preferred hotel brands
           </label>
           <textarea

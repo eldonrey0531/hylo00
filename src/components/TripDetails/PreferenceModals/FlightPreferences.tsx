@@ -39,7 +39,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
   }, [departureAirports, cabinClasses, flightPreferences]);
 
   return (
-    <div className="w-full bg-[#ece8de] rounded-[36px] py-6">
+    <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
       <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
         <span className="text-2xl">✈️</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
@@ -47,10 +47,10 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
         </h3>
       </div>
 
-      <div className="space-y-6 px-6">
+      <div className="space-y-6 px-6 bg-[#b0c29b]">
         {/* Departure Airports */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             Traveler departure airport(s)
           </label>
           <input
@@ -64,7 +64,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Cabin Class */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             (Optional) Preferred cabin class (select all that apply)
           </label>
           <div className="flex flex-wrap gap-2">
@@ -77,7 +77,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
               <button
                 key={option.value}
                 onClick={() => toggleCabinClass(option.value)}
-                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm text-left flex items-center ${
                   cabinClasses.includes(option.value)
                     ? 'border-primary bg-primary text-white'
                     : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
@@ -91,7 +91,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Flight Preferences */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             (Optional) Flight or airline preferences
           </label>
           <textarea
