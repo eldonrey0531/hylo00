@@ -453,6 +453,111 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
         />
       </div>
 
+      {/* Enhanced Dates Box */}
+      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+            DATES
+          </h3>
+        </div>
+
+        {/* Only show date controls when flexible dates is disabled */}
+        {!watchedFlexibleDates && (
+          <>
+            {/* Departure Date */}
+            <div className="mb-6">
+              <label className="block text-primary font-bold font-raleway text-base mb-2">
+                Departure Date
+              </label>
+              <Controller
+                name="departDate"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="date"
+                    min={dateUtils.getTodayString()}
+                    className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
+                      errors.departDate
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-primary focus:border-primary'
+                    }`}
+                    aria-label="Departure date"
+                    aria-invalid={!!errors.departDate}
+                    aria-describedby={errors.departDate ? 'depart-date-error' : undefined}
+                  />
+                )}
+              />
+              {errors.departDate && (
+                <p id="depart-date-error" className="text-red-500 text-sm mt-2 font-raleway">
+                  {errors.departDate.message}
+                </p>
+              )}
+            </div>
+
+            {/* Return Date */}
+            <div className="mb-6">
+              <label className="block text-primary font-bold font-raleway text-base mb-2">
+                Return Date (Optional)
+              </label>
+              <Controller
+                name="returnDate"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="date"
+                    min={getMinReturnDate()}
+                    className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
+                      errors.returnDate
+                        ? 'border-red-500 focus:border-red-500'
+                        : 'border-primary focus:border-primary'
+                    }`}
+                    aria-label="Return date"
+                    aria-invalid={!!errors.returnDate}
+                    aria-describedby={errors.returnDate ? 'return-date-error' : undefined}
+                  />
+                )}
+              />
+              {errors.returnDate && (
+                <p id="return-date-error" className="text-red-500 text-sm mt-2 font-raleway">
+                  {errors.returnDate.message}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Flexible Dates Toggle */}
+        <div className="flex items-center">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <Controller
+              name="flexibleDates"
+              control={control}
+              render={({ field }) => (
+                <input
+                  type="checkbox"
+                  checked={field.value || false}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  className="sr-only peer"
+                  aria-label="Toggle flexible dates"
+                />
+              )}
+            />
+            <div
+              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
+                watchedFlexibleDates
+                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+              }`}
+            ></div>
+            <span className="text-primary font-bold font-raleway text-sm">
+              I'm flexible with dates
+            </span>
+          </label>
+        </div>
+      </div>
+
       {/* Enhanced Budget Box with React Hook Form */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
         <div className="flex items-center justify-between mb-4">
@@ -623,52 +728,12 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
             {Object.entries(errors).map(([field, error]) => (
               <li key={field} className="text-red-600 font-raleway text-sm flex items-center">
                 <span className="mr-2">•</span>
-                {error?.message || `${field} is required`}
+                {String(error?.message || `${field} is required`)}
               </li>
             ))}
           </ul>
         </div>
       )}
-
-      {/* Travel Style Progressive Disclosure */}
-      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-6">
-        <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
-          TRAVEL STYLE
-        </h3>
-        <p className="text-primary font-raleway text-base mb-6">
-          Help us personalize your trip by telling us about your travel preferences
-        </p>
-
-        <div className="flex gap-4 justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              setValue('travelStyleChoice', 'answer-questions', {
-                shouldValidate: true,
-                shouldDirty: true,
-              });
-              console.log('Answer style questions selected');
-            }}
-            className="bg-primary text-white px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary/90 transition-colors duration-200 min-w-[200px]"
-          >
-            Answer style questions
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setValue('travelStyleChoice', 'skip-to-details', {
-                shouldValidate: true,
-                shouldDirty: true,
-              });
-              console.log('Skip to trip details selected');
-            }}
-            className="bg-[#ece8de] text-primary border-2 border-primary px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary hover:text-white transition-colors duration-200 min-w-[200px]"
-          >
-            Skip to trip details
-          </button>
-        </div>
-      </div>
 
       {/* Enhanced Form Status */}
       <div className="bg-green-50 border border-green-200 rounded-[36px] p-4 mt-6">
