@@ -1,35 +1,7 @@
-import React, { useRef, useEffect, useCallback, useReducer, useMemo, useState, memo } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Minus, Calendar, ChevronDown } from 'lucide-react';
 
-// Enhanced Zod schema for form validation
-const tripDetailsSchema = z.object({
-  location: z
-    .string()
-    .min(2, 'Location must be at least 2 characters')
-    .max(100, 'Location too long'),
-  departDate: z.string().min(1, 'Departure date is required'),
-  returnDate: z.string().optional(),
-  flexibleDates: z.boolean(),
-  plannedDays: z.number().min(1).max(31).optional(),
-  adults: z.number().min(1, 'At least 1 adult required').max(10, 'Maximum 10 adults'),
-  children: z.number().min(0).max(10, 'Maximum 10 children'),
-  childrenAges: z.array(z.number().min(0).max(17)).optional(),
-  budget: z.number().min(0).max(50000),
-  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD']),
-  flexibleBudget: z.boolean().optional(),
-  accommodationOther: z.string().optional(),
-  rentalCarPreferences: z.array(z.string()).optional(),
-  travelStyleChoice: z.enum(['answer-questions', 'skip-to-details', 'not-selected']).optional(),
-  travelStyleAnswers: z.record(z.any()).optional(),
-});
-
-// Type inference from Zod schema
-type TripDetailsFormData = z.infer<typeof tripDetailsSchema>;
-
-// Legacy types for compatibility
+// Type definitions
 type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
 type BudgetMode = 'total' | 'per-person';
 
@@ -44,6 +16,7 @@ interface FormData {
   childrenAges: number[];
   budget: number;
   currency: Currency;
+  // Enhanced fields
   flexibleBudget?: boolean;
   accommodationOther?: string;
   rentalCarPreferences?: string[];
@@ -55,36 +28,6 @@ interface TripDetailsFormProps {
   formData: FormData;
   onFormChange: (data: FormData) => void;
 }
-
-// Action types for reducer
-type BudgetAction =
-  | { type: 'SET_FLEXIBLE'; payload: boolean }
-  | { type: 'SET_BUDGET'; payload: number }
-  | { type: 'SET_BUDGET_MODE'; payload: 'total' | 'per-person' }
-  | { type: 'RESET_BUDGET' };
-
-// Budget reducer for complex state management
-const budgetReducer = (
-  state: { isFlexible: boolean; budget: number; mode: 'total' | 'per-person' },
-  action: BudgetAction
-) => {
-  switch (action.type) {
-    case 'SET_FLEXIBLE':
-      return {
-        ...state,
-        isFlexible: action.payload,
-        budget: action.payload ? 0 : Math.max(state.budget, 5000),
-      };
-    case 'SET_BUDGET':
-      return { ...state, budget: action.payload };
-    case 'SET_BUDGET_MODE':
-      return { ...state, mode: action.payload };
-    case 'RESET_BUDGET':
-      return { isFlexible: false, budget: 5000, mode: 'total' as const };
-    default:
-      return state;
-  }
-};
 
 // Constants
 const YEAR_THRESHOLD = 50;
@@ -106,50 +49,46 @@ const dateUtils = {
     const parts = dateStr.split('/');
     if (parts.length !== 3) return null;
 
-    const [month, day, year] = parts;
-    const monthNum = parseInt(month, 10);
-    const dayNum = parseInt(day, 10);
-    let yearNum = parseInt(year, 10);
+    const month = parseInt(parts[0] || '0') - 1; // Month is 0-indexed
+    const day = parseInt(parts[1] || '0');
+    let year = parseInt(parts[2] || '0');
 
-    // Handle two-digit years
-    if (yearNum <= YEAR_THRESHOLD) {
-      yearNum += YEAR_BASE_2000;
-    } else if (yearNum < 100) {
-      yearNum += YEAR_BASE_1900;
+    // Convert 2-digit year to 4-digit year
+    if (year < YEAR_THRESHOLD) {
+      year += YEAR_BASE_2000;
+    } else if (year < 100) {
+      year += YEAR_BASE_1900;
     }
 
-    // Validate date components
-    if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
-      return null;
-    }
-
-    const date = new Date(yearNum, monthNum - 1, dayNum);
-
-    // Check if the date is valid (handles edge cases like Feb 30)
-    if (date.getMonth() !== monthNum - 1 || date.getDate() !== dayNum) {
-      return null;
-    }
+    const date = new Date(year, month, day);
+    // Validate the date
+    if (isNaN(date.getTime())) return null;
 
     return date;
   },
 
+  formatToMMDDYY: (date: Date): string => {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${month}/${day}/${year}`;
+  },
+
   convertToInputFormat: (dateStr: string): string => {
+    if (!dateStr) return '';
+
     const date = dateUtils.parseMMDDYY(dateStr);
     if (!date) return '';
 
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
 
     return `${year}-${month}-${day}`;
   },
 
   getTodayString: (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return new Date().toISOString().split('T')[0] || '';
   },
 
   calculateDaysBetween: (startDate: string, endDate: string): number | null => {
@@ -183,136 +122,58 @@ const currencySymbols: Record<Currency, string> = {
   AUD: 'A$',
 };
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onFormChange }) => {
-  // Initialize React Hook Form with Zod resolver
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isValid, isDirty },
-    reset,
-  } = useForm<TripDetailsFormData>({
-    resolver: zodResolver(tripDetailsSchema),
-    defaultValues: {
-      location: formData.location || '',
-      departDate: formData.departDate || '',
-      returnDate: formData.returnDate || '',
-      flexibleDates: formData.flexibleDates || false,
-      plannedDays: formData.plannedDays || undefined,
-      adults: formData.adults || 2,
-      children: formData.children || 0,
-      childrenAges: formData.childrenAges || [],
-      budget: formData.budget || 5000,
-      currency: formData.currency || 'USD',
-      flexibleBudget: formData.flexibleBudget || false,
-      accommodationOther: formData.accommodationOther || '',
-      rentalCarPreferences: formData.rentalCarPreferences || [],
-      travelStyleChoice: formData.travelStyleChoice || 'not-selected',
-      travelStyleAnswers: formData.travelStyleAnswers || {},
-    },
-    mode: 'onChange', // Real-time validation
-  });
+const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChange }) => {
+  // Local state
+  const [localFlexibleDates, setLocalFlexibleDates] = useState(Boolean(formData.flexibleDates));
+  const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
+  const [budgetMode, setBudgetMode] = useState<BudgetMode>('total');
+  const [adults, setAdults] = useState(formData.adults || 2);
+  const [children, setChildren] = useState(formData.children || 0);
+  const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
 
-  // Enhanced reducer for budget state
-  const [budgetState, dispatchBudget] = useReducer(budgetReducer, {
-    isFlexible: Boolean(formData.flexibleBudget),
-    budget: formData.budget || 5000,
-    mode: 'total' as const,
-  });
-
-  // Watch form values for reactive updates
-  const watchedValues = watch();
-  const watchedFlexibleDates = watch('flexibleDates');
-  const watchedFlexibleBudget = watch('flexibleBudget');
-
-  // Refs for calendar inputs
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
 
-  // Memoized budget display calculation
-  const budgetDisplay = useMemo(() => {
-    const symbol = currencySymbols[watchedValues.currency || 'USD'];
-    const budget = watchedValues.budget || 0;
-
-    if (budget >= MAX_BUDGET) {
-      return `${symbol}10,000+`;
-    }
-    return `${symbol}${budget.toLocaleString()}`;
-  }, [watchedValues.currency, watchedValues.budget]);
-
-  // Sync with parent form data when form changes
+  // Sync local state when formData changes from parent
   useEffect(() => {
-    if (isDirty) {
-      onFormChange(watchedValues as FormData);
-    }
-  }, [watchedValues, isDirty, onFormChange]);
+    setLocalFlexibleDates(Boolean(formData.flexibleDates));
+    setAdults(formData.adults || 2);
+    setChildren(formData.children || 0);
+    setChildrenAges(formData.childrenAges || []);
+    setBudgetRange(formData.budget || 5000);
+  }, [formData]);
 
-  // Update React Hook Form when parent data changes
-  useEffect(() => {
-    reset({
-      location: formData.location || '',
-      departDate: formData.departDate || '',
-      returnDate: formData.returnDate || '',
-      flexibleDates: formData.flexibleDates || false,
-      plannedDays: formData.plannedDays || undefined,
-      adults: formData.adults || 2,
-      children: formData.children || 0,
-      childrenAges: formData.childrenAges || [],
-      budget: formData.budget || 5000,
-      currency: formData.currency || 'USD',
-      flexibleBudget: formData.flexibleBudget || false,
-      accommodationOther: formData.accommodationOther || '',
-      rentalCarPreferences: formData.rentalCarPreferences || [],
-      travelStyleChoice: formData.travelStyleChoice || 'not-selected',
-      travelStyleAnswers: formData.travelStyleAnswers || {},
-    });
-  }, [formData, reset]);
+  // Memoized handlers
+  const handleInputChange = useCallback(
+    (field: keyof FormData, value: any) => {
+      onFormChange({ ...formData, [field]: value });
+    },
+    [formData, onFormChange]
+  );
 
-  // Enhanced handlers with React Hook Form
   const handleBudgetChange = useCallback(
     (value: number) => {
-      setValue('budget', value, { shouldValidate: true, shouldDirty: true });
-      dispatchBudget({ type: 'SET_BUDGET', payload: value });
+      setBudgetRange(value);
+      handleInputChange('budget', value);
     },
-    [setValue, dispatchBudget]
-  );
-
-  const handleFlexibleBudgetToggle = useCallback(
-    (checked: boolean) => {
-      setValue('flexibleBudget', checked, { shouldValidate: true, shouldDirty: true });
-      dispatchBudget({ type: 'SET_FLEXIBLE', payload: checked });
-    },
-    [setValue, dispatchBudget]
-  );
-
-  const handleBudgetModeChange = useCallback(
-    (checked: boolean) => {
-      const mode = checked ? 'per-person' : 'total';
-      dispatchBudget({ type: 'SET_BUDGET_MODE', payload: mode });
-    },
-    [dispatchBudget]
+    [handleInputChange]
   );
 
   const adjustAdults = useCallback(
     (increment: boolean) => {
-      const currentAdults = watchedValues.adults || 2;
-      const newValue = increment ? currentAdults + 1 : Math.max(MIN_ADULTS, currentAdults - 1);
-      setValue('adults', newValue, { shouldValidate: true, shouldDirty: true });
+      const newValue = increment ? adults + 1 : Math.max(MIN_ADULTS, adults - 1);
+      setAdults(newValue);
+      handleInputChange('adults', newValue);
     },
-    [watchedValues.adults, setValue]
+    [adults, handleInputChange]
   );
 
   const adjustChildren = useCallback(
     (increment: boolean) => {
-      const currentChildren = watchedValues.children || 0;
-      const newChildrenCount = increment
-        ? currentChildren + 1
-        : Math.max(MIN_CHILDREN, currentChildren - 1);
+      const newChildrenCount = increment ? children + 1 : Math.max(MIN_CHILDREN, children - 1);
 
       // Adjust children ages array
-      const currentAges = watchedValues.childrenAges || [];
-      let newChildrenAges = [...currentAges];
+      let newChildrenAges = [...childrenAges];
       if (increment) {
         // Add a new unselected age when adding a child
         newChildrenAges.push(UNSELECTED_AGE);
@@ -321,445 +182,534 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
         newChildrenAges = newChildrenAges.slice(0, newChildrenCount);
       }
 
-      setValue('children', newChildrenCount, { shouldValidate: true, shouldDirty: true });
-      setValue('childrenAges', newChildrenAges, { shouldValidate: true, shouldDirty: true });
+      // Update local state
+      setChildren(newChildrenCount);
+      setChildrenAges(newChildrenAges);
+
+      // Update parent formData with both children count and ages in a single call
+      onFormChange({
+        ...formData,
+        children: newChildrenCount,
+        childrenAges: newChildrenAges,
+      });
     },
-    [watchedValues.children, watchedValues.childrenAges, setValue]
+    [children, childrenAges, formData, onFormChange]
   );
 
   const updateChildAge = useCallback(
     (index: number, age: number) => {
-      const currentAges = watchedValues.childrenAges || [];
-      const newAges = [...currentAges];
+      const newAges = [...childrenAges];
       // Ensure the array is long enough
       while (newAges.length <= index) {
         newAges.push(UNSELECTED_AGE);
       }
       newAges[index] = age;
-      setValue('childrenAges', newAges, { shouldValidate: true, shouldDirty: true });
+      setChildrenAges(newAges);
+      handleInputChange('childrenAges', newAges);
     },
-    [watchedValues.childrenAges, setValue]
+    [childrenAges, handleInputChange]
   );
 
   const handleDateChange = useCallback(
     (field: 'departDate' | 'returnDate', value: string) => {
-      setValue(field, value, { shouldValidate: true, shouldDirty: true });
-    },
-    [setValue]
-  );
+      if (value) {
+        const date = new Date(value);
+        const formattedDate = dateUtils.formatToMMDDYY(date);
 
-  const handleFlexibleDatesChange = useCallback(
-    (checked: boolean) => {
-      setValue('flexibleDates', checked, { shouldValidate: true, shouldDirty: true });
-      if (checked) {
-        // Clear return date when enabling flexible dates
-        setValue('returnDate', '', { shouldValidate: true, shouldDirty: true });
-      } else {
-        // Clear planned days when disabling flexible dates
-        setValue('plannedDays', undefined, { shouldValidate: true, shouldDirty: true });
+        // Special validation for return date
+        if (field === 'returnDate') {
+          // Check if return date is valid (at least one day after departure)
+          if (
+            formData.departDate &&
+            !dateUtils.isReturnDateValid(formData.departDate, formattedDate)
+          ) {
+            // Invalid return date - clear it and show user feedback
+            console.warn('Return date must be at least one day after departure date');
+            handleInputChange('returnDate', '');
+            return;
+          }
+        }
+
+        // If we're updating departure date and there's already a return date, validate it
+        if (field === 'departDate' && formData.returnDate) {
+          if (!dateUtils.isReturnDateValid(formattedDate, formData.returnDate)) {
+            // Clear the return date if it becomes invalid
+            onFormChange({
+              ...formData,
+              [field]: formattedDate,
+              returnDate: '',
+            });
+            return;
+          }
+        }
+
+        handleInputChange(field, formattedDate);
       }
     },
-    [setValue]
+    [formData, handleInputChange, onFormChange]
   );
 
   const handleManualDateInput = useCallback(
     (field: 'departDate' | 'returnDate', value: string) => {
-      setValue(field, value, { shouldValidate: true, shouldDirty: true });
+      // Remove all non-digits first
+      let cleaned = value.replace(/\D/g, '');
+
+      // Limit to 6 digits (MMDDYY)
+      if (cleaned.length > 6) {
+        cleaned = cleaned.substring(0, 6);
+      }
+
+      // Format as MM/DD/YY with proper validation
+      let formatted = '';
+
+      if (cleaned.length >= 1) {
+        // Month part (01-12)
+        let month = cleaned.substring(0, 2);
+        if (cleaned.length >= 2) {
+          let monthNum = parseInt(month);
+          if (monthNum > 12) {
+            month = '12';
+          } else if (monthNum === 0 && month.length === 2) {
+            month = '01';
+          }
+        }
+        formatted = month;
+      }
+
+      if (cleaned.length >= 3) {
+        // Day part (01-31)
+        let day = cleaned.substring(2, 4);
+        if (cleaned.length >= 4) {
+          let dayNum = parseInt(day);
+          if (dayNum > 31) {
+            day = '31';
+          } else if (dayNum === 0 && day.length === 2) {
+            day = '01';
+          }
+        }
+        formatted += '/' + day;
+      }
+
+      if (cleaned.length >= 5) {
+        // Year part (last 2 digits)
+        let year = cleaned.substring(4, 6);
+        formatted += '/' + year;
+      }
+
+      // Validate the complete date if it's fully formatted
+      if (formatted.length === 8) {
+        // Special validation for return date
+        if (field === 'returnDate') {
+          if (formData.departDate && !dateUtils.isReturnDateValid(formData.departDate, formatted)) {
+            // Invalid return date - don't update
+            console.warn('Return date must be at least one day after departure date');
+            return;
+          }
+        }
+
+        // If we're updating departure date and there's already a return date, validate it
+        if (field === 'departDate' && formData.returnDate) {
+          if (!dateUtils.isReturnDateValid(formatted, formData.returnDate)) {
+            // Clear the return date if it becomes invalid
+            onFormChange({
+              ...formData,
+              [field]: formatted,
+              returnDate: '',
+            });
+            return;
+          }
+        }
+      }
+
+      handleInputChange(field, formatted);
     },
-    [setValue]
+    [formData, handleInputChange, onFormChange]
   );
 
-  // Form submission handler
-  const onSubmit = useCallback(
-    (data: TripDetailsFormData) => {
-      console.log('Enhanced form submitted with data:', data);
-      onFormChange(data as FormData);
+  const handleFlexibleDatesChange = useCallback(
+    (checked: boolean) => {
+      try {
+        // Update local state immediately for responsive UI
+        setLocalFlexibleDates(checked);
+
+        // Create updated form data
+        const updatedFormData: FormData = { ...formData };
+        updatedFormData.flexibleDates = checked;
+
+        if (checked) {
+          // Clear only return date when enabling flexible dates
+          updatedFormData.returnDate = '';
+        } else {
+          // Clear planned days when disabling flexible dates
+          delete updatedFormData.plannedDays;
+        }
+
+        // Update parent with all changes at once
+        onFormChange(updatedFormData);
+      } catch (error) {
+        console.error('Error toggling flexible dates:', error);
+        // Reset local state on error
+        setLocalFlexibleDates(!checked);
+      }
     },
-    [onFormChange]
+    [formData, onFormChange]
   );
+
+  const handleBudgetModeChange = useCallback((checked: boolean) => {
+    setBudgetMode(checked ? 'per-person' : 'total');
+  }, []);
 
   // Computed values
   const getCurrencySymbol = useCallback(() => {
-    return currencySymbols[watchedValues.currency || 'USD'];
-  }, [watchedValues.currency]);
+    return currencySymbols[formData.currency || 'USD'];
+  }, [formData.currency]);
 
-  const totalTravelers = (watchedValues.adults || 0) + (watchedValues.children || 0);
-  const totalDays = dateUtils.calculateDaysBetween(
-    watchedValues.departDate || '',
-    watchedValues.returnDate || ''
-  );
-  const isFlexibleDatesEnabled = watchedFlexibleDates;
-  const isFlexibleBudgetEnabled = watchedFlexibleBudget;
+  const totalTravelers = adults + children;
+  const totalDays = dateUtils.calculateDaysBetween(formData.departDate, formData.returnDate);
+  const isFlexibleDatesEnabled = localFlexibleDates;
 
   const getBudgetDisplay = useCallback(() => {
     const symbol = getCurrencySymbol();
-    const budget = watchedValues.budget || 0;
 
-    if (budget >= MAX_BUDGET) {
+    if (budgetRange >= MAX_BUDGET) {
       return `${symbol}10,000+`;
     }
 
-    return `${symbol}${budget.toLocaleString()}`;
-  }, [watchedValues.budget, getCurrencySymbol]);
+    return `${symbol}${budgetRange.toLocaleString()}`;
+  }, [budgetRange, getCurrencySymbol]);
 
   const getMinReturnDate = useCallback(() => {
-    if (watchedValues.departDate) {
-      const departDate = dateUtils.parseMMDDYY(watchedValues.departDate);
+    if (formData.departDate) {
+      const departDate = dateUtils.parseMMDDYY(formData.departDate);
       if (departDate) {
         departDate.setDate(departDate.getDate() + 1); // Minimum 1 day trip
         return departDate.toISOString().split('T')[0];
       }
     }
     return dateUtils.getTodayString();
-  }, [watchedValues.departDate]);
+  }, [formData.departDate]);
 
-  const hasUnselectedChildrenAges = (watchedValues.childrenAges || []).some(
-    (age) => age === UNSELECTED_AGE
-  );
+  // Validation state
+  const hasUnselectedChildrenAges =
+    children > 0 &&
+    (childrenAges.length !== children ||
+      childrenAges.some((age) => age === UNSELECTED_AGE || age === undefined));
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <div className="space-y-6">
       {/* Location Box */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
         <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
           LOCATION(S)
         </h3>
-        <Controller
-          name="location"
-          control={control}
-          render={({ field }) => (
-            <div>
-              <input
-                {...field}
-                type="text"
-                placeholder='Example: "New York", "Thailand", "Spain and Portugal"'
-                onFocus={(e) => e.target.select()}
-                className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white placeholder-gray-500 font-bold font-raleway text-base ${
-                  errors.location
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-primary focus:border-primary'
-                }`}
-                aria-label="Trip location"
-                aria-invalid={!!errors.location}
-                aria-describedby={errors.location ? 'location-error' : undefined}
-              />
-              {errors.location && (
-                <p id="location-error" className="text-red-500 text-sm mt-2 font-raleway">
-                  {errors.location.message}
-                </p>
-              )}
-            </div>
-          )}
+        <input
+          type="text"
+          placeholder='Example: "New York", "Thailand", "Spain and Portugal"'
+          value={formData.location || ''}
+          onChange={(e) => handleInputChange('location', e.target.value)}
+          className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white placeholder-gray-500 font-bold font-raleway text-base"
+          aria-label="Trip location"
         />
       </div>
 
-      {/* Dates & Travelers - Two Separate Boxes Side by Side */}
+      {/* Dates and Travelers Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Dates Box */}
         <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
-              DATES
-            </h3>
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-bold text-primary font-raleway">Travel Dates</h4>
-            </div>
-
-            {/* Only show date controls when flexible dates is disabled */}
-            {!watchedFlexibleDates && (
-              <>
-                {/* Departure Date */}
-                <div className="mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    <label className="block text-primary font-bold font-raleway text-base">
-                      Depart
-                    </label>
-                  </div>
-                  <Controller
-                    name="departDate"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="date"
-                        min={dateUtils.getTodayString()}
-                        className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
-                          errors.departDate
-                            ? 'border-red-500 focus:border-red-500'
-                            : 'border-primary focus:border-primary'
-                        }`}
-                        aria-label="Departure date"
-                        aria-invalid={!!errors.departDate}
-                        aria-describedby={errors.departDate ? 'depart-date-error' : undefined}
-                      />
-                    )}
-                  />
-                  {errors.departDate && (
-                    <p id="depart-date-error" className="text-red-500 text-sm mt-2 font-raleway">
-                      {errors.departDate.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Return Date */}
-                <div className="mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    <label className="block text-primary font-bold font-raleway text-base">
-                      Return
-                    </label>
-                  </div>
-                  <Controller
-                    name="returnDate"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="date"
-                        min={getMinReturnDate()}
-                        className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
-                          errors.returnDate
-                            ? 'border-red-500 focus:border-red-500'
-                            : 'border-primary focus:border-primary'
-                        }`}
-                        aria-label="Return date"
-                        aria-invalid={!!errors.returnDate}
-                        aria-describedby={errors.returnDate ? 'return-date-error' : undefined}
-                      />
-                    )}
-                  />
-                  {errors.returnDate && (
-                    <p id="return-date-error" className="text-red-500 text-sm mt-2 font-raleway">
-                      {errors.returnDate.message}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Flexible Dates Toggle */}
-            <div className="flex items-center pt-2">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <Controller
-                  name="flexibleDates"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      type="checkbox"
-                      checked={field.value || false}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      className="sr-only peer"
-                      aria-label="Toggle flexible dates"
-                    />
-                  )}
-                />
-                <div
-                  className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
-                    watchedFlexibleDates
-                      ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                      : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                  }`}
-                ></div>
-                <span className="text-primary font-bold font-raleway text-sm">
-                  I'm not sure or my dates are flexible
-                </span>
+          <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
+            DATES
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                {isFlexibleDatesEnabled ? 'Trip Start (flexible)' : 'Depart'}
               </label>
+              <div
+                className={`relative cursor-pointer ${isFlexibleDatesEnabled ? 'hidden' : ''}`}
+                onClick={() => !isFlexibleDatesEnabled && departDateRef.current?.showPicker()}
+              >
+                <input
+                  type="text"
+                  placeholder="mm/dd/yy"
+                  value={formData.departDate || ''}
+                  onChange={(e) => handleManualDateInput('departDate', e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  maxLength={8}
+                  className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base bg-white cursor-pointer"
+                  aria-label="Departure date"
+                  disabled={isFlexibleDatesEnabled}
+                />
+                <input
+                  ref={departDateRef}
+                  type="date"
+                  min={dateUtils.getTodayString()}
+                  value={dateUtils.convertToInputFormat(formData.departDate || '')}
+                  onChange={(e) => handleDateChange('departDate', e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    !isFlexibleDatesEnabled && departDateRef.current?.showPicker();
+                  }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 hover:bg-gray-100 cursor-pointer text-primary"
+                  aria-label="Open departure date picker"
+                  disabled={isFlexibleDatesEnabled}
+                >
+                  <Calendar className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                {isFlexibleDatesEnabled ? 'Duration' : 'Return'}
+              </label>
+              <div
+                className={`relative ${
+                  isFlexibleDatesEnabled ? 'hidden cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                onClick={() => !isFlexibleDatesEnabled && returnDateRef.current?.showPicker()}
+              >
+                <input
+                  type="text"
+                  placeholder="mm/dd/yy"
+                  value={formData.returnDate || ''}
+                  onChange={(e) => handleManualDateInput('returnDate', e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  maxLength={8}
+                  disabled={isFlexibleDatesEnabled}
+                  className={`w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary placeholder-gray-400 font-bold font-raleway text-base ${
+                    isFlexibleDatesEnabled
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white cursor-pointer'
+                  }`}
+                  aria-label="Return date"
+                  aria-disabled={isFlexibleDatesEnabled}
+                />
+                <input
+                  ref={returnDateRef}
+                  type="date"
+                  min={getMinReturnDate()}
+                  value={dateUtils.convertToInputFormat(formData.returnDate || '')}
+                  onChange={(e) => handleDateChange('returnDate', e.target.value)}
+                  disabled={isFlexibleDatesEnabled}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    !isFlexibleDatesEnabled && returnDateRef.current?.showPicker();
+                  }}
+                  disabled={isFlexibleDatesEnabled}
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded transition-colors z-10 ${
+                    isFlexibleDatesEnabled
+                      ? 'cursor-not-allowed text-gray-400'
+                      : 'hover:bg-gray-100 cursor-pointer text-primary'
+                  }`}
+                  aria-label="Open return date picker"
+                  aria-disabled={isFlexibleDatesEnabled}
+                >
+                  <Calendar className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Total Days Display */}
+          {totalDays && !isFlexibleDatesEnabled && (
+            <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
+              <span className="text-primary font-bold font-raleway text-base">Total days: </span>
+              <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
+                <span className="font-bold text-primary font-raleway text-xl">{totalDays}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Flexible Dates Switch */}
+          <div className="flex items-center mt-4">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isFlexibleDatesEnabled}
+                onChange={(e) => handleFlexibleDatesChange(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div
+                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
+                  isFlexibleDatesEnabled
+                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                }`}
+              ></div>
+              <span className="text-primary font-bold font-raleway text-sm">
+                I'm not sure or my dates are flexible
+              </span>
+            </label>
+          </div>
+
+          {/* Flexible Dates Dropdown */}
+          {isFlexibleDatesEnabled && (
+            <div className="mt-4 transition-all duration-300 ease-in-out">
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                How many days should we plan?
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.plannedDays || ''}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'plannedDays',
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
+                  className="w-full px-4 py-3 pr-10 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base appearance-none"
+                  aria-label="Number of planned days"
+                >
+                  <option value="" className="font-bold font-raleway">
+                    Select number of days
+                  </option>
+                  {Array.from({ length: MAX_PLANNED_DAYS }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day} className="font-bold font-raleway">
+                      {day} {day === 1 ? 'day' : 'days'}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Travelers Box */}
         <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
-              TRAVELERS
-            </h3>
-          </div>
-
-          {/* Travelers Content */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-bold text-primary font-raleway">Travelers</h4>
-            </div>
-
-            {/* Adults Section */}
-            <div className="mb-4">
-              <label className="block text-primary font-bold font-raleway text-base mb-2">
-                Adults
-              </label>
+          <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
+            TRAVELERS
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-primary font-bold font-raleway text-base">Adults</span>
               <div className="flex items-center space-x-3">
                 <button
-                  type="button"
                   onClick={() => adjustAdults(false)}
-                  disabled={(watchedValues.adults || 2) <= MIN_ADULTS}
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
-                  aria-label="Decrease number of adults"
+                  disabled={adults <= MIN_ADULTS}
+                  className="w-8 h-8 rounded-full border-3 border-primary bg-white hover:bg-primary/10 text-primary flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Decrease adults"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="h-4 w-4" />
                 </button>
-
-                <Controller
-                  name="adults"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="number"
-                      min={MIN_ADULTS}
-                      max={10}
-                      value={field.value || 2}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || MIN_ADULTS;
-                        field.onChange(Math.max(MIN_ADULTS, Math.min(10, value)));
-                      }}
-                      className="w-16 text-center px-2 py-2 border-3 border-primary rounded-[8px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base"
-                      aria-label="Number of adults"
-                      aria-invalid={!!errors.adults}
-                      aria-describedby={errors.adults ? 'adults-error' : undefined}
-                    />
-                  )}
-                />
-
+                <span className="text-xl font-bold w-8 text-center text-primary font-raleway">
+                  {adults}
+                </span>
                 <button
-                  type="button"
                   onClick={() => adjustAdults(true)}
-                  disabled={(watchedValues.adults || 2) >= 10}
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
-                  aria-label="Increase number of adults"
+                  className="w-8 h-8 rounded-full border-3 border-primary bg-white hover:bg-primary/10 text-primary flex items-center justify-center transition-all duration-200"
+                  aria-label="Increase adults"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
-              {errors.adults && (
-                <p id="adults-error" className="text-red-500 text-sm mt-2 font-raleway">
-                  {errors.adults.message}
-                </p>
-              )}
             </div>
 
-            {/* Children Section */}
-            <div className="mb-4">
-              <label className="block text-primary font-bold font-raleway text-base mb-2">
-                Children Ages 0-17
-              </label>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-primary font-bold font-raleway text-base">Children</span>
+                <div className="text-sm text-primary/70 font-bold font-raleway">Ages 0-17</div>
+              </div>
               <div className="flex items-center space-x-3">
                 <button
-                  type="button"
                   onClick={() => adjustChildren(false)}
-                  disabled={(watchedValues.children || 0) <= MIN_CHILDREN}
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
-                  aria-label="Decrease number of children"
+                  disabled={children <= MIN_CHILDREN}
+                  className="w-8 h-8 rounded-full border-3 border-primary bg-white hover:bg-primary/10 text-primary flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Decrease children"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="h-4 w-4" />
                 </button>
-
-                <Controller
-                  name="children"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="number"
-                      min={MIN_CHILDREN}
-                      max={10}
-                      value={field.value || 0}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || MIN_CHILDREN;
-                        field.onChange(Math.max(MIN_CHILDREN, Math.min(10, value)));
-                      }}
-                      className="w-16 text-center px-2 py-2 border-3 border-primary rounded-[8px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base"
-                      aria-label="Number of children"
-                      aria-invalid={!!errors.children}
-                      aria-describedby={errors.children ? 'children-error' : undefined}
-                    />
-                  )}
-                />
-
+                <span className="text-xl font-bold w-8 text-center text-primary font-raleway">
+                  {children}
+                </span>
                 <button
-                  type="button"
                   onClick={() => adjustChildren(true)}
-                  disabled={(watchedValues.children || 0) >= 10}
-                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
-                  aria-label="Increase number of children"
+                  className="w-8 h-8 rounded-full border-3 border-primary bg-white hover:bg-primary/10 text-primary flex items-center justify-center transition-all duration-200"
+                  aria-label="Increase children"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
-              </div>
-              {errors.children && (
-                <p id="children-error" className="text-red-500 text-sm mt-2 font-raleway">
-                  {errors.children.message}
-                </p>
-              )}
-            </div>
-
-            {/* Children Ages Section - Only show if there are children */}
-            {(watchedValues.children || 0) > 0 && (
-              <div className="pt-2 border-t border-gray-200">
-                <label className="block text-primary font-bold font-raleway text-sm mb-2">
-                  Children's Ages
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {Array.from({ length: watchedValues.children || 0 }, (_, index) => (
-                    <div key={index} className="flex flex-col">
-                      <label className="text-xs text-primary font-raleway font-bold mb-1">
-                        Child {index + 1}
-                      </label>
-                      <Controller
-                        name={`childrenAges.${index}`}
-                        control={control}
-                        render={({ field }) => (
-                          <select
-                            {...field}
-                            value={field.value ?? UNSELECTED_AGE}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              field.onChange(value);
-                              updateChildAge(index, value);
-                            }}
-                            className="px-2 py-1 border-3 border-primary rounded-[6px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-xs"
-                            aria-label={`Age of child ${index + 1}`}
-                          >
-                            <option value={UNSELECTED_AGE} disabled>
-                              Age
-                            </option>
-                            {Array.from({ length: 18 }, (_, age) => (
-                              <option
-                                key={age}
-                                value={age}
-                                className="font-bold font-raleway text-xs"
-                              >
-                                {age}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      />
-                    </div>
-                  ))}
-                </div>
-                {hasUnselectedChildrenAges && (
-                  <p className="text-amber-600 text-xs mt-2 font-raleway">⚠️ Select ages</p>
-                )}
-              </div>
-            )}
-
-            {/* Total Travelers Summary */}
-            <div className="pt-3">
-              <div className="text-center">
-                <div className="text-primary font-bold font-raleway text-base">
-                  Total travelers: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
-                </div>
               </div>
             </div>
           </div>
+
+          <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
+            <span className="text-primary font-bold font-raleway text-base">Total travelers: </span>
+            <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
+              <span className="font-bold text-primary font-raleway text-xl">{totalTravelers}</span>
+            </div>
+          </div>
+
+          {/* Children Ages */}
+          {children > 0 && (
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: children }, (_, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-primary font-bold font-raleway text-lg">
+                    Child {index + 1}
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
+                          ? ''
+                          : childrenAges[index]
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '') {
+                          updateChildAge(index, UNSELECTED_AGE);
+                        } else {
+                          updateChildAge(index, parseInt(value));
+                        }
+                      }}
+                      className={`px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] ${
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
+                          ? 'border-red-400 text-gray-500'
+                          : 'border-primary'
+                      }`}
+                      aria-label={`Age for child ${index + 1}`}
+                      aria-invalid={
+                        childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
+                      }
+                    >
+                      <option value="" className="font-bold font-raleway text-base">
+                        Select age
+                      </option>
+                      <option value={0} className="font-bold font-raleway text-base">
+                        Under 1
+                      </option>
+                      {Array.from({ length: MAX_CHILD_AGE }, (_, age) => age + 1).map((age) => (
+                        <option key={age} value={age} className="font-bold font-raleway text-base">
+                          {age} {age === 1 ? 'year' : 'years'} old
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+                  </div>
+                </div>
+              ))}
+              {hasUnselectedChildrenAges && (
+                <p className="text-sm text-red-600 font-bold font-raleway mt-2">
+                  Please select ages for all children
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Enhanced Budget Box with React Hook Form */}
+      {/* Budget Box */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
@@ -767,363 +717,150 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
           </h3>
         </div>
 
-        {/* Only show budget controls when flexible budget is disabled */}
-        {!isFlexibleBudgetEnabled && (
-          <>
-            {/* Budget Display */}
-            <div className="text-center mb-6">
-              <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
-                {getBudgetDisplay()}
-              </div>
-            </div>
+        {/* Budget Display */}
+        <div className="text-center mb-6">
+          <div className="bg-primary text-white px-6 py-3 rounded-[10px] font-bold text-2xl inline-block font-raleway">
+            {getBudgetDisplay()}
+          </div>
+        </div>
 
-            {/* Budget Slider with Controller */}
-            <div className="space-y-4">
-              <Controller
-                name="budget"
-                control={control}
-                render={({ field }) => (
-                  <div className="slider-container">
-                    <input
-                      type="range"
-                      min="0"
-                      max={MAX_BUDGET}
-                      step={BUDGET_STEP}
-                      value={field.value}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        field.onChange(value);
-                        handleBudgetChange(value);
-                      }}
-                      onInput={(e) => {
-                        const value = parseInt((e.target as HTMLInputElement).value);
-                        field.onChange(value);
-                        handleBudgetChange(value);
-                      }}
-                      className="w-full slider-primary"
-                      aria-label="Budget range"
-                      aria-valuemin={0}
-                      aria-valuemax={MAX_BUDGET}
-                      aria-valuenow={field.value}
-                    />
-                  </div>
-                )}
-              />
-
-              {/* Budget labels */}
-              <div
-                className="flex justify-between text-base font-bold font-raleway px-3"
-                style={{ color: '#406170' }}
-              >
-                <span>{getCurrencySymbol()}0</span>
-                <span>{getCurrencySymbol()}10,000+</span>
-              </div>
-            </div>
-
-            {/* Currency and Budget Mode Row */}
-            <div className="flex items-center justify-between gap-6 mt-6">
-              {/* Currency Dropdown */}
-              <div className="flex items-center space-x-2">
-                <Controller
-                  name="currency"
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
-                      aria-label="Select currency"
-                    >
-                      <option value="USD" className="font-bold font-raleway text-sm">
-                        $ USD
-                      </option>
-                      <option value="EUR" className="font-bold font-raleway text-sm">
-                        € EUR
-                      </option>
-                      <option value="GBP" className="font-bold font-raleway text-sm">
-                        £ GBP
-                      </option>
-                      <option value="CAD" className="font-bold font-raleway text-sm">
-                        C$ CAD
-                      </option>
-                      <option value="AUD" className="font-bold font-raleway text-sm">
-                        A$ AUD
-                      </option>
-                    </select>
-                  )}
-                />
-              </div>
-
-              {/* Budget Mode Switch */}
-              <div className="flex items-center space-x-4">
-                <span className="text-primary font-bold font-raleway text-sm">
-                  Total trip budget
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={budgetState.mode === 'per-person'}
-                    onChange={(e) => handleBudgetModeChange(e.target.checked)}
-                    className="sr-only peer"
-                    aria-label="Toggle budget mode"
-                  />
-                  <div
-                    className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                      budgetState.mode === 'per-person'
-                        ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                        : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-                    }`}
-                  ></div>
-                </label>
-                <span className="text-primary font-bold font-raleway text-sm">
-                  Per-person budget
-                </span>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Flexible Budget Toggle - Always visible */}
-        <div
-          className={`flex items-center ${
-            !isFlexibleBudgetEnabled ? 'mt-6 pt-4 border-t border-gray-200' : ''
-          }`}
-        >
-          <label className="relative inline-flex items-center cursor-pointer">
-            <Controller
-              name="flexibleBudget"
-              control={control}
-              render={({ field }) => (
-                <input
-                  type="checkbox"
-                  checked={field.value || false}
-                  onChange={(e) => {
-                    field.onChange(e.target.checked);
-                    handleFlexibleBudgetToggle(e.target.checked);
-                  }}
-                  className="sr-only peer"
-                  aria-label="Toggle budget flexibility"
-                />
-              )}
+        {/* Budget Slider */}
+        <div className="space-y-4">
+          <div className="slider-container">
+            <input
+              type="range"
+              min="0"
+              max={MAX_BUDGET}
+              step={BUDGET_STEP}
+              value={budgetRange}
+              onChange={(e) => handleBudgetChange(parseInt(e.target.value))}
+              onInput={(e) => handleBudgetChange(parseInt((e.target as HTMLInputElement).value))}
+              className="w-full slider-primary"
+              aria-label="Budget range"
+              aria-valuemin={0}
+              aria-valuemax={MAX_BUDGET}
+              aria-valuenow={budgetRange}
             />
-            <div
-              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
-                isFlexibleBudgetEnabled
-                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-              }`}
-            ></div>
-            <span className="text-primary font-bold font-raleway text-sm">
-              I'm not sure or my budget is flexible
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* Form Validation Summary */}
-
-      {/* Adults Section */}
-      <div className="mb-6">
-        <label className="block text-primary font-bold font-raleway text-base mb-3">
-          Adults (18+ years)
-        </label>
-        <div className="flex items-center space-x-4">
-          <button
-            type="button"
-            onClick={() => adjustAdults(false)}
-            disabled={(watchedValues.adults || 2) <= MIN_ADULTS}
-            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-            aria-label="Decrease number of adults"
-          >
-            <Minus className="w-5 h-5" />
-          </button>
-
-          <Controller
-            name="adults"
-            control={control}
-            render={({ field }) => (
-              <input
-                {...field}
-                type="number"
-                min={MIN_ADULTS}
-                max={10}
-                value={field.value || 2}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || MIN_ADULTS;
-                  field.onChange(Math.max(MIN_ADULTS, Math.min(10, value)));
-                }}
-                className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
-                aria-label="Number of adults"
-                aria-invalid={!!errors.adults}
-                aria-describedby={errors.adults ? 'adults-error' : undefined}
-              />
-            )}
-          />
-
-          <button
-            type="button"
-            onClick={() => adjustAdults(true)}
-            disabled={(watchedValues.adults || 2) >= 10}
-            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-            aria-label="Increase number of adults"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
-        {errors.adults && (
-          <p id="adults-error" className="text-red-500 text-sm mt-2 font-raleway">
-            {errors.adults.message}
-          </p>
-        )}
-      </div>
-
-      {/* Children Section */}
-      <div className="mb-6">
-        <label className="block text-primary font-bold font-raleway text-base mb-3">
-          Children (0-17 years)
-        </label>
-        <div className="flex items-center space-x-4">
-          <button
-            type="button"
-            onClick={() => adjustChildren(false)}
-            disabled={(watchedValues.children || 0) <= MIN_CHILDREN}
-            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-            aria-label="Decrease number of children"
-          >
-            <Minus className="w-5 h-5" />
-          </button>
-
-          <Controller
-            name="children"
-            control={control}
-            render={({ field }) => (
-              <input
-                {...field}
-                type="number"
-                min={MIN_CHILDREN}
-                max={10}
-                value={field.value || 0}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || MIN_CHILDREN;
-                  field.onChange(Math.max(MIN_CHILDREN, Math.min(10, value)));
-                }}
-                className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
-                aria-label="Number of children"
-                aria-invalid={!!errors.children}
-                aria-describedby={errors.children ? 'children-error' : undefined}
-              />
-            )}
-          />
-
-          <button
-            type="button"
-            onClick={() => adjustChildren(true)}
-            disabled={(watchedValues.children || 0) >= 10}
-            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-            aria-label="Increase number of children"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
-        {errors.children && (
-          <p id="children-error" className="text-red-500 text-sm mt-2 font-raleway">
-            {errors.children.message}
-          </p>
-        )}
-      </div>
-
-      {/* Children Ages Section - Only show if there are children */}
-      {(watchedValues.children || 0) > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
-            Children's Ages
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {Array.from({ length: watchedValues.children || 0 }, (_, index) => (
-              <div key={index} className="flex flex-col">
-                <label className="text-sm text-primary font-raleway font-bold mb-1">
-                  Child {index + 1}
-                </label>
-                <Controller
-                  name={`childrenAges.${index}`}
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      value={field.value ?? UNSELECTED_AGE}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        field.onChange(value);
-                        updateChildAge(index, value);
-                      }}
-                      className="px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-sm"
-                      aria-label={`Age of child ${index + 1}`}
-                    >
-                      <option value={UNSELECTED_AGE} disabled>
-                        Select age
-                      </option>
-                      {Array.from({ length: 18 }, (_, age) => (
-                        <option key={age} value={age} className="font-bold font-raleway text-sm">
-                          {age} {age === 1 ? 'year' : 'years'} old
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                />
-              </div>
-            ))}
           </div>
-          {hasUnselectedChildrenAges && (
-            <p className="text-amber-600 text-sm mt-3 font-raleway">
-              ⚠️ Please select ages for all children
-            </p>
-          )}
-        </div>
-      )}
 
-      {/* Total Travelers Summary */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="bg-primary/10 rounded-[10px] p-4">
-          <div className="text-center">
-            <div className="text-primary font-bold font-raleway text-lg">
-              Total Travelers: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
-            </div>
-            <div className="text-primary font-raleway text-sm mt-1">
-              {watchedValues.adults || 2} Adult{(watchedValues.adults || 2) !== 1 ? 's' : ''},{' '}
-              {watchedValues.children || 0} Child
-              {(watchedValues.children || 0) !== 1 ? 'ren' : ''}
-            </div>
+          {/* Budget labels */}
+          <div
+            className="flex justify-between text-base font-bold font-raleway px-3"
+            style={{ color: '#406170' }}
+          >
+            <span>{getCurrencySymbol()}0</span>
+            <span>{getCurrencySymbol()}10,000+</span>
+          </div>
+        </div>
+
+        {/* Currency and Budget Mode Row */}
+        <div className="flex items-center justify-between gap-6 mt-6">
+          {/* Currency Dropdown */}
+          <div className="flex items-center space-x-2">
+            <select
+              value={formData.currency || 'USD'}
+              onChange={(e) => handleInputChange('currency', e.target.value as Currency)}
+              className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
+              aria-label="Select currency"
+            >
+              <option value="USD" className="font-bold font-raleway text-sm">
+                $ USD
+              </option>
+              <option value="EUR" className="font-bold font-raleway text-sm">
+                € EUR
+              </option>
+              <option value="GBP" className="font-bold font-raleway text-sm">
+                £ GBP
+              </option>
+              <option value="CAD" className="font-bold font-raleway text-sm">
+                C$ CAD
+              </option>
+              <option value="AUD" className="font-bold font-raleway text-sm">
+                A$ AUD
+              </option>
+            </select>
+          </div>
+
+          {/* Budget Mode Switch */}
+          <div className="flex items-center space-x-4">
+            <span className="text-primary font-bold font-raleway text-sm">Total trip budget</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={budgetMode === 'per-person'}
+                onChange={(e) => handleBudgetModeChange(e.target.checked)}
+                className="sr-only peer"
+                aria-label="Toggle budget mode"
+              />
+              <div
+                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
+                  budgetMode === 'per-person'
+                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                }`}
+              ></div>
+            </label>
+            <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
+          </div>
+
+          {/* Budget Flexibility Toggle */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <span className="text-primary font-bold font-raleway text-sm">Budget flexibility</span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.flexibleBudget || false}
+                onChange={(e) => handleInputChange('flexibleBudget', e.target.checked)}
+                className="sr-only peer"
+                aria-label="Toggle budget flexibility"
+              />
+              <div
+                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
+                  formData.flexibleBudget
+                    ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                    : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                }`}
+              ></div>
+            </label>
           </div>
         </div>
       </div>
 
-      {/* Form Validation Summary */}
-      {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-[36px] p-6 mt-6">
-          <h4 className="text-red-600 font-bold font-raleway text-lg mb-3">
-            Please review the following:
-          </h4>
-          <ul className="space-y-2">
-            {Object.entries(errors).map(([field, error]) => (
-              <li key={field} className="text-red-600 font-raleway text-sm flex items-center">
-                <span className="mr-2">•</span>
-                {String(error?.message || `${field} is required`)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Travel Style Progressive Disclosure */}
+      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-6">
+        <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
+          TRAVEL STYLE
+        </h3>
+        <p className="text-primary font-raleway text-base mb-6">
+          Help us personalize your trip by telling us about your travel preferences
+        </p>
 
-      {/* Enhanced Form Status */}
-      <div className="bg-green-50 border border-green-200 rounded-[36px] p-4 mt-6">
-        <div className="flex items-center justify-between text-sm font-raleway">
-          <span className="text-green-600">
-            Form Status: {isValid ? '✅ Valid' : '⚠️ Has Validation Errors'}
-          </span>
-          <span className="text-green-600">Changes: {isDirty ? '📝 Modified' : '✨ Pristine'}</span>
+        <div className="flex gap-4 justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              // Show travel style questions logic can be added here
+              console.log('Answer style questions selected');
+            }}
+            className="bg-primary text-white px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary/90 transition-colors duration-200 min-w-[200px]"
+          >
+            Answer style questions
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              // Skip to trip details logic can be added here
+              console.log('Skip to trip details selected');
+            }}
+            className="bg-[#ece8de] text-primary border-2 border-primary px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary hover:text-white transition-colors duration-200 min-w-[200px]"
+          >
+            Skip to trip details
+          </button>
         </div>
       </div>
-    </form>
+    </div>
   );
-});
+};
 
 export default TripDetailsForm;
