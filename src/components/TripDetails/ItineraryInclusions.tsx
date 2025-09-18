@@ -70,7 +70,7 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({ formData, onFormChange }
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
         <div className="mb-4">
           <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
-            ITINERARY INCLUSIONS
+            What Should We Include in Your Itinerary?
           </h3>
           <p className="text-primary font-bold font-raleway text-xs">
             What should be included in your itinerary?

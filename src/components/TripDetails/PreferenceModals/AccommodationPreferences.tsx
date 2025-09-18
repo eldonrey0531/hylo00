@@ -11,6 +11,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 }) => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(preferences.selectedTypes || []);
   const [otherType, setOtherType] = useState(preferences.otherType || '');
+  const [showOtherInput, setShowOtherInput] = useState(false);
   const [specialRequests, setSpecialRequests] = useState(preferences.specialRequests || '');
 
   const accommodationTypes = [
@@ -51,7 +52,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 
   return (
     <div className="w-full rounded-[36px] p-6 mt-4" style={{ backgroundColor: '#b0c29b' }}>
-      <div className="w-full flex items-center space-x-3 mb-6 bg-[#406170] rounded-[20px] px-4 py-3">
+      <div className="w-full flex items-center space-x-3 mb-6 bg-[#406170] px-4 py-3">
         <span className="text-3xl">🏨</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Accommodation Preferences
@@ -65,7 +66,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
             Preferred accommodation type(s)
           </label>
           <p className="text-primary font-bold font-raleway text-xs mb-4">Select all that apply</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {accommodationTypes.map((type) => (
               <button
                 key={type}
@@ -81,10 +82,9 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
             ))}
             <button
               onClick={() => {
-                if (otherType === '') {
-                  setOtherType('Other accommodation type...');
-                } else {
-                  setOtherType('');
+                setShowOtherInput(!showOtherInput);
+                if (!showOtherInput) {
+                  setOtherType(''); // Start with empty input
                 }
               }}
               className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
@@ -96,7 +96,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
               ✨ Other
             </button>
           </div>
-          {otherType !== '' && (
+          {showOtherInput && (
             <input
               type="text"
               value={otherType}
