@@ -134,6 +134,10 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   const [children, setChildren] = useState(formData.children || 0);
   const [childrenAges, setChildrenAges] = useState<number[]>(formData.childrenAges || []);
 
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const departDateRef = useRef<HTMLInputElement>(null);
   const returnDateRef = useRef<HTMLInputElement>(null);
 
@@ -148,11 +152,49 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
   }, [formData]);
 
   // Memoized handlers
+  const validateField = useCallback(
+    (field: string, value: any) => {
+      const errors: Record<string, string> = {};
+
+      switch (field) {
+        case 'location':
+          if (!value || value.trim().length < 2) {
+            errors['location'] = 'Please enter a destination with at least 2 characters';
+          }
+          break;
+        case 'departDate':
+          if (!value && !localFlexibleDates) {
+            errors['departDate'] = 'Please select a departure date';
+          }
+          break;
+        case 'adults':
+          if (value < 1) {
+            errors['adults'] = 'At least 1 adult is required';
+          }
+          break;
+      }
+
+      setValidationErrors((prev) => ({ ...prev, ...errors }));
+      return Object.keys(errors).length === 0;
+    },
+    [localFlexibleDates]
+  );
+
   const handleInputChange = useCallback(
     (field: keyof FormData, value: any) => {
+      // Clear previous validation error for this field
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+
+      // Validate the field
+      validateField(field, value);
+
       onFormChange({ ...formData, [field]: value });
     },
-    [formData, onFormChange]
+    [formData, onFormChange, validateField]
   );
 
   const handleBudgetChange = useCallback(
@@ -439,9 +481,20 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           value={formData.location || ''}
           onChange={(e) => handleInputChange('location', e.target.value)}
           onFocus={(e) => e.target.select()}
-          className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white placeholder-gray-500 font-bold font-raleway text-base"
+          className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white placeholder-gray-500 font-bold font-raleway text-base ${
+            validationErrors['location']
+              ? 'border-red-500 focus:border-red-500'
+              : 'border-primary focus:border-primary'
+          }`}
           aria-label="Trip location"
+          aria-invalid={!!validationErrors['location']}
+          aria-describedby={validationErrors['location'] ? 'location-error' : undefined}
         />
+        {validationErrors['location'] && (
+          <p id="location-error" className="text-red-500 text-sm mt-2 font-raleway">
+            {validationErrors['location']}
+          </p>
+        )}
       </div>
 
       {/* Dates and Travelers Row */}
@@ -874,6 +927,23 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </label>
         </div>
       </div>
+
+      {/* Form Validation Summary */}
+      {Object.keys(validationErrors).length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-[36px] p-6 mt-6">
+          <h4 className="text-red-600 font-bold font-raleway text-lg mb-3">
+            Please review the following:
+          </h4>
+          <ul className="space-y-2">
+            {Object.entries(validationErrors).map(([field, error]) => (
+              <li key={field} className="text-red-600 font-raleway text-sm flex items-center">
+                <span className="mr-2">•</span>
+                {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Travel Style Progressive Disclosure */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-6">
