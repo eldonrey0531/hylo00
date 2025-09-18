@@ -453,108 +453,302 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
         />
       </div>
 
-      {/* Enhanced Dates Box */}
+      {/* Combined Dates & Travelers Box */}
       <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
-            DATES
+            DATES & TRAVELERS
           </h3>
         </div>
 
-        {/* Only show date controls when flexible dates is disabled */}
-        {!watchedFlexibleDates && (
-          <>
-            {/* Departure Date */}
-            <div className="mb-6">
-              <label className="block text-primary font-bold font-raleway text-base mb-2">
-                Departure Date
-              </label>
-              <Controller
-                name="departDate"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="date"
-                    min={dateUtils.getTodayString()}
-                    className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
-                      errors.departDate
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-primary focus:border-primary'
-                    }`}
-                    aria-label="Departure date"
-                    aria-invalid={!!errors.departDate}
-                    aria-describedby={errors.departDate ? 'depart-date-error' : undefined}
-                  />
-                )}
-              />
-              {errors.departDate && (
-                <p id="depart-date-error" className="text-red-500 text-sm mt-2 font-raleway">
-                  {errors.departDate.message}
-                </p>
-              )}
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Dates */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-bold text-primary font-raleway">Travel Dates</h4>
             </div>
 
-            {/* Return Date */}
-            <div className="mb-6">
-              <label className="block text-primary font-bold font-raleway text-base mb-2">
-                Return Date (Optional)
-              </label>
-              <Controller
-                name="returnDate"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="date"
-                    min={getMinReturnDate()}
-                    className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
-                      errors.returnDate
-                        ? 'border-red-500 focus:border-red-500'
-                        : 'border-primary focus:border-primary'
-                    }`}
-                    aria-label="Return date"
-                    aria-invalid={!!errors.returnDate}
-                    aria-describedby={errors.returnDate ? 'return-date-error' : undefined}
+            {/* Only show date controls when flexible dates is disabled */}
+            {!watchedFlexibleDates && (
+              <>
+                {/* Departure Date */}
+                <div className="mb-4">
+                  <label className="block text-primary font-bold font-raleway text-sm mb-2">
+                    Departure Date
+                  </label>
+                  <Controller
+                    name="departDate"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        min={dateUtils.getTodayString()}
+                        className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
+                          errors.departDate
+                            ? 'border-red-500 focus:border-red-500'
+                            : 'border-primary focus:border-primary'
+                        }`}
+                        aria-label="Departure date"
+                        aria-invalid={!!errors.departDate}
+                        aria-describedby={errors.departDate ? 'depart-date-error' : undefined}
+                      />
+                    )}
                   />
-                )}
-              />
-              {errors.returnDate && (
-                <p id="return-date-error" className="text-red-500 text-sm mt-2 font-raleway">
-                  {errors.returnDate.message}
-                </p>
-              )}
-            </div>
-          </>
-        )}
+                  {errors.departDate && (
+                    <p id="depart-date-error" className="text-red-500 text-sm mt-2 font-raleway">
+                      {errors.departDate.message}
+                    </p>
+                  )}
+                </div>
 
-        {/* Flexible Dates Toggle */}
-        <div className="flex items-center">
-          <label className="relative inline-flex items-center cursor-pointer">
-            <Controller
-              name="flexibleDates"
-              control={control}
-              render={({ field }) => (
-                <input
-                  type="checkbox"
-                  checked={field.value || false}
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  className="sr-only peer"
-                  aria-label="Toggle flexible dates"
+                {/* Return Date */}
+                <div className="mb-4">
+                  <label className="block text-primary font-bold font-raleway text-sm mb-2">
+                    Return Date (Optional)
+                  </label>
+                  <Controller
+                    name="returnDate"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        min={getMinReturnDate()}
+                        className={`w-full px-4 py-3 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base ${
+                          errors.returnDate
+                            ? 'border-red-500 focus:border-red-500'
+                            : 'border-primary focus:border-primary'
+                        }`}
+                        aria-label="Return date"
+                        aria-invalid={!!errors.returnDate}
+                        aria-describedby={errors.returnDate ? 'return-date-error' : undefined}
+                      />
+                    )}
+                  />
+                  {errors.returnDate && (
+                    <p id="return-date-error" className="text-red-500 text-sm mt-2 font-raleway">
+                      {errors.returnDate.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Flexible Dates Toggle */}
+            <div className="flex items-center pt-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <Controller
+                  name="flexibleDates"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      checked={field.value || false}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="sr-only peer"
+                      aria-label="Toggle flexible dates"
+                    />
+                  )}
                 />
+                <div
+                  className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
+                    watchedFlexibleDates
+                      ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
+                      : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                  }`}
+                ></div>
+                <span className="text-primary font-bold font-raleway text-sm">
+                  I'm flexible with dates
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Right Column - Travelers */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-bold text-primary font-raleway">Travelers</h4>
+            </div>
+
+            {/* Adults Section */}
+            <div className="mb-4">
+              <label className="block text-primary font-bold font-raleway text-sm mb-2">
+                Adults (18+ years)
+              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => adjustAdults(false)}
+                  disabled={(watchedValues.adults || 2) <= MIN_ADULTS}
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
+                  aria-label="Decrease number of adults"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+
+                <Controller
+                  name="adults"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      type="number"
+                      min={MIN_ADULTS}
+                      max={10}
+                      value={field.value || 2}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || MIN_ADULTS;
+                        field.onChange(Math.max(MIN_ADULTS, Math.min(10, value)));
+                      }}
+                      className="w-16 text-center px-2 py-2 border-3 border-primary rounded-[8px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base"
+                      aria-label="Number of adults"
+                      aria-invalid={!!errors.adults}
+                      aria-describedby={errors.adults ? 'adults-error' : undefined}
+                    />
+                  )}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => adjustAdults(true)}
+                  disabled={(watchedValues.adults || 2) >= 10}
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
+                  aria-label="Increase number of adults"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {errors.adults && (
+                <p id="adults-error" className="text-red-500 text-sm mt-2 font-raleway">
+                  {errors.adults.message}
+                </p>
               )}
-            />
-            <div
-              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
-                watchedFlexibleDates
-                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-              }`}
-            ></div>
-            <span className="text-primary font-bold font-raleway text-sm">
-              I'm flexible with dates
-            </span>
-          </label>
+            </div>
+
+            {/* Children Section */}
+            <div className="mb-4">
+              <label className="block text-primary font-bold font-raleway text-sm mb-2">
+                Children (0-17 years)
+              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => adjustChildren(false)}
+                  disabled={(watchedValues.children || 0) <= MIN_CHILDREN}
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
+                  aria-label="Decrease number of children"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+
+                <Controller
+                  name="children"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      type="number"
+                      min={MIN_CHILDREN}
+                      max={10}
+                      value={field.value || 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || MIN_CHILDREN;
+                        field.onChange(Math.max(MIN_CHILDREN, Math.min(10, value)));
+                      }}
+                      className="w-16 text-center px-2 py-2 border-3 border-primary rounded-[8px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base"
+                      aria-label="Number of children"
+                      aria-invalid={!!errors.children}
+                      aria-describedby={errors.children ? 'children-error' : undefined}
+                    />
+                  )}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => adjustChildren(true)}
+                  disabled={(watchedValues.children || 0) >= 10}
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
+                  aria-label="Increase number of children"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {errors.children && (
+                <p id="children-error" className="text-red-500 text-sm mt-2 font-raleway">
+                  {errors.children.message}
+                </p>
+              )}
+            </div>
+
+            {/* Children Ages Section - Only show if there are children */}
+            {(watchedValues.children || 0) > 0 && (
+              <div className="pt-2 border-t border-gray-200">
+                <label className="block text-primary font-bold font-raleway text-sm mb-2">
+                  Children's Ages
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.from({ length: watchedValues.children || 0 }, (_, index) => (
+                    <div key={index} className="flex flex-col">
+                      <label className="text-xs text-primary font-raleway font-bold mb-1">
+                        Child {index + 1}
+                      </label>
+                      <Controller
+                        name={`childrenAges.${index}`}
+                        control={control}
+                        render={({ field }) => (
+                          <select
+                            {...field}
+                            value={field.value ?? UNSELECTED_AGE}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              field.onChange(value);
+                              updateChildAge(index, value);
+                            }}
+                            className="px-2 py-1 border-3 border-primary rounded-[6px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-xs"
+                            aria-label={`Age of child ${index + 1}`}
+                          >
+                            <option value={UNSELECTED_AGE} disabled>
+                              Age
+                            </option>
+                            {Array.from({ length: 18 }, (_, age) => (
+                              <option
+                                key={age}
+                                value={age}
+                                className="font-bold font-raleway text-xs"
+                              >
+                                {age}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {hasUnselectedChildrenAges && (
+                  <p className="text-amber-600 text-xs mt-2 font-raleway">⚠️ Select ages</p>
+                )}
+              </div>
+            )}
+
+            {/* Total Travelers Summary */}
+            <div className="pt-3 border-t border-gray-200">
+              <div className="bg-primary/10 rounded-[8px] p-3">
+                <div className="text-center">
+                  <div className="text-primary font-bold font-raleway text-sm">
+                    Total: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
+                  </div>
+                  <div className="text-primary font-raleway text-xs mt-1">
+                    {watchedValues.adults || 2} Adult{(watchedValues.adults || 2) !== 1 ? 's' : ''},{' '}
+                    {watchedValues.children || 0} Child
+                    {(watchedValues.children || 0) !== 1 ? 'ren' : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -718,185 +912,178 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
         </div>
       </div>
 
-      {/* Enhanced Travelers Box */}
-      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
-            TRAVELERS
-          </h3>
-        </div>
+      {/* Form Validation Summary */}
 
-        {/* Adults Section */}
-        <div className="mb-6">
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
-            Adults (18+ years)
-          </label>
-          <div className="flex items-center space-x-4">
-            <button
-              type="button"
-              onClick={() => adjustAdults(false)}
-              disabled={(watchedValues.adults || 2) <= MIN_ADULTS}
-              className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-              aria-label="Decrease number of adults"
-            >
-              <Minus className="w-5 h-5" />
-            </button>
+      {/* Adults Section */}
+      <div className="mb-6">
+        <label className="block text-primary font-bold font-raleway text-base mb-3">
+          Adults (18+ years)
+        </label>
+        <div className="flex items-center space-x-4">
+          <button
+            type="button"
+            onClick={() => adjustAdults(false)}
+            disabled={(watchedValues.adults || 2) <= MIN_ADULTS}
+            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
+            aria-label="Decrease number of adults"
+          >
+            <Minus className="w-5 h-5" />
+          </button>
 
-            <Controller
-              name="adults"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="number"
-                  min={MIN_ADULTS}
-                  max={10}
-                  value={field.value || 2}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || MIN_ADULTS;
-                    field.onChange(Math.max(MIN_ADULTS, Math.min(10, value)));
-                  }}
-                  className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
-                  aria-label="Number of adults"
-                  aria-invalid={!!errors.adults}
-                  aria-describedby={errors.adults ? 'adults-error' : undefined}
-                />
-              )}
-            />
-
-            <button
-              type="button"
-              onClick={() => adjustAdults(true)}
-              disabled={(watchedValues.adults || 2) >= 10}
-              className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-              aria-label="Increase number of adults"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
-          {errors.adults && (
-            <p id="adults-error" className="text-red-500 text-sm mt-2 font-raleway">
-              {errors.adults.message}
-            </p>
-          )}
-        </div>
-
-        {/* Children Section */}
-        <div className="mb-6">
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
-            Children (0-17 years)
-          </label>
-          <div className="flex items-center space-x-4">
-            <button
-              type="button"
-              onClick={() => adjustChildren(false)}
-              disabled={(watchedValues.children || 0) <= MIN_CHILDREN}
-              className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-              aria-label="Decrease number of children"
-            >
-              <Minus className="w-5 h-5" />
-            </button>
-
-            <Controller
-              name="children"
-              control={control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="number"
-                  min={MIN_CHILDREN}
-                  max={10}
-                  value={field.value || 0}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || MIN_CHILDREN;
-                    field.onChange(Math.max(MIN_CHILDREN, Math.min(10, value)));
-                  }}
-                  className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
-                  aria-label="Number of children"
-                  aria-invalid={!!errors.children}
-                  aria-describedby={errors.children ? 'children-error' : undefined}
-                />
-              )}
-            />
-
-            <button
-              type="button"
-              onClick={() => adjustChildren(true)}
-              disabled={(watchedValues.children || 0) >= 10}
-              className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
-              aria-label="Increase number of children"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
-          {errors.children && (
-            <p id="children-error" className="text-red-500 text-sm mt-2 font-raleway">
-              {errors.children.message}
-            </p>
-          )}
-        </div>
-
-        {/* Children Ages Section - Only show if there are children */}
-        {(watchedValues.children || 0) > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <label className="block text-primary font-bold font-raleway text-base mb-3">
-              Children's Ages
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Array.from({ length: watchedValues.children || 0 }, (_, index) => (
-                <div key={index} className="flex flex-col">
-                  <label className="text-sm text-primary font-raleway font-bold mb-1">
-                    Child {index + 1}
-                  </label>
-                  <Controller
-                    name={`childrenAges.${index}`}
-                    control={control}
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        value={field.value ?? UNSELECTED_AGE}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          field.onChange(value);
-                          updateChildAge(index, value);
-                        }}
-                        className="px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-sm"
-                        aria-label={`Age of child ${index + 1}`}
-                      >
-                        <option value={UNSELECTED_AGE} disabled>
-                          Select age
-                        </option>
-                        {Array.from({ length: 18 }, (_, age) => (
-                          <option key={age} value={age} className="font-bold font-raleway text-sm">
-                            {age} {age === 1 ? 'year' : 'years'} old
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  />
-                </div>
-              ))}
-            </div>
-            {hasUnselectedChildrenAges && (
-              <p className="text-amber-600 text-sm mt-3 font-raleway">
-                ⚠️ Please select ages for all children
-              </p>
+          <Controller
+            name="adults"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min={MIN_ADULTS}
+                max={10}
+                value={field.value || 2}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || MIN_ADULTS;
+                  field.onChange(Math.max(MIN_ADULTS, Math.min(10, value)));
+                }}
+                className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
+                aria-label="Number of adults"
+                aria-invalid={!!errors.adults}
+                aria-describedby={errors.adults ? 'adults-error' : undefined}
+              />
             )}
-          </div>
-        )}
+          />
 
-        {/* Total Travelers Summary */}
+          <button
+            type="button"
+            onClick={() => adjustAdults(true)}
+            disabled={(watchedValues.adults || 2) >= 10}
+            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
+            aria-label="Increase number of adults"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+        {errors.adults && (
+          <p id="adults-error" className="text-red-500 text-sm mt-2 font-raleway">
+            {errors.adults.message}
+          </p>
+        )}
+      </div>
+
+      {/* Children Section */}
+      <div className="mb-6">
+        <label className="block text-primary font-bold font-raleway text-base mb-3">
+          Children (0-17 years)
+        </label>
+        <div className="flex items-center space-x-4">
+          <button
+            type="button"
+            onClick={() => adjustChildren(false)}
+            disabled={(watchedValues.children || 0) <= MIN_CHILDREN}
+            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
+            aria-label="Decrease number of children"
+          >
+            <Minus className="w-5 h-5" />
+          </button>
+
+          <Controller
+            name="children"
+            control={control}
+            render={({ field }) => (
+              <input
+                {...field}
+                type="number"
+                min={MIN_CHILDREN}
+                max={10}
+                value={field.value || 0}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || MIN_CHILDREN;
+                  field.onChange(Math.max(MIN_CHILDREN, Math.min(10, value)));
+                }}
+                className="w-20 text-center px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-lg"
+                aria-label="Number of children"
+                aria-invalid={!!errors.children}
+                aria-describedby={errors.children ? 'children-error' : undefined}
+              />
+            )}
+          />
+
+          <button
+            type="button"
+            onClick={() => adjustChildren(true)}
+            disabled={(watchedValues.children || 0) >= 10}
+            className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xl"
+            aria-label="Increase number of children"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+        {errors.children && (
+          <p id="children-error" className="text-red-500 text-sm mt-2 font-raleway">
+            {errors.children.message}
+          </p>
+        )}
+      </div>
+
+      {/* Children Ages Section - Only show if there are children */}
+      {(watchedValues.children || 0) > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-200">
-          <div className="bg-primary/10 rounded-[10px] p-4">
-            <div className="text-center">
-              <div className="text-primary font-bold font-raleway text-lg">
-                Total Travelers: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
+            Children's Ages
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: watchedValues.children || 0 }, (_, index) => (
+              <div key={index} className="flex flex-col">
+                <label className="text-sm text-primary font-raleway font-bold mb-1">
+                  Child {index + 1}
+                </label>
+                <Controller
+                  name={`childrenAges.${index}`}
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      value={field.value ?? UNSELECTED_AGE}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        field.onChange(value);
+                        updateChildAge(index, value);
+                      }}
+                      className="px-3 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-sm"
+                      aria-label={`Age of child ${index + 1}`}
+                    >
+                      <option value={UNSELECTED_AGE} disabled>
+                        Select age
+                      </option>
+                      {Array.from({ length: 18 }, (_, age) => (
+                        <option key={age} value={age} className="font-bold font-raleway text-sm">
+                          {age} {age === 1 ? 'year' : 'years'} old
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
               </div>
-              <div className="text-primary font-raleway text-sm mt-1">
-                {watchedValues.adults || 2} Adult{(watchedValues.adults || 2) !== 1 ? 's' : ''},{' '}
-                {watchedValues.children || 0} Child
-                {(watchedValues.children || 0) !== 1 ? 'ren' : ''}
-              </div>
+            ))}
+          </div>
+          {hasUnselectedChildrenAges && (
+            <p className="text-amber-600 text-sm mt-3 font-raleway">
+              ⚠️ Please select ages for all children
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Total Travelers Summary */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="bg-primary/10 rounded-[10px] p-4">
+          <div className="text-center">
+            <div className="text-primary font-bold font-raleway text-lg">
+              Total Travelers: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
+            </div>
+            <div className="text-primary font-raleway text-sm mt-1">
+              {watchedValues.adults || 2} Adult{(watchedValues.adults || 2) !== 1 ? 's' : ''},{' '}
+              {watchedValues.children || 0} Child
+              {(watchedValues.children || 0) !== 1 ? 'ren' : ''}
             </div>
           </div>
         </div>
