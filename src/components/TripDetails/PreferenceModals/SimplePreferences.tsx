@@ -32,7 +32,7 @@ const SimplePreferences: React.FC<SimplePreferencesProps> = ({
 
   return (
     <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
-      <div className="flex items-center space-x-3 mb-6 bg-transparent">
+      <div className="flex items-center space-x-3 mb-6 bg-[#406170] rounded-[20px] px-4 py-3">
         <span className="text-3xl">{emoji}</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           {title}

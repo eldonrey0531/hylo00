@@ -48,7 +48,7 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
 
   return (
     <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
-      <div className="flex items-center space-x-3 mb-6 bg-transparent">
+      <div className="flex items-center space-x-3 mb-6 bg-[#406170] rounded-[20px] px-4 py-3">
         <span className="text-3xl">🚗</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Rental Car Preferences
@@ -61,7 +61,7 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
           <label className="block text-primary font-bold font-raleway text-base mb-3">
             Preferred vehicle type(s) (select all that apply)
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {vehicleTypeOptions.map((type) => (
               <button
                 key={type}

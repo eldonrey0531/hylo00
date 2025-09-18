@@ -51,7 +51,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 
   return (
     <div className="rounded-[36px] p-6 border-3 border-gray-200 mt-4" style={{ backgroundColor: '#b0c29b' }}>
-      <div className="flex items-center space-x-3 mb-6 bg-transparent">
+      <div className="flex items-center space-x-3 mb-6 bg-[#406170] rounded-[20px] px-4 py-3">
         <span className="text-3xl">🏨</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Accommodation Preferences
@@ -65,7 +65,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
             Preferred accommodation type(s)
           </label>
           <p className="text-primary font-bold font-raleway text-xs mb-4">Select all that apply</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {accommodationTypes.map((type) => (
               <button
                 key={type}
@@ -79,27 +79,23 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
                 {type}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Other Type */}
-        <div>
-          <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-[10px] border-2 border-gray-200 hover:border-primary transition-colors">
-            <input
-              type="checkbox"
-              checked={otherType !== ''}
-              onChange={(e) => {
-                if (!e.target.checked) {
+            <button
+              onClick={() => {
+                if (otherType === '') {
+                  setOtherType('Other accommodation type...');
+                } else {
                   setOtherType('');
                 }
               }}
-              className="w-5 h-5 text-primary border-3 border-primary rounded focus:ring-2 focus:ring-primary"
-            />
-            <span className="text-primary font-raleway font-bold text-sm flex items-center">
-              <span className="text-xl mr-2">✨</span>
-              Other
-            </span>
-          </label>
+              className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-xs ${
+                otherType !== ''
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
+              }`}
+            >
+              ✨ Other
+            </button>
+          </div>
           {otherType !== '' && (
             <input
               type="text"
