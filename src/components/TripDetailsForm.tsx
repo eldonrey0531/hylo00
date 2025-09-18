@@ -453,17 +453,16 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
         />
       </div>
 
-      {/* Combined Dates & Travelers Box */}
-      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
-            DATES & TRAVELERS
-          </h3>
-        </div>
+      {/* Dates & Travelers - Two Separate Boxes Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Dates Box */}
+        <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+              DATES
+            </h3>
+          </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Dates */}
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-bold text-primary font-raleway">Travel Dates</h4>
@@ -565,8 +564,17 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
               </label>
             </div>
           </div>
+        </div>
 
-          {/* Right Column - Travelers */}
+        {/* Travelers Box */}
+        <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-primary uppercase tracking-wide font-raleway">
+              TRAVELERS
+            </h3>
+          </div>
+
+          {/* Travelers Content */}
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-bold text-primary font-raleway">Travelers</h4>
