@@ -825,6 +825,40 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({ formData, onFormChang
           </div>
         </div>
       </div>
+
+      {/* Travel Style Progressive Disclosure */}
+      <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200 mt-6">
+        <h3 className="text-xl font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
+          TRAVEL STYLE
+        </h3>
+        <p className="text-primary font-raleway text-base mb-6">
+          Help us personalize your trip by telling us about your travel preferences
+        </p>
+
+        <div className="flex gap-4 justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              // Show travel style questions logic can be added here
+              console.log('Answer style questions selected');
+            }}
+            className="bg-primary text-white px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary/90 transition-colors duration-200 min-w-[200px]"
+          >
+            Answer style questions
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              // Skip to trip details logic can be added here
+              console.log('Skip to trip details selected');
+            }}
+            className="bg-[#ece8de] text-primary border-2 border-primary px-8 py-4 rounded-[10px] font-bold font-raleway text-base hover:bg-primary hover:text-white transition-colors duration-200 min-w-[200px]"
+          >
+            Skip to trip details
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
