@@ -473,9 +473,12 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
               <>
                 {/* Departure Date */}
                 <div className="mb-4">
-                  <label className="block text-primary font-bold font-raleway text-sm mb-2">
-                    Departure Date
-                  </label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <label className="block text-primary font-bold font-raleway text-base">
+                      Depart
+                    </label>
+                  </div>
                   <Controller
                     name="departDate"
                     control={control}
@@ -504,9 +507,12 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
 
                 {/* Return Date */}
                 <div className="mb-4">
-                  <label className="block text-primary font-bold font-raleway text-sm mb-2">
-                    Return Date (Optional)
-                  </label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <label className="block text-primary font-bold font-raleway text-base">
+                      Return
+                    </label>
+                  </div>
                   <Controller
                     name="returnDate"
                     control={control}
@@ -559,7 +565,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
                   }`}
                 ></div>
                 <span className="text-primary font-bold font-raleway text-sm">
-                  I'm flexible with dates
+                  I'm not sure or my dates are flexible
                 </span>
               </label>
             </div>
@@ -582,8 +588,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
 
             {/* Adults Section */}
             <div className="mb-4">
-              <label className="block text-primary font-bold font-raleway text-sm mb-2">
-                Adults (18+ years)
+              <label className="block text-primary font-bold font-raleway text-base mb-2">
+                Adults
               </label>
               <div className="flex items-center space-x-3">
                 <button
@@ -637,8 +643,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
 
             {/* Children Section */}
             <div className="mb-4">
-              <label className="block text-primary font-bold font-raleway text-sm mb-2">
-                Children (0-17 years)
+              <label className="block text-primary font-bold font-raleway text-base mb-2">
+                Children Ages 0-17
               </label>
               <div className="flex items-center space-x-3">
                 <button
@@ -742,17 +748,10 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = memo(({ formData, onForm
             )}
 
             {/* Total Travelers Summary */}
-            <div className="pt-3 border-t border-gray-200">
-              <div className="bg-primary/10 rounded-[8px] p-3">
-                <div className="text-center">
-                  <div className="text-primary font-bold font-raleway text-sm">
-                    Total: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
-                  </div>
-                  <div className="text-primary font-raleway text-xs mt-1">
-                    {watchedValues.adults || 2} Adult{(watchedValues.adults || 2) !== 1 ? 's' : ''},{' '}
-                    {watchedValues.children || 0} Child
-                    {(watchedValues.children || 0) !== 1 ? 'ren' : ''}
-                  </div>
+            <div className="pt-3">
+              <div className="text-center">
+                <div className="text-primary font-bold font-raleway text-base">
+                  Total travelers: {(watchedValues.adults || 2) + (watchedValues.children || 0)}
                 </div>
               </div>
             </div>
