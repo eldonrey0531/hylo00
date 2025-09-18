@@ -55,6 +55,11 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   );
 
   const totalTravelers = adults + children;
+  
+  // Check if any child age is unselected
+  const hasUnselectedAges = children > 0 && 
+    (childrenAges.length < children || 
+     childrenAges.slice(0, children).some((age) => age === UNSELECTED_AGE || age === undefined));
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
@@ -115,11 +120,11 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
           </div>
         </div>
 
-        {/* Total Travelers Display - Updated Layout */}
-        <div className="pt-3 border-t-3 border-primary">
+        {/* Total Travelers Display - Updated with thicker border */}
+        <div className="pt-3 border-t-[5px] border-[#406170]">
           <div className="flex justify-between items-center">
             <span className="text-primary font-bold font-raleway text-base">Total travelers</span>
-            <div className="w-10 h-10 rounded-full border-3 border-[#406170] bg-white flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full border-[5px] border-[#406170] bg-white flex items-center justify-center">
               <span className="text-xl font-bold text-[#406170] font-raleway">{totalTravelers}</span>
             </div>
           </div>
@@ -147,7 +152,11 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
                       updateChildAge(index, parseInt(value));
                     }
                   }}
-                  className="px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] border-primary"
+                  className={`px-3 py-2 pr-8 border-3 rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base appearance-none min-w-[140px] ${
+                    childrenAges[index] === UNSELECTED_AGE || childrenAges[index] === undefined
+                      ? 'border-red-500'
+                      : 'border-primary'
+                  }`}
                   aria-label={`Age for child ${index + 1}`}
                 >
                   <option value="" className="font-bold font-raleway text-base">
@@ -166,6 +175,11 @@ const TravelersForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
               </div>
             </div>
           ))}
+          {hasUnselectedAges && (
+            <p className="text-red-500 font-bold font-raleway text-sm mt-2">
+              Please select ages for all children
+            </p>
+          )}
         </div>
       )}
     </div>

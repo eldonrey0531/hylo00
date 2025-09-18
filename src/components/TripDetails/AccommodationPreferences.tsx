@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BaseFormProps } from './types';
 
 const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
@@ -7,30 +7,48 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
     'Vacation Rental', 'Hostel', 'Eco-Lodge', 'Other'
   ];
 
+  // Use a simple string array stored in the form data
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [showOtherInput, setShowOtherInput] = useState(false);
+
   const handleAccommodationChange = (type: string) => {
-    const currentTypes = formData.accommodationTypes || [];
-    const updatedTypes = currentTypes.includes(type)
-      ? currentTypes.filter(t => t !== type)
-      : [...currentTypes, type];
+    let updatedTypes;
     
-    onFormChange({ accommodationTypes: updatedTypes });
+    if (type === 'Other') {
+      if (selectedTypes.includes(type)) {
+        updatedTypes = selectedTypes.filter(t => t !== type);
+        setSelectedTypes(updatedTypes);
+        setShowOtherInput(false);
+        onFormChange({ accommodationOther: '' });
+      } else {
+        updatedTypes = [...selectedTypes, type];
+        setSelectedTypes(updatedTypes);
+        setShowOtherInput(true);
+      }
+    } else {
+      updatedTypes = selectedTypes.includes(type)
+        ? selectedTypes.filter(t => t !== type)
+        : [...selectedTypes, type];
+      setSelectedTypes(updatedTypes);
+    }
   };
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
-      <div className="-mx-6 -mt-6 mb-6 bg-primary px-6 py-4 rounded-t-[33px]">
+    <div className="bg-form-box rounded-[36px] p-6 border-3 border-primary">
+      <div className="-m-6 mb-6 bg-primary px-6 py-4 rounded-t-[33px]">
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           ACCOMMODATION PREFERENCES
         </h3>
       </div>
       
-      {/* Accommodation Types - 2 rows of 4 */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      {/* Accommodation Types - Vertical 2 columns */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {accommodationTypes.map((type) => (
           <label key={type} className="flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={(formData.accommodationTypes || []).includes(type)}
+              checked={selectedTypes.includes(type)}
               onChange={() => handleAccommodationChange(type)}
               className="w-5 h-5 text-primary bg-gray-100 border-3 border-primary rounded-md focus:ring-primary focus:ring-2 mr-2"
             />
@@ -39,14 +57,14 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
         ))}
       </div>
 
-      {/* Other accommodation details */}
-      {(formData.accommodationTypes || []).includes('Other') && (
+      {/* Other accommodation input */}
+      {showOtherInput && (
         <div className="mt-4">
           <input
             type="text"
             placeholder="Tell us more about your preferred accommodations"
-            value={formData.otherAccommodation || ''}
-            onChange={(e) => onFormChange({ otherAccommodation: e.target.value })}
+            value={formData.accommodationOther || ''}
+            onChange={(e) => onFormChange({ accommodationOther: e.target.value })}
             className="w-full px-4 py-3 border-3 border-primary rounded-[10px] bg-[#ece8de] text-primary font-bold placeholder-primary/50 focus:ring-2 focus:ring-primary font-raleway"
           />
         </div>
@@ -62,13 +80,12 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
             <label key={amenity} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={(formData.amenities || []).includes(amenity)}
+                checked={selectedAmenities.includes(amenity)}
                 onChange={(e) => {
-                  const currentAmenities = formData.amenities || [];
                   const updatedAmenities = e.target.checked
-                    ? [...currentAmenities, amenity]
-                    : currentAmenities.filter(a => a !== amenity);
-                  onFormChange({ amenities: updatedAmenities });
+                    ? [...selectedAmenities, amenity]
+                    : selectedAmenities.filter((a: string) => a !== amenity);
+                  setSelectedAmenities(updatedAmenities);
                 }}
                 className="w-5 h-5 text-primary bg-gray-100 border-3 border-primary rounded-md focus:ring-primary focus:ring-2 mr-2"
               />
