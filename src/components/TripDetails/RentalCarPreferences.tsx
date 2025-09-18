@@ -6,8 +6,11 @@ const RentalCarPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange:
   console.log('Form data:', formData); // Prevent unused parameter warning
   
   const carTypes = [
-    'Economy', 'Compact', 'Midsize', 'Full-size',
-    'SUV', 'Luxury', 'Convertible', 'Van/Minivan'
+    'Economy', 'Compact', 'SUV', 'Luxury'
+  ];
+
+  const additionalCarTypes = [
+    'Midsize', 'Full-size', 'Convertible', 'Van/Minivan'
   ];
 
   const [selectedCarTypes, setSelectedCarTypes] = useState<string[]>([]);
@@ -22,14 +25,15 @@ const RentalCarPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange:
   };
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-primary">
-      <div className="-m-6 mb-6 bg-primary px-6 py-4 rounded-t-[33px]">
+    <div className="bg-form-box rounded-[36px] border-3 border-primary overflow-hidden">
+      <div className="bg-primary px-6 py-4">
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           RENTAL CAR PREFERENCES
         </h3>
       </div>
       
-      {/* Car Types - Vertical 2 columns */}
+      <div className="p-6">
+      {/* Car Types - 2x2 Layout */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {carTypes.map((type) => (
           <label key={type} className="flex items-center cursor-pointer">
@@ -42,6 +46,26 @@ const RentalCarPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange:
             <span className="text-primary font-bold font-raleway text-base">{type}</span>
           </label>
         ))}
+      </div>
+
+      {/* Additional Car Types */}
+      <div className="mb-6">
+        <h4 className="text-lg font-bold text-primary uppercase mb-3 font-raleway">
+          More Vehicle Types
+        </h4>
+        <div className="grid grid-cols-2 gap-3">
+          {additionalCarTypes.map((type) => (
+            <label key={type} className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedCarTypes.includes(type)}
+                onChange={() => handleCarTypeChange(type)}
+                className="w-5 h-5 text-primary bg-gray-100 border-3 border-primary rounded-md focus:ring-primary focus:ring-2 mr-2"
+              />
+              <span className="text-primary font-bold font-raleway text-base">{type}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Additional Options */}
@@ -67,6 +91,7 @@ const RentalCarPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange:
             </label>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -3,8 +3,11 @@ import { BaseFormProps } from './types';
 
 const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   const accommodationTypes = [
-    'Hotel', 'Resort', 'Boutique Hotel', 'Bed & Breakfast',
-    'Vacation Rental', 'Hostel', 'Eco-Lodge', 'Other'
+    'Hotel', 'Resort', 'Vacation Rental', 'Other'
+  ];
+
+  const additionalAccommodationTypes = [
+    'Boutique Hotel', 'Bed & Breakfast', 'Hostel', 'Eco-Lodge'
   ];
 
   // Use a simple string array stored in the form data
@@ -35,14 +38,15 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
   };
 
   return (
-    <div className="bg-form-box rounded-[36px] p-6 border-3 border-primary">
-      <div className="-m-6 mb-6 bg-primary px-6 py-4 rounded-t-[33px]">
+    <div className="bg-form-box rounded-[36px] border-3 border-primary overflow-hidden">
+      <div className="bg-primary px-6 py-4">
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           ACCOMMODATION PREFERENCES
         </h3>
       </div>
       
-      {/* Accommodation Types - Vertical 2 columns */}
+      <div className="p-6">
+      {/* Accommodation Types - 2x2 Layout */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {accommodationTypes.map((type) => (
           <label key={type} className="flex items-center cursor-pointer">
@@ -55,6 +59,26 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
             <span className="text-primary font-bold font-raleway text-base">{type}</span>
           </label>
         ))}
+      </div>
+
+      {/* Additional Accommodation Types */}
+      <div className="mb-6">
+        <h4 className="text-lg font-bold text-primary uppercase mb-3 font-raleway">
+          More Options
+        </h4>
+        <div className="grid grid-cols-2 gap-3">
+          {additionalAccommodationTypes.map((type) => (
+            <label key={type} className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedTypes.includes(type)}
+                onChange={() => handleAccommodationChange(type)}
+                className="w-5 h-5 text-primary bg-gray-100 border-3 border-primary rounded-md focus:ring-primary focus:ring-2 mr-2"
+              />
+              <span className="text-primary font-bold font-raleway text-base">{type}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Other accommodation input */}
@@ -93,6 +117,7 @@ const AccommodationPreferences: React.FC<BaseFormProps> = ({ formData, onFormCha
             </label>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );
