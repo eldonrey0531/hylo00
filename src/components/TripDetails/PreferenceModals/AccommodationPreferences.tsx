@@ -51,15 +51,15 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
   }, [selectedTypes, otherType, specialRequests]);
 
   return (
-    <div className="w-full rounded-[36px] p-6 mt-4" style={{ backgroundColor: '#b0c29b' }}>
-      <div className="w-full flex items-center space-x-3 mb-6 bg-[#406170] px-4 py-3">
-        <span className="text-3xl">🏨</span>
+    <div className="w-full bg-[#ece8de] rounded-[36px] py-6">
+      <div className="w-full flex items-center space-x-3 mb-6 bg-[#406170] px-6 py-4 rounded-t-[33px]">
+        <span className="text-2xl">🏨</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Accommodation Preferences
         </h3>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 px-6">
         {/* Accommodation Types */}
         <div>
           <label className="block text-primary font-bold font-raleway text-base mb-3">
