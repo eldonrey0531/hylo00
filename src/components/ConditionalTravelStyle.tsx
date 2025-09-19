@@ -73,10 +73,12 @@ const ConditionalTravelStyle: React.FC<ConditionalTravelStyleProps> = ({
           />
 
           {/* Contact Form */}
-          <ContactForm
-            contactInfo={contactInfo}
-            onContactChange={onContactChange}
-          />
+          <div className="bg-form-box rounded-[20px] p-6">
+            <ContactForm
+              contactInfo={contactInfo}
+              onContactChange={onContactChange}
+            />
+          </div>
 
           {/* Generate Button for Detailed Flow */}
           {onGenerateItinerary && (
@@ -91,10 +93,12 @@ const ConditionalTravelStyle: React.FC<ConditionalTravelStyleProps> = ({
       {choice === TravelStyleChoiceEnum.SKIP && (
         <div className="space-y-8">
           {/* Contact Form Only */}
-          <ContactForm
-            contactInfo={contactInfo}
-            onContactChange={onContactChange}
-          />
+          <div className="bg-form-box rounded-[20px] p-6">
+            <ContactForm
+              contactInfo={contactInfo}
+              onContactChange={onContactChange}
+            />
+          </div>
 
           {/* Generate Button for Skip Flow */}
           {onGenerateItinerary && (
