@@ -80,14 +80,30 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
         <p className="text-gray-600">Let's customize your trip experience</p>
       </div>
 
-      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+      <div className="bg-form-box rounded-[20px] p-6">
+        <div className="mb-4">
+          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
+            What's your travel experience?
+          </h4>
+          <p className="text-primary font-bold font-raleway text-xs">
+            Select all that apply
+          </p>
+        </div>
         <TravelExperience
           selectedExperience={formData?.travelStyleAnswers?.experience || []}
           onSelectionChange={handleExperienceChange}
         />
       </div>
 
-      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+      <div className="bg-form-box rounded-[20px] p-6">
+        <div className="mb-4">
+          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
+            What's the vibe you're going for?
+          </h4>
+          <p className="text-primary font-bold font-raleway text-xs">
+            Select all that apply
+          </p>
+        </div>
         <TripVibe
           selectedVibes={formData?.travelStyleAnswers?.vibes || []}
           onSelectionChange={handleVibeChange}
@@ -96,32 +112,48 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
         />
       </div>
 
-      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+      <div className="bg-form-box rounded-[20px] p-6">
+        <div className="mb-4">
+          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
+            Which of these sample travel days are you drawn to?
+          </h4>
+          <p className="text-primary font-bold font-raleway text-xs">
+            Select all that apply
+          </p>
+        </div>
         <SampleDays
           selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
           onSelectionChange={handleSampleDaysChange}
         />
       </div>
 
-      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+      <div className="bg-form-box rounded-[20px] p-6">
+        <div className="mb-4">
+          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
+            You just landed and are starving. Where are you having dinner?
+          </h4>
+          <p className="text-primary font-bold font-raleway text-xs">
+            Select all that apply
+          </p>
+        </div>
         <DinnerChoice
           selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
           onSelectionChange={handleDinnerChoiceChange}
         />
       </div>
 
-      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+      <div className="bg-form-box rounded-[20px] p-6">
         <TripNickname
           tripNickname={formData?.travelStyleAnswers?.tripNickname || ''}
           onNicknameChange={handleTripNicknameChange}
           contactInfo={formData?.contactInfo || {}}
           onContactChange={(contactInfo) => {
-          onFormChange?.({
-            ...formData,
-            contactInfo,
-          });
-        }}
-      />
+            onFormChange?.({
+              ...formData,
+              contactInfo,
+            });
+          }}
+        />
       </div>
     </div>
   );
