@@ -70,7 +70,10 @@ function App() {
           "destination": formData.location,
           "departureDate": formData.departDate,
           "returnDate": formData.returnDate,
-          "flexibleDates": formData.flexibleDates
+          "flexibleDates": formData.flexibleDates,
+          ...(formData.flexibleDates && formData.plannedDays && {
+            "plannedDays": formData.plannedDays
+          })
         },
         "2. Travelers": {
           "adults": formData.adults,
@@ -78,10 +81,14 @@ function App() {
           "childrenAges": formData.childrenAges
         },
         "3. Budget": {
-          "amount": formData.budget,
-          "currency": formData.currency,
-          "budgetMode": formData.budgetMode,
-          "flexibleBudget": formData.flexibleBudget
+          "flexibleBudget": formData.flexibleBudget,
+          ...(formData.flexibleBudget ? {
+            "budgetNote": "User indicated budget is flexible - specific amount not relevant"
+          } : {
+            "amount": formData.budget,
+            "currency": formData.currency,
+            "budgetMode": formData.budgetMode
+          })
         },
         "4. Travel Group": {
           "selectedGroups": formData.selectedGroups,
