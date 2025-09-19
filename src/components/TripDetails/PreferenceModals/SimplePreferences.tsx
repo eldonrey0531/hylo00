@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface SimplePreferencesProps {
   title: string;
@@ -21,14 +21,14 @@ const SimplePreferences: React.FC<SimplePreferencesProps> = ({
     setText(preferences || '');
   }, [preferences]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave(text);
-  };
+  }, [text, onSave]);
 
   // Auto-save when field changes
   useEffect(() => {
     handleSave();
-  }, [text]);
+  }, [handleSave]);
 
   return (
     <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">

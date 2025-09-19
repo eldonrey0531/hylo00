@@ -32,7 +32,7 @@ const TravelStyleChoice: React.FC<TravelStyleChoiceProps> = ({
     <div className={`bg-gradient-to-br from-[#406170] to-[#2a4552] rounded-[36px] p-8 text-white ${className}`}>
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold font-raleway uppercase tracking-wide mb-3">
-          PERSONALIZE YOUR EXPERIENCE
+          NOW YOU HAVE A CHOICE:
         </h2>
         <p className="text-base font-raleway opacity-90 max-w-2xl mx-auto">
           Choose how you'd like us to customize your itinerary
@@ -51,17 +51,17 @@ const TravelStyleChoice: React.FC<TravelStyleChoiceProps> = ({
             transition-all duration-300 transform hover:scale-105
             ${disabled 
               ? 'bg-white/20 text-white/60 cursor-not-allowed border-4 border-white/20' 
-              : 'bg-white text-primary hover:shadow-2xl hover:shadow-white/30 border-4 border-white shadow-[inset_0_0_0_2px_rgba(255,255,255,1)]'
+              : 'bg-[#b0c29b] text-white hover:shadow-2xl hover:shadow-white/30 border-4 border-white shadow-[inset_0_0_0_2px_rgba(255,255,255,1)]'
             }
           `}
         >
           <div className="flex flex-col items-center space-y-3">
             <Sparkles className="h-6 w-6" />
             <span className="text-center leading-tight">
-              I want to add answer more forms to suit my travel style
+              Answer 4 more questions
             </span>
             <div className="text-sm font-normal opacity-80 max-w-xs">
-              Get a highly personalized itinerary
+              to get the most personalized itinerary possible
             </div>
             <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
               Recommended
@@ -96,7 +96,7 @@ const TravelStyleChoice: React.FC<TravelStyleChoiceProps> = ({
               Skip ahead
             </span>
             <div className="text-sm font-normal opacity-80 max-w-xs">
-              Jump to trip planning
+              to an itinerary based on what I've already answered
             </div>
           </div>
 

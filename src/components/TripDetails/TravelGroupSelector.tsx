@@ -6,7 +6,7 @@ const TravelGroupSelector: React.FC<BaseFormProps> = ({ formData, onFormChange }
   const [localOtherText, setLocalOtherText] = useState(formData.customGroupText || '');
   const [showOtherInput, setShowOtherInput] = useState(false);
 
-  // Extract group selections from formData
+  // Extract group selections from formData (using selectedGroups)
   const selectedGroups = formData.selectedGroups || [];
 
   useEffect(() => {
@@ -26,14 +26,14 @@ const TravelGroupSelector: React.FC<BaseFormProps> = ({ formData, onFormChange }
           setShowOtherInput(true);
         } else {
           // Removing other: remove from selection & clear text
-          newSelection = selectedGroups.filter((g) => g !== 'other');
+          newSelection = selectedGroups.filter((g: string) => g !== 'other');
           setShowOtherInput(false);
           setLocalOtherText('');
           onFormChange({ customGroupText: '' });
         }
       } else {
         newSelection = selectedGroups.includes(groupId)
-          ? selectedGroups.filter((g) => g !== groupId)
+          ? selectedGroups.filter((g: string) => g !== groupId)
           : [...selectedGroups, groupId];
       }
 
@@ -76,7 +76,7 @@ const TravelGroupSelector: React.FC<BaseFormProps> = ({ formData, onFormChange }
                     : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                 }
               `}
-              aria-label={`Toggle ${option.label} group`}
+              aria-label={option.id === 'extended' ? 'Select Family with Relatives group' : `Select ${option.label.replace('\n', ' ')} group`}
               aria-pressed={isSelected}
             >
               <span className="text-2xl">{option.emoji}</span>
@@ -105,10 +105,10 @@ const TravelGroupSelector: React.FC<BaseFormProps> = ({ formData, onFormChange }
           <textarea
             value={localOtherText}
             onChange={(e) => handleOtherTextChange(e.target.value)}
-            placeholder="Example: Group dynamics, how you know each other, why you're traveling together, etc."
+            placeholder="Specify your travel group"
             className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold"
             rows={3}
-            aria-label="Describe your travel group"
+            aria-label="Specify custom travel group"
           />
         </div>
       )}

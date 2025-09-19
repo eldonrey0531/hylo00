@@ -2,8 +2,22 @@
 
 ##```
 src/
-├── components/
-│   ├── ConditionalTravelStyle.tsx    # Primary target for container styling
+├── co## Key File Locations
+```
+src/
+├── components/TripDetails/
+│   ├── TravelersForm.tsx              # Main target for centering
+│   └── PreferenceModals/              # Modal styling targets
+│       ├── AccommodationPreferences.tsx
+│       └── RentalCarPreferences.tsx
+├── types/                             # TypeScript interfaces
+├── hooks/                             # Custom React hooks  
+└── utils/validation/                  # Zod schemas
+
+api/                                   # Edge functions
+tests/                                 # Test files
+specs/005-update-trip-details/         # Current feature docs
+```── ConditionalTravelStyle.tsx    # Primary target for container styling
 │   ├── TravelStyleChoice.tsx         # May need button styling review
 │   └── GenerateItineraryButton.tsx   # For duplicate removal
 ├── types/
@@ -38,26 +52,31 @@ Hylo is a travel planning platform using React + TypeScript frontend with Vercel
 - **Forms**: React Hook Form patterns with Zod schemas
 - **Tests**: .test.tsx files, React Testing Library patterns
 
-## Current Feature: Travel Style Styling Fix (Branch: 004-fix-travel-style)
-**Context**: Fixing visual inconsistencies in travel style section background colors and button duplication.
+## Current Feature: Trip Details Enhancements (Branch: 005-update-trip-details)
+**Context**: Enhancing trip details forms with budget mode switching, complete option selections, and comprehensive data gathering.
 
 **Key Components**:
-- `ConditionalTravelStyle.tsx`: Needs yellow background container like trip details
-- Travel style forms: Must preserve #ece8de background colors
-- `GenerateItineraryButton`: Remove duplication before choice selection
+- `BudgetForm.tsx`: Add total vs per-person budget toggle with dynamic calculations
+- `TravelGroupSelector.tsx`: Include all group names and Other option with custom text
+- `TravelInterests.tsx`: Capture specific choice names including Other option
+- `ItineraryInclusions.tsx`: Complete options with preferences and Other capability
+- Travel style forms: Ensure all option selections are captured including Other text
+- `TripNickname.tsx`: Simplify to only trip nickname, name, and email fields
 
 **Requirements**:
-- Travel style section MUST have `bg-trip-details` (#b0c29b) background
-- All forms MUST maintain `bg-form-box` (#ece8de) backgrounds  
-- NO #406170 backgrounds anywhere in travel style content
-- Exactly one GenerateItineraryButton per page
-- Background consistency across all travel style states
+- Budget form MUST include total/per-person toggle with accurate calculations
+- All selection components MUST include Other option with custom text input
+- Travel style forms MUST capture all user selections comprehensively
+- Form data MUST be completely visible and accessible for future AI integration
+- Maintain existing design patterns and TypeScript safety
+- No AI/LLM integration yet (frontend data gathering focus)
 
-**Styling Approach**:
-- Use `bg-trip-details` for travel style container
-- Preserve existing `bg-form-box` on all form components
-- NEVER use `bg-primary` (#406170) in travel style content
-- Maintain design token hierarchy: section bg → form bg → input bg
+**Implementation Approach**:
+- Extend existing FormData interface with new optional fields
+- Follow established Other option pattern from TripVibe component
+- Use existing switch pattern from budget flexibility toggle
+- Maintain backward compatibility with existing form handling
+- Preserve all Tailwind styling and accessibility features
 
 ## Constitutional Requirements
 - **TDD Mandatory**: Write failing tests first
@@ -67,9 +86,9 @@ Hylo is a travel planning platform using React + TypeScript frontend with Vercel
 - **Cost Conscious**: No impact on LLM costs for UI changes
 
 ## Recent Changes (Keep Updated)
-1. **2025-09-19**: Travel style section styling fix specification created
-2. **2025-09-19**: Implementation planning completed for styling consistency
-3. **Feature Focus**: ConditionalTravelStyle container background + form preservation + button cleanup
+1. **2025-09-19**: Trip details enhancements specification and planning completed
+2. **2025-09-19**: Budget toggle, Other options, and comprehensive data gathering designed
+3. **Feature Focus**: Form enhancements for complete user selection capture + simplified contact form
 
 ## Key File Locations
 ```
@@ -124,5 +143,5 @@ const TravelersForm: React.FC<TravelersFormProps> = ({ formData, onFormChange })
 };
 ```
 
-*Last Updated: 2025-09-19 | Current Feature: Travel Style Styling Fix | Constitution v2.0.0*
+*Last Updated: 2025-09-19 | Current Feature: Trip Details Enhancements | Constitution v2.0.0*
 

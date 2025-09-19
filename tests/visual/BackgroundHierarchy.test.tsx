@@ -254,7 +254,7 @@ describe('Background Color Hierarchy Validation', () => {
       expect(formBoxes.length).toBeGreaterThan(0);
       
       // Header should have proper styling
-      const header = screen.getByRole('heading', { name: /🌏Travel Style Preferences/i });
+      const header = screen.getByRole('heading', { name: /🌏 Travel Style/i });
       expect(header).toHaveClass('text-primary');
     });
 
@@ -275,12 +275,12 @@ describe('Background Color Hierarchy Validation', () => {
       const detailedButton = screen.getByLabelText(/detailed travel style preferences/i);
       const skipButton = screen.getByLabelText(/skip ahead to trip nickname/i);
       
-      // These buttons have white backgrounds, not inheriting container background
-      expect(detailedButton).toHaveClass('bg-white');
+      // These buttons have specific backgrounds as implemented
+      expect(detailedButton).toHaveClass('bg-[#b0c29b]');
       expect(skipButton).toHaveClass('bg-white');
       
       // They should maintain their own styling independent of container
-      expect(detailedButton).toHaveClass('text-primary');
+      expect(detailedButton).toHaveClass('text-white');
       expect(skipButton).toHaveClass('text-primary');
     });
   });

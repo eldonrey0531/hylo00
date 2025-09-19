@@ -84,6 +84,49 @@ export interface TravelStyleData {
   customTexts: Record<string, string>;
 }
 
+// T003: Enhanced travel style data interface for comprehensive data gathering
+export interface EnhancedTravelStyleData {
+  // Travel experience level options
+  travelExperience: string[];
+  
+  // Trip vibe preferences with Other option
+  tripVibes: string[];
+  customVibeText?: string;
+  
+  // Sample travel days selections
+  sampleDays: string[];
+  
+  // Dinner preference selections
+  dinnerPreferences: string[];
+  
+  // Additional custom responses
+  customTexts?: Record<string, string>;
+}
+
+// T003: Budget configuration interface
+export interface BudgetConfiguration {
+  amount: number;
+  currency: 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
+  mode: 'total' | 'per-person';
+  isFlexible: boolean;
+  calculatedPerPerson?: number;
+  calculatedTotal?: number;
+}
+
+// T003: Selection with Other option pattern interface
+export interface SelectionWithOther {
+  predefinedSelections: string[];
+  hasOtherSelected: boolean;
+  customText?: string;
+}
+
+// T003: Contact information interface (simplified)
+export interface ContactInformation {
+  tripNickname: string;
+  name: string;
+  email: string;
+}
+
 // Trip nickname data interface (for reference)
 export interface TripNicknameData {
   tripNickname: string;

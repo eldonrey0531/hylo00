@@ -11,7 +11,9 @@ import {
 
 const BudgetForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
   const [budgetRange, setBudgetRange] = useState(formData.budget || 5000);
-  const [budgetMode, setBudgetMode] = useState<BudgetMode>('total');
+  
+  // T016: Connect budgetMode to FormData for proper state management
+  const budgetMode = formData.budgetMode || 'total';
 
   useEffect(() => {
     setBudgetRange(formData.budget || 5000);
@@ -25,21 +27,35 @@ const BudgetForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
     [onFormChange]
   );
 
+  // T016: Enhanced budget mode handler with FormData sync
   const handleBudgetModeChange = useCallback((checked: boolean) => {
-    setBudgetMode(checked ? 'per-person' : 'total');
-  }, []);
+    const newMode: BudgetMode = checked ? 'per-person' : 'total';
+    onFormChange({ budgetMode: newMode });
+  }, [onFormChange]);
 
   const getCurrencySymbol = useCallback(() => {
     return currencySymbols[formData.currency || 'USD'];
   }, [formData.currency]);
 
+  // T016: Enhanced budget display with per-person calculations
   const getBudgetDisplay = useCallback(() => {
     const symbol = getCurrencySymbol();
-    if (budgetRange >= MAX_BUDGET) {
-      return `${symbol}10,000+`;
+    const totalTravelers = (formData.adults || 1) + (formData.children || 0);
+    
+    if (budgetMode === 'per-person' && totalTravelers > 0) {
+      const perPersonAmount = Math.round(budgetRange / totalTravelers);
+      if (budgetRange >= MAX_BUDGET) {
+        const perPersonMax = Math.round(MAX_BUDGET / totalTravelers);
+        return `${symbol}${perPersonMax.toLocaleString()}+`;
+      }
+      return `${symbol}${perPersonAmount.toLocaleString()}`;
+    } else {
+      if (budgetRange >= MAX_BUDGET) {
+        return `${symbol}10,000+`;
+      }
+      return `${symbol}${budgetRange.toLocaleString()}`;
     }
-    return `${symbol}${budgetRange.toLocaleString()}`;
-  }, [budgetRange, getCurrencySymbol]);
+  }, [budgetRange, getCurrencySymbol, budgetMode, formData.adults, formData.children]);
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
@@ -112,55 +128,63 @@ const BudgetForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
       )}
 
       {/* Currency and Budget Mode Row */}
-      <div className="flex items-center justify-between gap-6 mt-6">
-        {/* Currency Dropdown */}
-        <div className="flex items-center space-x-2">
-          <select
-            value={formData.currency || 'USD'}
-            onChange={(e) => onFormChange({ currency: e.target.value as Currency })}
-            className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
-            aria-label="Select currency"
-          >
-            <option value="USD" className="font-bold font-raleway text-sm">
-              $ USD
-            </option>
-            <option value="EUR" className="font-bold font-raleway text-sm">
-              € EUR
-            </option>
-            <option value="GBP" className="font-bold font-raleway text-sm">
-              £ GBP
-            </option>
-            <option value="CAD" className="font-bold font-raleway text-sm">
-              C$ CAD
-            </option>
-            <option value="AUD" className="font-bold font-raleway text-sm">
-              A$ AUD
-            </option>
-          </select>
-        </div>
+      {!formData.flexibleBudget && (
+        <div className="flex items-center justify-between gap-6 mt-6">
+          {/* Currency Dropdown */}
+          <div className="flex items-center space-x-2">
+            <select
+              value={formData.currency || 'USD'}
+              onChange={(e) => onFormChange({ currency: e.target.value as Currency })}
+              className="px-4 py-2 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-[#ece8de] text-primary font-bold font-raleway text-base"
+              aria-label="Select currency"
+            >
+              <option value="USD" className="font-bold font-raleway text-sm">
+                $ USD
+              </option>
+              <option value="EUR" className="font-bold font-raleway text-sm">
+                € EUR
+              </option>
+              <option value="GBP" className="font-bold font-raleway text-sm">
+                £ GBP
+              </option>
+              <option value="CAD" className="font-bold font-raleway text-sm">
+                C$ CAD
+              </option>
+              <option value="AUD" className="font-bold font-raleway text-sm">
+                A$ AUD
+              </option>
+            </select>
+          </div>
 
-        {/* Budget Mode Switch */}
-        <div className="flex items-center space-x-4">
-          <span className="text-primary font-bold font-raleway text-sm">Total trip budget</span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={budgetMode === 'per-person'}
-              onChange={(e) => handleBudgetModeChange(e.target.checked)}
-              className="sr-only peer"
-              aria-label="Toggle budget mode"
-            />
-            <div
-              className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
-                budgetMode === 'per-person'
-                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
-              }`}
-            ></div>
-          </label>
-          <span className="text-primary font-bold font-raleway text-sm">Per-person budget</span>
+          {/* Budget Mode Switch */}
+          <div className="flex items-center space-x-4">
+            <span 
+              className="text-primary font-bold font-raleway text-sm"
+              aria-current={budgetMode === 'total' ? 'true' : 'false'}
+            >
+              Total trip budget
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={budgetMode === 'per-person'}
+                onChange={(e) => handleBudgetModeChange(e.target.checked)}
+                className="sr-only peer"
+                aria-label="Toggle budget mode"
+              />
+              <div
+                className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2`}
+              ></div>
+            </label>
+            <span 
+              className="text-primary font-bold font-raleway text-sm"
+              aria-current={budgetMode === 'per-person' ? 'true' : 'false'}
+            >
+              Per-person budget
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

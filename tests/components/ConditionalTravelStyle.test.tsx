@@ -43,16 +43,15 @@ describe('ConditionalTravelStyle Component', () => {
     render(<ConditionalTravelStyle {...mockProps} />);
     
     // Test that travel style header is displayed
-    expect(screen.getByRole('heading', { name: /TRAVEL STYLE/i })).toBeInTheDocument();
-    expect(screen.getByText(/Help us create the perfect itinerary/i)).toBeInTheDocument();
-    expect(screen.getByText(/sharing your travel preferences/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Travel Style/i })).toBeInTheDocument();
+    expect(screen.getByText(/Answer with this group and trip in mind/i)).toBeInTheDocument();
   });
 
   it('renders TravelStyleChoice component when choice is NOT_SELECTED', () => {
     render(<ConditionalTravelStyle {...mockProps} />);
     
     // Test that choice buttons are displayed
-    expect(screen.getByText('I want to add answer more forms to suit my travel style')).toBeInTheDocument();
+    expect(screen.getByText('Answer 4 more questions')).toBeInTheDocument();
     expect(screen.getByText('Skip ahead')).toBeInTheDocument();
   });
 

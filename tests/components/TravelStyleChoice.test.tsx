@@ -22,7 +22,7 @@ describe('TravelStyleChoice Component', () => {
     render(<TravelStyleChoice onChoiceSelect={mockOnChoiceSelect} />);
     
     // Test that both choice buttons are rendered
-    expect(screen.getByText('I want to add answer more forms to suit my travel style')).toBeInTheDocument();
+    expect(screen.getByText('Answer 4 more questions')).toBeInTheDocument();
     expect(screen.getByText('Skip ahead')).toBeInTheDocument();
   });
 
@@ -34,19 +34,25 @@ describe('TravelStyleChoice Component', () => {
     expect(gradientContainer).toBeInTheDocument();
     expect(gradientContainer).toHaveClass('from-[#406170]', 'to-[#2a4552]', 'rounded-[36px]', 'p-8', 'text-white');
     
-    // Test buttons have white styling with borders
+    // Test buttons have proper styling
     const buttons = container.querySelectorAll('button');
     expect(buttons).toHaveLength(2);
-    buttons.forEach(button => {
-      expect(button).toHaveClass('bg-white', 'text-primary', 'border-4', 'border-white', 'rounded-[20px]');
-      expect(button).toHaveClass('font-bold', 'font-raleway', 'text-xl');
-    });
+    
+    // First button (detailed) should have green background with white text
+    const detailedButton = buttons[0];
+    expect(detailedButton).toHaveClass('bg-[#b0c29b]', 'text-white', 'border-4', 'border-white', 'rounded-[20px]');
+    expect(detailedButton).toHaveClass('font-bold', 'font-raleway', 'text-xl');
+    
+    // Second button (skip) should have white background
+    const skipButton = buttons[1];
+    expect(skipButton).toHaveClass('bg-white', 'text-primary', 'border-4', 'border-white', 'rounded-[20px]');
+    expect(skipButton).toHaveClass('font-bold', 'font-raleway', 'text-xl');
   });
 
   it('calls onChoiceSelect with DETAILED when first button clicked', () => {
     render(<TravelStyleChoice onChoiceSelect={mockOnChoiceSelect} />);
     
-    const detailedButton = screen.getByText('I want to add answer more forms to suit my travel style');
+    const detailedButton = screen.getByText('Answer 4 more questions');
     fireEvent.click(detailedButton);
     
     expect(mockOnChoiceSelect).toHaveBeenCalledWith(TravelStyleChoiceEnum.DETAILED);
@@ -73,7 +79,7 @@ describe('TravelStyleChoice Component', () => {
     });
     
     // Should not call handler when disabled
-    const detailedButton = screen.getByText('I want to add answer more forms to suit my travel style');
+    const detailedButton = screen.getByText('Answer 4 more questions');
     fireEvent.click(detailedButton);
     expect(mockOnChoiceSelect).not.toHaveBeenCalled();
   });

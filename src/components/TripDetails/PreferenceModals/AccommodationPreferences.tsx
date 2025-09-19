@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface AccommodationPreferencesProps {
   preferences: any;
@@ -37,18 +37,18 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave({
       selectedTypes,
       otherType,
       specialRequests,
     });
-  };
+  }, [selectedTypes, otherType, specialRequests, onSave]);
 
   // Auto-save when any field changes
   useEffect(() => {
     handleSave();
-  }, [selectedTypes, otherType, specialRequests]);
+  }, [handleSave]);
 
   return (
     <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
@@ -101,7 +101,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
               type="text"
               value={otherType}
               onChange={(e) => setOtherType(e.target.value)}
-              placeholder="Tell us more about your preferred accommodations"
+              placeholder="Specify other accommodation type..."
               className="mt-3 w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] font-raleway font-bold"
             />
           )}
