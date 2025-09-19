@@ -146,69 +146,72 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Departure Date */}
-          <div>
-            <label className="block text-primary mb-2 font-bold font-raleway text-base">
-              Departure Date *
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={convertToInputFormat(localDepartDate)}
-                onChange={(e) => handleDepartDateChange(e.target.value)}
-                min={getMinDate()}
-                disabled={disabled}
-                className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
-                  errors.departDate
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-primary focus:border-primary'
-                } ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-primary'}`}
-                aria-label="Departure date"
-                aria-invalid={!!errors.departDate}
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+        <div className="p-6">
+          {/* Date Inputs in 2-Column Grid */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            {/* Departure Date */}
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                Departure Date *
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={convertToInputFormat(localDepartDate)}
+                  onChange={(e) => handleDepartDateChange(e.target.value)}
+                  min={getMinDate()}
+                  disabled={disabled}
+                  className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
+                    errors.departDate
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-primary focus:border-primary'
+                  } ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-primary'}`}
+                  aria-label="Departure date"
+                  aria-invalid={!!errors.departDate}
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+              </div>
+              {errors.departDate && (
+                <p className="text-red-500 text-sm mt-1 font-raleway">{errors.departDate}</p>
+              )}
             </div>
-            {errors.departDate && (
-              <p className="text-red-500 text-sm mt-1 font-raleway">{errors.departDate}</p>
-            )}
-          </div>
 
-          {/* Return Date */}
-          <div>
-            <label className="block text-primary mb-2 font-bold font-raleway text-base">
-              Return Date
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={convertToInputFormat(localReturnDate)}
-                onChange={(e) => handleReturnDateChange(e.target.value)}
-                min={getMinReturnDate()}
-                disabled={disabled || !localDepartDate}
-                className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
-                  errors.returnDate
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-primary focus:border-primary'
-                } ${
-                  disabled || !localDepartDate 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-white text-primary'
-                }`}
-                aria-label="Return date"
-                aria-invalid={!!errors.returnDate}
-                placeholder="Optional"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+            {/* Return Date */}
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                Return Date
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={convertToInputFormat(localReturnDate)}
+                  onChange={(e) => handleReturnDateChange(e.target.value)}
+                  min={getMinReturnDate()}
+                  disabled={disabled || !localDepartDate}
+                  className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
+                    errors.returnDate
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-primary focus:border-primary'
+                  } ${
+                    disabled || !localDepartDate 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-white text-primary'
+                  }`}
+                  aria-label="Return date"
+                  aria-invalid={!!errors.returnDate}
+                  placeholder="Optional"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+              </div>
+              {errors.returnDate && (
+                <p className="text-red-500 text-sm mt-1 font-raleway">{errors.returnDate}</p>
+              )}
+              {!localDepartDate && (
+                <p className="text-gray-500 text-sm mt-1 font-raleway">
+                  Select departure date first
+                </p>
+              )}
             </div>
-            {errors.returnDate && (
-              <p className="text-red-500 text-sm mt-1 font-raleway">{errors.returnDate}</p>
-            )}
-            {!localDepartDate && (
-              <p className="text-gray-500 text-sm mt-1 font-raleway">
-                Select departure date first
-              </p>
-            )}
           </div>
 
           {/* Trip Duration Display */}
