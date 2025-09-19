@@ -112,3 +112,4 @@ const TravelersForm: React.FC<TravelersFormProps> = ({ formData, onFormChange })
 ```
 
 *Last Updated: 2025-09-19 | Current Feature: UI Improvements | Constitution v2.0.0*
+

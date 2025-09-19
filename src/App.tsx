@@ -2,11 +2,8 @@ import { useState, useRef } from 'react';
 import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
 import TripDetails from './components/TripDetails';
 import { FormData } from './components/TripDetails/types';
-import TravelExperience from './components/travel-style/TravelExperience';
-import TripVibe from './components/travel-style/TripVibe';
-import SampleDays from './components/travel-style/SampleDays';
-import DinnerChoice from './components/travel-style/DinnerChoice';
-import TripNickname from './components/travel-style/TripNickname';
+import ConditionalTravelStyle from './components/ConditionalTravelStyle';
+import { TravelStyleChoice } from './types/travel-style-choice';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import BehindTheScenes from './components/BehindTheScenes';
 import AIErrorBoundary from './components/AIErrorBoundary';
@@ -42,6 +39,9 @@ function App() {
   const [dinnerChoices, setDinnerChoices] = useState<string[]>([]);
   const [tripNickname, setTripNickname] = useState<string>('');
   const [contactInfo, setContactInfo] = useState({});
+  
+  // Travel style choice state management
+  const [travelStyleChoice, setTravelStyleChoice] = useState<TravelStyleChoice>(TravelStyleChoice.NOT_SELECTED);
 
   // Custom text inputs for "other" options (remaining for travel style components)
   const [customVibesText, setCustomVibesText] = useState<string>('');
@@ -51,6 +51,11 @@ function App() {
   const [generationError, setGenerationError] = useState<string>('');
   const [agentLogs, setAgentLogs] = useState<AgentLog[]>([]);
   const itineraryRef = useRef<HTMLDivElement>(null);
+
+  // Handle travel style choice selection
+  const handleTravelStyleChoice = (choice: TravelStyleChoice) => {
+    setTravelStyleChoice(choice);
+  };
 
   const handleGenerateItinerary = async () => {
     const travelData: TravelFormData = {
@@ -127,81 +132,28 @@ function App() {
           {/* Trip Details Form - Unified with all form components */}
           <TripDetails formData={formData} onFormChange={setFormData} showAdditionalForms={true} />
 
-          {/* Travel Style Header - Full Width No Rounded Corners */}
-          <div className="bg-trip-details text-primary py-4 px-6 shadow-lg -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-16">
-            <div className="flex items-center justify-center space-x-3">
-              <span className="text-3xl">🌏</span>
-              <h2 className="text-2xl font-bold tracking-wide text-primary font-raleway">
-                TRAVEL STYLE
-              </h2>
-            </div>
-          </div>
-
-          {/* Travel Style Description */}
-          <div className="text-center py-4">
-            <p className="text-primary leading-relaxed text-sm font-bold font-raleway">
-              <span style={{ color: '#ece8de' }}>
-                The next few questions are optional, but answering them helps us understand you and
-                create an even more personalized itinerary.
-              </span>{' '}
-              <span style={{ color: '#f9dd8b' }} className="font-bold">
-                Answer them with this group and trip in mind.
-              </span>
-            </p>
-          </div>
-
-          {/* Travel Experience */}
-          <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <div className="space-y-3 mb-6">
-              <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
-                What is your group's level of travel experience?
-              </h4>
-              <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
-            </div>
-            <TravelExperience
-              selectedExperience={selectedExperience}
-              onSelectionChange={setSelectedExperience}
-            />
-          </div>
-
-          {/* Trip Vibe */}
-          <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <div className="space-y-3 mb-6">
-              <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
-                What do you want the "vibe" of this trip to be?
-              </h4>
-              <p className="text-primary font-bold font-raleway text-xs">Select all that apply</p>
-            </div>
-            <TripVibe
-              selectedVibes={selectedVibes}
-              onSelectionChange={setSelectedVibes}
-              otherText={customVibesText}
-              onOtherTextChange={setCustomVibesText}
-            />
-          </div>
-
-          {/* Sample Days */}
-          <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <SampleDays
-              selectedDays={selectedSampleDays}
-              onSelectionChange={setSelectedSampleDays}
-            />
-          </div>
-
-          {/* Dinner Choice */}
-          <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <DinnerChoice selectedChoice={dinnerChoices} onSelectionChange={setDinnerChoices} />
-          </div>
-
-          {/* Trip Nickname with Contact Info */}
-          <div className="bg-form-box rounded-[36px] p-6 shadow-lg border border-gray-200">
-            <TripNickname
-              tripNickname={tripNickname}
-              onNicknameChange={setTripNickname}
-              contactInfo={contactInfo}
-              onContactChange={setContactInfo}
-            />
-          </div>
+          {/* ConditionalTravelStyle - Handles choice-based travel style display */}
+          <ConditionalTravelStyle
+            choice={travelStyleChoice}
+            onChoiceChange={handleTravelStyleChoice}
+            formData={formData}
+            onFormChange={setFormData}
+            selectedExperience={selectedExperience}
+            onExperienceChange={setSelectedExperience}
+            selectedVibes={selectedVibes}
+            onVibeChange={setSelectedVibes}
+            customVibesText={customVibesText}
+            onCustomVibesChange={setCustomVibesText}
+            selectedSampleDays={selectedSampleDays}
+            onSampleDaysChange={setSelectedSampleDays}
+            dinnerChoices={dinnerChoices}
+            onDinnerChoicesChange={setDinnerChoices}
+            tripNickname={tripNickname}
+            onTripNicknameChange={setTripNickname}
+            contactInfo={contactInfo}
+            onContactChange={setContactInfo}
+            disabled={isGenerating}
+          />
 
           {/* Generate Button */}
           <GenerateItineraryButton isSubmitting={isGenerating} onClick={handleGenerateItinerary} />
