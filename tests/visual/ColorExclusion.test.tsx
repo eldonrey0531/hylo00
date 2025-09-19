@@ -75,8 +75,8 @@ describe('Color Exclusion Enforcement', () => {
         // Container must NOT have bg-primary class
         expect(container).not.toHaveClass('bg-primary');
         
-        // Should have the correct bg-trip-details instead
-        expect(container).toHaveClass('bg-trip-details');
+        // Should have the correct bg-form-box instead
+        expect(container).toHaveClass('bg-form-box');
         
         unmount();
       });
@@ -96,7 +96,7 @@ describe('Color Exclusion Enforcement', () => {
       expect(container).not.toHaveClass('bg-primary');
       
       // Verify it has the correct background class
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
       
       // Check all background-related classes to ensure none are bg-primary
       const classList = Array.from(container.classList);
@@ -309,7 +309,7 @@ describe('Color Exclusion Enforcement', () => {
       const container = screen.getByTestId('travel-style-container');
       
       // Container should only have approved background
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
       expect(container).not.toHaveClass('bg-primary');
       
       // This test validates that we're using the approved color palette
@@ -317,7 +317,7 @@ describe('Color Exclusion Enforcement', () => {
       const backgroundClasses = classList.filter(cls => cls.startsWith('bg-'));
       
       // Should contain approved background
-      expect(backgroundClasses).toContain('bg-trip-details');
+      expect(backgroundClasses).toContain('bg-form-box');
       
       // Should not contain the problematic bg-primary
       expect(backgroundClasses).not.toContain('bg-primary');
@@ -335,7 +335,7 @@ describe('Color Exclusion Enforcement', () => {
 
       // Container should maintain proper background even during interaction
       const container = screen.getByTestId('travel-style-container');
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
       expect(container).not.toHaveClass('bg-primary');
     });
 
@@ -361,7 +361,7 @@ describe('Color Exclusion Enforcement', () => {
 
       container = screen.getByTestId('travel-style-container');
       expect(container).not.toHaveClass('bg-primary');
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
 
       // Change to SKIP state
       rerender(
@@ -373,7 +373,7 @@ describe('Color Exclusion Enforcement', () => {
 
       container = screen.getByTestId('travel-style-container');
       expect(container).not.toHaveClass('bg-primary');
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
     });
   });
 });

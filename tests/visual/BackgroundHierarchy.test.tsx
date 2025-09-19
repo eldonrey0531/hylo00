@@ -8,7 +8,7 @@ import { TravelStyleChoice } from '../../src/types/travel-style-choice';
  * Feature: 004-fix-travel-style
  * 
  * Validates the proper background color hierarchy for travel style section:
- * - Travel Style Container: bg-trip-details (#b0c29b) - olive green section background
+ * - Travel Style Container: bg-form-box (#ece8de (form box) section background
  * - Form Components: bg-form-box (#ece8de) - light beige form backgrounds  
  * - Input Elements: Various input-specific backgrounds
  * 
@@ -57,7 +57,7 @@ const defaultProps = {
 describe('Background Color Hierarchy Validation', () => {
 
   describe('Travel Style Container Background', () => {
-    it('should use bg-trip-details for travel style container across all states', () => {
+    it('should use bg-form-box for travel style container across all states', () => {
       const states = [TravelStyleChoice.NOT_SELECTED, TravelStyleChoice.DETAILED, TravelStyleChoice.SKIP];
 
       states.forEach(choice => {
@@ -70,8 +70,8 @@ describe('Background Color Hierarchy Validation', () => {
 
         const container = screen.getByTestId('travel-style-container');
         
-        // Container must have bg-trip-details class (#b0c29b)
-        expect(container).toHaveClass('bg-trip-details');
+        // Container must have bg-form-box class (#ece8de)
+        expect(container).toHaveClass('bg-form-box');
         
         // Should not have other background classes
         expect(container).not.toHaveClass('bg-primary', 'bg-form-box', 'bg-white');
@@ -92,7 +92,7 @@ describe('Background Color Hierarchy Validation', () => {
       
       // Verify complete styling hierarchy
       expect(container).toHaveClass(
-        'bg-trip-details',     // Background color
+        'bg-form-box',     // Background color
         'text-primary',        // Text color
         'rounded-[36px]',      // Border radius
         'p-6',                 // Padding
@@ -119,7 +119,7 @@ describe('Background Color Hierarchy Validation', () => {
 
       styleButtons.forEach(button => {
         expect(button).toHaveClass('bg-[#ece8de]');
-        expect(button).not.toHaveClass('bg-primary', 'bg-trip-details');
+        expect(button).not.toHaveClass('bg-primary', 'bg-form-box');
       });
     });
 
@@ -138,7 +138,7 @@ describe('Background Color Hierarchy Validation', () => {
       // Contact form container should have proper styling
       // Note: ContactForm uses its own internal styling, we validate it doesn't break hierarchy
       const container = screen.getByTestId('travel-style-container');
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
     });
   });
 
@@ -153,10 +153,10 @@ describe('Background Color Hierarchy Validation', () => {
 
       const container = screen.getByTestId('travel-style-container');
       
-      // bg-trip-details should resolve to #b0c29b (olive green)
+      // bg-form-box should resolve to #b0c29b (olive green)
       // Note: This test validates the CSS class is applied - actual color resolution
       // depends on Tailwind config, which we assume is correctly configured
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
     });
 
     it('should ensure no conflicting background classes', () => {
@@ -172,11 +172,11 @@ describe('Background Color Hierarchy Validation', () => {
 
         const container = screen.getByTestId('travel-style-container');
         
-        // Should only have bg-trip-details, not multiple background classes
+        // Should only have bg-form-box, not multiple background classes
         const classList = Array.from(container.classList);
         const backgroundClasses = classList.filter(cls => cls.startsWith('bg-'));
         
-        expect(backgroundClasses).toContain('bg-trip-details');
+        expect(backgroundClasses).toContain('bg-form-box');
         expect(backgroundClasses).not.toContain('bg-primary');
         expect(backgroundClasses).not.toContain('bg-white');
         
@@ -198,8 +198,8 @@ describe('Background Color Hierarchy Validation', () => {
 
       const container = screen.getByTestId('travel-style-container');
       
-      // Container should maintain bg-trip-details regardless of responsive modifiers
-      expect(container).toHaveClass('bg-trip-details');
+      // Container should maintain bg-form-box regardless of responsive modifiers
+      expect(container).toHaveClass('bg-form-box');
       
       // Should have responsive margin classes that don't interfere with background
       expect(container).toHaveClass('-mx-4', 'sm:-mx-6', 'lg:-mx-8', '2xl:-mx-16');
@@ -243,13 +243,13 @@ describe('Background Color Hierarchy Validation', () => {
       );
 
       const container = screen.getByTestId('travel-style-container');
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
       
       // Text should be properly colored for the background
       expect(container).toHaveClass('text-primary');
       
       // Header within container should inherit proper styling
-      const header = screen.getByRole('heading', { name: /\?\? TRAVEL STYLE/i });
+      const header = screen.getByRole('heading', { name: /🌏 TRAVEL STYLE/i });
       expect(header).toHaveClass('text-primary');
     });
 
@@ -264,7 +264,7 @@ describe('Background Color Hierarchy Validation', () => {
       const container = screen.getByTestId('travel-style-container');
       
       // Main container has correct background
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
       
       // Choice buttons inside should have their own distinct backgrounds
       const detailedButton = screen.getByLabelText(/detailed travel style preferences/i);
@@ -274,9 +274,9 @@ describe('Background Color Hierarchy Validation', () => {
       expect(detailedButton).toHaveClass('bg-white');
       expect(skipButton).toHaveClass('bg-white');
       
-      // They should not inherit the container's bg-trip-details
-      expect(detailedButton).not.toHaveClass('bg-trip-details');
-      expect(skipButton).not.toHaveClass('bg-trip-details');
+      // They should not inherit the container's bg-form-box
+      expect(detailedButton).not.toHaveClass('bg-form-box');
+      expect(skipButton).not.toHaveClass('bg-form-box');
     });
   });
 });
