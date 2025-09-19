@@ -113,14 +113,6 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
       </div>
 
       <div className="bg-form-box rounded-[20px] p-6">
-        <div className="mb-4">
-          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
-            Which of these sample travel days are you drawn to?
-          </h4>
-          <p className="text-primary font-bold font-raleway text-xs">
-            Select all that apply for this group
-          </p>
-        </div>
         <SampleDays
           selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
           onSelectionChange={handleSampleDaysChange}
