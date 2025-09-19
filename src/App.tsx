@@ -58,53 +58,76 @@ function App() {
   };
 
   const handleGenerateItinerary = async () => {
-    const travelData: TravelFormData = {
-      tripDetails: formData,
-      groups: formData.selectedGroups || [],
-      interests: formData.selectedInterests || [],
-      inclusions: formData.selectedInclusions || [],
-      experience: selectedExperience,
-      vibes: selectedVibes,
-      sampleDays: selectedSampleDays,
-      dinnerChoices: dinnerChoices,
-      nickname: tripNickname,
-      contact: contactInfo,
-    };
-
     setIsGenerating(true);
     setGenerationError('');
     setGeneratedItinerary(''); // Clear previous itinerary
     setAgentLogs([]); // Clear previous logs
 
     try {
-      // Instead of calling AI/LLM, display the gathered form data
-      const formDataDisplay = JSON.stringify(travelData, null, 2);
+      // Instead of calling AI/LLM, display the gathered form data organized by form sections
+      const organizedFormData = {
+        "1. Destination & Dates": {
+          "destination": formData.location,
+          "departureDate": formData.departDate,
+          "returnDate": formData.returnDate,
+          "flexibleDates": formData.flexibleDates
+        },
+        "2. Travelers": {
+          "adults": formData.adults,
+          "children": formData.children,
+          "childrenAges": formData.childrenAges
+        },
+        "3. Budget": {
+          "amount": formData.budget,
+          "currency": formData.currency,
+          "budgetMode": formData.budgetMode,
+          "flexibleBudget": formData.flexibleBudget
+        },
+        "4. Travel Group": {
+          "selectedGroups": formData.selectedGroups,
+          "customGroupText": formData.customGroupText
+        },
+        "5. Travel Interests": {
+          "selectedInterests": formData.selectedInterests,
+          "customInterestsText": formData.customInterestsText
+        },
+        "6. Itinerary Inclusions": {
+          "selectedInclusions": formData.selectedInclusions,
+          "customInclusionsText": formData.customInclusionsText,
+          "inclusionPreferences": formData.inclusionPreferences
+        },
+        "7. Travel Style Questions": {
+          "travelStyleChoice": formData.travelStyleChoice,
+          "experience": formData.travelStyleAnswers?.['experience'] || [],
+          "vibes": formData.travelStyleAnswers?.['vibes'] || [],
+          "vibesOther": formData.travelStyleAnswers?.['vibesOther'],
+          "sampleDays": formData.travelStyleAnswers?.['sampleDays'] || [],
+          "dinnerChoices": formData.travelStyleAnswers?.['dinnerChoices'] || []
+        },
+        "8. Contact & Trip Details": {
+          "tripNickname": formData.travelStyleAnswers?.['tripNickname'] || tripNickname,
+          "contactName": (contactInfo as any)?.name || '',
+          "contactEmail": (contactInfo as any)?.email || ''
+        }
+      };
+
       const debugItinerary = `
-# Gathered Form Data for Review
+# 📋 Complete Form Data Review
 
-## Trip Details
-${JSON.stringify(travelData.tripDetails, null, 2)}
-
-## Travel Preferences
-- **Groups**: ${JSON.stringify(travelData.groups)}
-- **Interests**: ${JSON.stringify(travelData.interests)}
-- **Inclusions**: ${JSON.stringify(travelData.inclusions)}
-- **Experience Level**: ${JSON.stringify(travelData.experience)}
-- **Vibes**: ${JSON.stringify(travelData.vibes)}
-- **Sample Days**: ${JSON.stringify(travelData.sampleDays)}
-- **Dinner Choices**: ${JSON.stringify(travelData.dinnerChoices)}
-
-## Contact Information
-- **Trip Nickname**: ${travelData.nickname}
-- **Contact**: ${JSON.stringify(travelData.contact)}
+${Object.entries(organizedFormData).map(([sectionTitle, sectionData]) => `
+## ${sectionTitle}
+\`\`\`json
+${JSON.stringify(sectionData, null, 2)}
+\`\`\`
+`).join('')}
 
 ---
 
-**Note**: This is a debug view showing all collected form data. AI/LLM functionality has been temporarily disabled.
+**Note**: This is a debug view showing all collected form data organized by form sections. AI/LLM functionality has been temporarily disabled.
 
-## Complete Data Object
+## Raw Complete Data Object
 \`\`\`json
-${formDataDisplay}
+${JSON.stringify(organizedFormData, null, 2)}
 \`\`\`
       `;
 
