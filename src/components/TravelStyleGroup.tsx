@@ -1,6 +1,8 @@
 import React from 'react';
 import TravelExperience from './travel-style/TravelExperience';
 import TripVibe from './travel-style/TripVibe';
+import SampleDays from './travel-style/SampleDays';
+import DinnerChoice from './travel-style/DinnerChoice';
 import TripNickname from './travel-style/TripNickname';
 
 interface TravelStyleGroupProps {
@@ -39,6 +41,26 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
     });
   };
 
+  const handleSampleDaysChange = (sampleDays: string[]) => {
+    onFormChange?.({
+      ...formData,
+      travelStyleAnswers: {
+        ...formData?.travelStyleAnswers,
+        sampleDays,
+      },
+    });
+  };
+
+  const handleDinnerChoiceChange = (dinnerChoices: string[]) => {
+    onFormChange?.({
+      ...formData,
+      travelStyleAnswers: {
+        ...formData?.travelStyleAnswers,
+        dinnerChoices,
+      },
+    });
+  };
+
   const handleTripNicknameChange = (tripNickname: string) => {
     onFormChange?.({
       ...formData,
@@ -51,7 +73,7 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
 
   return (
     <div className="space-y-8">
-      <div className="text-center mb-6 bg-[#f9dd8b] p-6 rounded-[20px]">
+      <div className="text-center mb-6 bg-[#f9dd8b] p-6">
         <h2 className="text-2xl font-bold text-primary font-raleway mb-2">
           🌏Travel Style Preferences
         </h2>
@@ -87,6 +109,28 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
           onSelectionChange={handleVibeChange}
           otherText={formData?.travelStyleAnswers?.vibesOther || ''}
           onOtherTextChange={handleVibeOtherChange}
+        />
+      </div>
+
+      <div className="bg-form-box rounded-[20px] p-6">
+        <div className="mb-4">
+          <h4 className="text-xl font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
+            Which of these sample travel days are you drawn to?
+          </h4>
+          <p className="text-primary font-bold font-raleway text-xs">
+            Select all that apply for this group
+          </p>
+        </div>
+        <SampleDays
+          selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
+          onSelectionChange={handleSampleDaysChange}
+        />
+      </div>
+
+      <div className="bg-form-box rounded-[20px] p-6">
+        <DinnerChoice
+          selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
+          onSelectionChange={handleDinnerChoiceChange}
         />
       </div>
 
