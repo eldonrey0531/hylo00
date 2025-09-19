@@ -54,6 +54,7 @@
     "eslint-plugin-react-refresh": "^0.4.11",
     "express": "^5.1.0",
     "globals": "^15.9.0",
+    "jest-environment-jsdom": "^30.1.2",
     "jest-openapi": "^0.14.2",
     "jsdom": "^27.0.0",
     "msw": "^2.11.2",

@@ -68,6 +68,10 @@ export interface ConditionalTravelStyleProps {
   disabled?: boolean;
   contactInfo: any;
   onContactChange: (contact: any) => void;
+  
+  // Itinerary generation functionality
+  onGenerateItinerary?: () => void;
+  isGenerating?: boolean;
 }
 
 // Existing travel style data interface (for reference and type safety)
