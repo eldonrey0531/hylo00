@@ -80,39 +80,49 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
         <p className="text-gray-600">Let's customize your trip experience</p>
       </div>
 
-      <TravelExperience
-        selectedExperience={formData?.travelStyleAnswers?.experience || []}
-        onSelectionChange={handleExperienceChange}
-      />
+      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+        <TravelExperience
+          selectedExperience={formData?.travelStyleAnswers?.experience || []}
+          onSelectionChange={handleExperienceChange}
+        />
+      </div>
 
-      <TripVibe
-        selectedVibes={formData?.travelStyleAnswers?.vibes || []}
-        onSelectionChange={handleVibeChange}
-        otherText={formData?.travelStyleAnswers?.vibesOther || ''}
-        onOtherTextChange={handleVibeOtherChange}
-      />
+      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+        <TripVibe
+          selectedVibes={formData?.travelStyleAnswers?.vibes || []}
+          onSelectionChange={handleVibeChange}
+          otherText={formData?.travelStyleAnswers?.vibesOther || ''}
+          onOtherTextChange={handleVibeOtherChange}
+        />
+      </div>
 
-      <SampleDays
-        selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
-        onSelectionChange={handleSampleDaysChange}
-      />
+      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+        <SampleDays
+          selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
+          onSelectionChange={handleSampleDaysChange}
+        />
+      </div>
 
-      <DinnerChoice
-        selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
-        onSelectionChange={handleDinnerChoiceChange}
-      />
+      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+        <DinnerChoice
+          selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
+          onSelectionChange={handleDinnerChoiceChange}
+        />
+      </div>
 
-      <TripNickname
-        tripNickname={formData?.travelStyleAnswers?.tripNickname || ''}
-        onNicknameChange={handleTripNicknameChange}
-        contactInfo={formData?.contactInfo || {}}
-        onContactChange={(contactInfo) => {
+      <div className="bg-form-box p-6 rounded-lg shadow-sm">
+        <TripNickname
+          tripNickname={formData?.travelStyleAnswers?.tripNickname || ''}
+          onNicknameChange={handleTripNicknameChange}
+          contactInfo={formData?.contactInfo || {}}
+          onContactChange={(contactInfo) => {
           onFormChange?.({
             ...formData,
             contactInfo,
           });
         }}
       />
+      </div>
     </div>
   );
 };
