@@ -1,7 +1,8 @@
 // src/components/TripDetails/DateRangePicker.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Calendar, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { dateUtils } from './utils';
+import { VisualCalendar } from './VisualCalendar';
 
 interface DateRangePickerProps {
   isOpen: boolean;
@@ -23,43 +24,30 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [localDepartDate, setLocalDepartDate] = useState(departDate);
   const [localReturnDate, setLocalReturnDate] = useState(returnDate);
   const [errors, setErrors] = useState<{ departDate?: string; returnDate?: string }>({});
+  const [selectedDepartDate, setSelectedDepartDate] = useState<Date | undefined>();
+  const [selectedReturnDate, setSelectedReturnDate] = useState<Date | undefined>();
 
   // Update local state when props change
   useEffect(() => {
     setLocalDepartDate(departDate);
     setLocalReturnDate(returnDate);
     setErrors({});
-  }, [departDate, returnDate, isOpen]);
-
-  // Convert MM/DD/YY format to YYYY-MM-DD for input[type="date"]
-  const convertToInputFormat = useCallback((dateStr: string): string => {
-    if (!dateStr) return '';
-    return dateUtils.convertToInputFormat(dateStr);
-  }, []);
-
-  // Convert YYYY-MM-DD format back to MM/DD/YY
-  const convertFromInputFormat = useCallback((dateStr: string): string => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return dateUtils.formatToMMDDYY(date);
-  }, []);
-
-  // Get minimum date (today)
-  const getMinDate = useCallback(() => {
-    return dateUtils.getTodayString();
-  }, []);
-
-  // Get minimum return date (day after departure)
-  const getMinReturnDate = useCallback(() => {
-    if (localDepartDate) {
-      const departDate = dateUtils.parseMMDDYY(localDepartDate);
-      if (departDate) {
-        departDate.setDate(departDate.getDate() + 1);
-        return departDate.toISOString().split('T')[0];
-      }
+    
+    // Convert MM/DD/YY to Date objects for calendar
+    if (departDate) {
+      const departDateObj = dateUtils.parseMMDDYY(departDate);
+      setSelectedDepartDate(departDateObj || undefined);
+    } else {
+      setSelectedDepartDate(undefined);
     }
-    return getMinDate();
-  }, [localDepartDate, getMinDate]);
+    
+    if (returnDate) {
+      const returnDateObj = dateUtils.parseMMDDYY(returnDate);
+      setSelectedReturnDate(returnDateObj || undefined);
+    } else {
+      setSelectedReturnDate(undefined);
+    }
+  }, [departDate, returnDate, isOpen]);
 
   // Validate dates
   const validateDates = useCallback(() => {
@@ -86,22 +74,25 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     return Object.keys(newErrors).length === 0;
   }, [localDepartDate, localReturnDate]);
 
-  // Handle departure date change
-  const handleDepartDateChange = useCallback((value: string) => {
-    const formattedDate = convertFromInputFormat(value);
+  // Handle departure date selection from calendar
+  const handleDepartDateSelect = useCallback((date: Date) => {
+    const formattedDate = dateUtils.formatToMMDDYY(date);
     setLocalDepartDate(formattedDate);
+    setSelectedDepartDate(date);
 
     // Clear return date if it becomes invalid
-    if (localReturnDate && formattedDate && !dateUtils.isReturnDateValid(formattedDate, localReturnDate)) {
+    if (localReturnDate && !dateUtils.isReturnDateValid(formattedDate, localReturnDate)) {
       setLocalReturnDate('');
+      setSelectedReturnDate(undefined);
     }
-  }, [localReturnDate, convertFromInputFormat]);
+  }, [localReturnDate]);
 
-  // Handle return date change
-  const handleReturnDateChange = useCallback((value: string) => {
-    const formattedDate = convertFromInputFormat(value);
+  // Handle return date selection from calendar
+  const handleReturnDateSelect = useCallback((date: Date) => {
+    const formattedDate = dateUtils.formatToMMDDYY(date);
     setLocalReturnDate(formattedDate);
-  }, [convertFromInputFormat]);
+    setSelectedReturnDate(date);
+  }, []);
 
   // Handle save
   const handleSave = useCallback(() => {
@@ -130,7 +121,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-primary text-white px-6 py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -147,67 +138,42 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
         {/* Content */}
         <div className="p-6">
-          {/* Date Inputs in 2-Column Grid */}
+          {/* Calendar Grid - 2 Columns */}
           <div className="grid grid-cols-2 gap-6 mb-6">
-            {/* Departure Date */}
+            {/* Departure Calendar */}
             <div>
-              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+              <h4 className="text-lg font-bold text-primary mb-3 font-raleway text-center">
                 Departure Date *
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={convertToInputFormat(localDepartDate)}
-                  onChange={(e) => handleDepartDateChange(e.target.value)}
-                  min={getMinDate()}
-                  disabled={disabled}
-                  className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
-                    errors.departDate
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-primary focus:border-primary'
-                  } ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-primary'}`}
-                  aria-label="Departure date"
-                  aria-invalid={!!errors.departDate}
-                />
-                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
-              </div>
+              </h4>
+              <VisualCalendar
+                selectedDate={selectedDepartDate}
+                onDateSelect={handleDepartDateSelect}
+                minDate={new Date()}
+                highlightedDates={selectedReturnDate ? [selectedReturnDate] : []}
+                className="w-full"
+              />
               {errors.departDate && (
-                <p className="text-red-500 text-sm mt-1 font-raleway">{errors.departDate}</p>
+                <p className="text-red-500 text-sm mt-2 font-raleway text-center">{errors.departDate}</p>
               )}
             </div>
 
-            {/* Return Date */}
+            {/* Return Calendar */}
             <div>
-              <label className="block text-primary mb-2 font-bold font-raleway text-base">
-                Return Date
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={convertToInputFormat(localReturnDate)}
-                  onChange={(e) => handleReturnDateChange(e.target.value)}
-                  min={getMinReturnDate()}
-                  disabled={disabled || !localDepartDate}
-                  className={`w-full px-4 py-3 pr-12 border-3 rounded-[10px] focus:ring-2 focus:ring-primary transition-all duration-200 font-bold font-raleway text-base ${
-                    errors.returnDate
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-primary focus:border-primary'
-                  } ${
-                    disabled || !localDepartDate 
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                      : 'bg-white text-primary'
-                  }`}
-                  aria-label="Return date"
-                  aria-invalid={!!errors.returnDate}
-                  placeholder="Optional"
-                />
-                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
-              </div>
+              <h4 className="text-lg font-bold text-primary mb-3 font-raleway text-center">
+                Return Date (Optional)
+              </h4>
+              <VisualCalendar
+                selectedDate={selectedReturnDate}
+                onDateSelect={handleReturnDateSelect}
+                minDate={selectedDepartDate ? new Date(selectedDepartDate.getTime() + 24 * 60 * 60 * 1000) : new Date()}
+                highlightedDates={selectedDepartDate ? [selectedDepartDate] : []}
+                className={`w-full ${!selectedDepartDate ? 'opacity-50' : ''}`}
+              />
               {errors.returnDate && (
-                <p className="text-red-500 text-sm mt-1 font-raleway">{errors.returnDate}</p>
+                <p className="text-red-500 text-sm mt-2 font-raleway text-center">{errors.returnDate}</p>
               )}
-              {!localDepartDate && (
-                <p className="text-gray-500 text-sm mt-1 font-raleway">
+              {!selectedDepartDate && (
+                <p className="text-gray-500 text-sm mt-2 font-raleway text-center">
                   Select departure date first
                 </p>
               )}
