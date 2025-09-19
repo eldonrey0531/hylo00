@@ -122,7 +122,7 @@ const ItineraryInclusions: React.FC<BaseFormProps> = ({ formData, onFormChange }
             <textarea
               value={localOtherText}
               onChange={(e) => handleOtherTextChange(e.target.value)}
-              placeholder="Describe any other inclusions or special requirements..."
+              placeholder="Specify what else you'd like included in your itinerary..."
               className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
               rows={3}
               aria-label="Describe other inclusions"

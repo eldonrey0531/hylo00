@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface FlightPreferencesProps {
   preferences: any;
@@ -25,18 +25,18 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave({
       departureAirports,
       cabinClasses,
       flightPreferences,
     });
-  };
+  }, [departureAirports, cabinClasses, flightPreferences, onSave]);
 
   // Auto-save when any field changes
   useEffect(() => {
     handleSave();
-  }, [departureAirports, cabinClasses, flightPreferences]);
+  }, [handleSave]);
 
   return (
     <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">

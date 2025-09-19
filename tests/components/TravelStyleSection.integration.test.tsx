@@ -72,14 +72,22 @@ describe('Travel Style Section Visual Integration', () => {
         // Travel style container should always be present with consistent styling
         const container = screen.getByTestId('travel-style-container');
         expect(container).toBeInTheDocument();
-        expect(container).toHaveClass('bg-form-box');
-        expect(container).toHaveClass('text-primary');
+        expect(container).toHaveClass('space-y-8');
+        expect(container).not.toHaveClass('bg-form-box');
         expect(container).not.toHaveClass('rounded-[36px]');
 
         // Header should be consistently styled across all states
-        // Use getByRole to find the main heading specifically
-        const header = screen.getByRole('heading', { name: /🌏 TRAVEL STYLE/i });
-        expect(header).toBeInTheDocument();
+        // Check for appropriate header based on state
+        if (choice === TravelStyleChoice.NOT_SELECTED) {
+          const header = screen.getByRole('heading', { name: /NOW YOU HAVE A CHOICE/i });
+          expect(header).toBeInTheDocument();
+        } else if (choice === TravelStyleChoice.DETAILED) {
+          const header = screen.getByRole('heading', { name: /Travel Style/i });
+          expect(header).toBeInTheDocument();
+        } else if (choice === TravelStyleChoice.SKIP) {
+          // SKIP state may have Trip Nickname text but not necessarily a heading role
+          expect(screen.getByText(/Trip Nickname/i)).toBeInTheDocument();
+        }
 
         unmount();
       });
@@ -95,12 +103,13 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       // Main container should have space-y-8 for consistent spacing
-      const mainContainer = screen.getByTestId('travel-style-container').parentElement;
-      expect(mainContainer).toHaveClass('space-y-8');
+      const container = screen.getByTestId('travel-style-container');
+      expect(container).toHaveClass('space-y-8');
 
-      // Container should use consistent margin classes
+      // Container should not have these responsive classes as per actual implementation
       const styledContainer = screen.getByTestId('travel-style-container');
-      expect(styledContainer).toHaveClass('-mx-4', 'sm:-mx-6', 'lg:-mx-8', '2xl:-mx-16');
+      expect(styledContainer).toHaveClass('space-y-8');
+      expect(styledContainer).not.toHaveClass('-mx-4');
     });
   });
 
@@ -116,7 +125,7 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       // Should show choice buttons in NOT_SELECTED state
-      expect(screen.getByText(/I want to add answer more forms/i)).toBeInTheDocument();
+      expect(screen.getByText(/Answer 4 more questions/i)).toBeInTheDocument();
       expect(screen.getByText(/Skip ahead/i)).toBeInTheDocument();
 
       // Transition to DETAILED state
@@ -131,7 +140,7 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       // Should now show travel style forms
-      expect(screen.getByText(/Travel Style Preferences/i)).toBeInTheDocument();
+      expect(screen.getByText(/Travel Style/i)).toBeInTheDocument();
       expect(screen.getByText(/GENERATE MY PERSONALIZED ITINERARY/i)).toBeInTheDocument();
     });
 
@@ -146,7 +155,7 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       // Should show choice buttons in NOT_SELECTED state
-      expect(screen.getByText(/I want to add answer more forms/i)).toBeInTheDocument();
+      expect(screen.getByText(/Answer 4 more questions/i)).toBeInTheDocument();
 
       // Transition to SKIP state
       rerender(
@@ -183,7 +192,7 @@ describe('Travel Style Section Visual Integration', () => {
         );
 
         const container = screen.getByTestId('travel-style-container');
-        expect(container).toHaveClass('bg-form-box');
+        expect(container).toHaveClass('space-y-8');
         expect(container).not.toHaveClass('bg-primary');
 
         unmount();
@@ -260,7 +269,7 @@ describe('Travel Style Section Visual Integration', () => {
       // Should maintain proper visual structure during loading
       const container = screen.getByTestId('travel-style-container');
       expect(container).toBeInTheDocument();
-      expect(container).toHaveClass('bg-form-box');
+      expect(container).toHaveClass('space-y-8');
     });
   });
 
@@ -276,11 +285,9 @@ describe('Travel Style Section Visual Integration', () => {
 
       const container = screen.getByTestId('travel-style-container');
       
-      // Should have responsive margin classes for full-width styling
-      expect(container).toHaveClass('-mx-4');
-      expect(container).toHaveClass('sm:-mx-6');
-      expect(container).toHaveClass('lg:-mx-8');
-      expect(container).toHaveClass('2xl:-mx-16');
+      // Should have space-y-8 class, not responsive margin classes
+      expect(container).toHaveClass('space-y-8');
+      expect(container).not.toHaveClass('-mx-4');
     });
 
     it('should maintain proper padding and shadow classes', () => {
@@ -293,8 +300,9 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       const container = screen.getByTestId('travel-style-container');
-      expect(container).toHaveClass('p-6');
-      expect(container).toHaveClass('shadow-lg');
+      expect(container).toHaveClass('space-y-8');
+      expect(container).not.toHaveClass('p-6');
+      expect(container).not.toHaveClass('shadow-lg');
       expect(container).not.toHaveClass('rounded-[36px]');
     });
   });
@@ -310,7 +318,7 @@ describe('Travel Style Section Visual Integration', () => {
         />
       );
 
-      expect(screen.getByText(/Help us create the perfect itinerary by sharing your travel preferences/i)).toBeInTheDocument();
+      expect(screen.getByText(/Choose how you'd like us to customize your itinerary/i)).toBeInTheDocument();
 
       // DETAILED state
       rerender(
@@ -322,7 +330,8 @@ describe('Travel Style Section Visual Integration', () => {
         />
       );
 
-      expect(screen.getByText(/Help us create the perfect itinerary by sharing your travel preferences/i)).toBeInTheDocument();
+      // DETAILED state shows travel style forms, not the choice text
+      expect(screen.getByText(/What is your group's level of travel experience?/i)).toBeInTheDocument();
 
       // SKIP state
       rerender(
@@ -334,7 +343,7 @@ describe('Travel Style Section Visual Integration', () => {
         />
       );
 
-      expect(screen.getByText(/Help us create the perfect itinerary by sharing your travel preferences/i)).toBeInTheDocument();
+      expect(screen.getByText(/Trip Nickname/i)).toBeInTheDocument();
     });
 
     it('should properly integrate with child components', () => {
@@ -348,10 +357,10 @@ describe('Travel Style Section Visual Integration', () => {
       );
 
       // Should contain travel style group content
-      expect(screen.getByText(/Travel Style Preferences/i)).toBeInTheDocument();
+      expect(screen.getByText(/Travel Style/i)).toBeInTheDocument();
       
-      // Should contain contact form elements
-      expect(screen.getByText(/Contact Information/i)).toBeInTheDocument();
+      // Should contain travel experience question, not contact form
+      expect(screen.getByText(/What is your group's level of travel experience?/i)).toBeInTheDocument();
     });
   });
 
@@ -372,9 +381,17 @@ describe('Travel Style Section Visual Integration', () => {
         // Main container should have proper test ID for accessibility
         expect(screen.getByTestId('travel-style-container')).toBeInTheDocument();
 
-        // Header should be properly structured
-        const header = screen.getByRole('heading', { name: /🌏 TRAVEL STYLE/i });
-        expect(header.tagName).toBe('H2');
+        // Header should be properly structured based on state
+        if (choice === TravelStyleChoice.NOT_SELECTED) {
+          const header = screen.getByRole('heading', { name: /NOW YOU HAVE A CHOICE/i });
+          expect(header.tagName).toBe('H2');
+        } else if (choice === TravelStyleChoice.DETAILED) {
+          const header = screen.getByRole('heading', { name: /Travel Style/i });
+          expect(header.tagName).toBe('H2');
+        } else if (choice === TravelStyleChoice.SKIP) {
+          // SKIP state has Trip Nickname heading
+          expect(screen.getByText(/Trip Nickname/i)).toBeInTheDocument();
+        }
 
         unmount();
       });

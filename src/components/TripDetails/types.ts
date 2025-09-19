@@ -6,14 +6,40 @@ export type BudgetMode = 'total' | 'per-person';
 
 // Use the validated FormData from schemas
 export type FormData = TripDetailsFormData & {
-  // Additional fields for new components
+  // Budget Configuration (T001)
+  budgetMode?: BudgetMode;
+  
+  // Travel Group Selection (T001)
   selectedGroups?: string[];
-  selectedInterests?: string[];
-  selectedInclusions?: string[];
   customGroupText?: string;
+  
+  // Travel Interest Selection (T001)
+  selectedInterests?: string[];
   customInterestsText?: string;
+  
+  // Itinerary Inclusion Selection (T001)
+  selectedInclusions?: string[];
   customInclusionsText?: string;
   inclusionPreferences?: Record<string, any>;
+  
+  // Travel Style Comprehensive Data (T001)
+  travelExperience?: string[];
+  customTravelExperienceText?: string;
+  tripVibes?: string[];
+  customVibeText?: string;
+  selectedTripVibes?: string[];
+  otherTripVibeText?: string;
+  selectedSampleDays?: string[];
+  otherSampleDaysText?: string;
+  selectedDinnerChoices?: string[];
+  otherDinnerChoiceText?: string;
+  sampleDays?: string[];
+  dinnerPreferences?: string[];
+  
+  // Simplified Contact Information (T001)
+  tripNickname?: string;
+  contactName?: string;
+  contactEmail?: string;
 };
 
 // Travel Group interfaces
@@ -106,7 +132,7 @@ export const TRAVEL_GROUPS: TravelGroup[] = [
   { id: 'solo', label: 'Solo', emoji: '🥾' },
   { id: 'friends', label: 'Friends', emoji: '👯' },
   { id: 'large-group', label: 'Large\nGroup', emoji: '🚌' },
-  { id: 'extended', label: 'Extended\nFamily', emoji: '🏘️' },
+  { id: 'extended', label: 'Family with\nRelatives', emoji: '🏘️' },
   { id: 'business', label: 'Business\nAssociates', emoji: '💼' },
   { id: 'other', label: 'Other', emoji: '✨' },
 ];
@@ -146,5 +172,7 @@ export const ITINERARY_INCLUSIONS: ItineraryInclusion[] = [
   { id: 'nature', label: 'Nature', emoji: '🌲' },
   { id: 'train', label: 'Train Tickets', emoji: '🚆' },
   { id: 'cruise', label: 'Cruise', emoji: '🛳️' },
+  { id: 'local-transport', label: 'Local Transportation', emoji: '🚌' },
+  { id: 'wellness', label: 'Spa & Wellness', emoji: '🧘' },
   { id: 'other', label: 'Other', emoji: '✨' },
 ];

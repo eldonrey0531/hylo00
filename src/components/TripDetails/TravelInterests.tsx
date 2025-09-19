@@ -76,7 +76,7 @@ const TravelInterests: React.FC<BaseFormProps> = ({ formData, onFormChange }) =>
                     : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                 }
               `}
-              aria-label={`Toggle ${option.label} interest`}
+              aria-label={`Select ${option.label.replace('\n', ' ')} interest`}
               aria-pressed={isSelected}
             >
               <span className="text-xl">{option.emoji}</span>
@@ -105,7 +105,7 @@ const TravelInterests: React.FC<BaseFormProps> = ({ formData, onFormChange }) =>
           <textarea
             value={localOtherText}
             onChange={(e) => handleOtherTextChange(e.target.value)}
-            placeholder="Example: Photography, cooking classes, wine tasting, etc."
+            placeholder="Specify your interests: photography, cooking classes, wine tasting, etc."
             className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold text-sm"
             rows={3}
             aria-label="Describe other interests"

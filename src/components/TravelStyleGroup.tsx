@@ -75,9 +75,9 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
     <div className="space-y-8">
       <div className="text-center mb-6 bg-[#f9dd8b] p-6">
         <h2 className="text-2xl font-bold text-primary font-raleway mb-2">
-          🌏Travel Style Preferences
+          🌏 Travel Style
         </h2>
-        <p className="text-gray-600">Let's customize your trip experience</p>
+        <p className="text-gray-600">Answer with this group and trip in mind.</p>
       </div>
 
       <div className="bg-form-box rounded-[20px] p-6">

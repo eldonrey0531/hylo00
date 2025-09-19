@@ -18,7 +18,9 @@ const setupStylingMatchers = () => {
       };
     },
     toHaveClass: (element: Element, expectedClass: string) => {
-      const pass = element.className.includes(expectedClass);
+      // Use getAttribute('class') as the most reliable way to get class names
+      const className = element.getAttribute('class') || '';
+      const pass = className.includes(expectedClass);
       return {
         message: () => `expected element to have class ${expectedClass}`,
         pass,

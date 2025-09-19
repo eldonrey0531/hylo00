@@ -57,8 +57,7 @@ const TripNickname: React.FC<TripNicknameProps> = ({
             Email
           </label>
           <p
-            className="text-xs font-bold font-raleway mb-2"
-            style={{ color: '#406170' }}
+            className="text-xs font-bold font-raleway mb-2 text-primary"
           >
             We'll use this to send you your itinerary
           </p>
@@ -83,8 +82,8 @@ const TripNickname: React.FC<TripNicknameProps> = ({
             <div
               className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 ${
                 contactInfo.subscribe !== false
-                  ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
-                  : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
+                  ? 'bg-[#f68854] border-[#f68854] after:bg-white after:border-[#ece8de] after:border'
+                  : 'bg-[#ece8de] border-primary border-2 after:bg-[#f68854] after:border-[#ece8de] after:border-2'
               }`}
             ></div>
           </label>

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 // Base schemas for reusability
 const currencyEnum = z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD']);
+const budgetModeEnum = z.enum(['total', 'per-person']); // T002: Added budget mode enum
 const travelStyleEnum = z.enum(['answer-questions', 'skip-to-details', 'not-selected']);
 
 // Trip Details Schema with enhanced validation
@@ -47,6 +48,9 @@ export const tripDetailsSchema = z
 
     flexibleBudget: z.boolean().default(false),
 
+    // T002: Enhanced budget configuration
+    budgetMode: budgetModeEnum.default('total'),
+
     accommodationOther: z.string().max(500, 'Description too long').optional(),
 
     rentalCarPreferences: z.array(z.string()).max(5, 'Maximum 5 preferences').optional(),
@@ -54,6 +58,27 @@ export const tripDetailsSchema = z
     travelStyleChoice: travelStyleEnum.default('not-selected'),
 
     travelStyleAnswers: z.record(z.any()).optional(),
+
+    // T002: Enhanced selection fields
+    selectedGroups: z.array(z.string()).optional(),
+    customGroupText: z.string().max(200, 'Custom group text too long').optional(),
+    selectedInterests: z.array(z.string()).optional(),
+    customInterestsText: z.string().max(200, 'Custom interest text too long').optional(),
+    selectedInclusions: z.array(z.string()).optional(),
+    customInclusionsText: z.string().max(200, 'Custom inclusion text too long').optional(),
+    inclusionPreferences: z.record(z.any()).optional(),
+    
+    // T002: Travel style comprehensive data
+    travelExperience: z.array(z.string()).optional(),
+    tripVibes: z.array(z.string()).optional(),
+    customVibeText: z.string().max(200, 'Custom vibe text too long').optional(),
+    sampleDays: z.array(z.string()).optional(),
+    dinnerPreferences: z.array(z.string()).optional(),
+    
+    // T002: Simplified contact information
+    tripNickname: z.string().max(100, 'Trip nickname too long').optional(),
+    contactName: z.string().max(50, 'Contact name too long').optional(),
+    contactEmail: z.string().email('Invalid email format').optional(),
   })
   .superRefine((data, ctx) => {
     // Cross-field validation for children ages
