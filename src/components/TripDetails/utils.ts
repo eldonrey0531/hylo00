@@ -64,7 +64,7 @@ export const dateUtils = {
     if (!start || !end) return null;
 
     const timeDiff = end.getTime() - start.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // Include departure day
 
     return daysDiff > 0 ? daysDiff : null;
   },

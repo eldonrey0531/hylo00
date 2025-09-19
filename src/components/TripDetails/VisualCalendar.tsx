@@ -28,6 +28,8 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
     return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   });
 
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -77,6 +79,18 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
     const startDate = selectedDate < selectedEndDate ? selectedDate : selectedEndDate;
     const endDate = selectedDate > selectedEndDate ? selectedDate : selectedEndDate;
     return date > startDate && date < endDate;
+  };
+
+  const isDateInHoverRange = (date: Date) => {
+    if (!enableRangeSelection || !selectedDate || selectedEndDate || !hoveredDate) return false;
+    const startDate = selectedDate < hoveredDate ? selectedDate : hoveredDate;
+    const endDate = selectedDate > hoveredDate ? selectedDate : hoveredDate;
+    return date > startDate && date < endDate;
+  };
+
+  const isHoveredEndDate = (date: Date) => {
+    if (!enableRangeSelection || !selectedDate || selectedEndDate || !hoveredDate) return false;
+    return date.toDateString() === hoveredDate.toDateString();
   };
 
   const isDateHighlighted = (date: Date) => {
@@ -140,6 +154,8 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
           const isSelected = isDateSelected(date);
           const isEndSelected = isDateEndSelected(date);
           const isInRange = isDateInRange(date);
+          const isInHoverRange = isDateInHoverRange(date);
+          const isHoveredEnd = isHoveredEndDate(date);
           const isHighlighted = isDateHighlighted(date);
           const isDisabled = isDateDisabled(date);
           const isToday = date.toDateString() === today.toDateString();
@@ -149,6 +165,8 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
             <button
               key={index}
               onClick={() => handleDateClick(date)}
+              onMouseEnter={() => !isDisabled && setHoveredDate(date)}
+              onMouseLeave={() => setHoveredDate(null)}
               disabled={isDisabled}
               className={`
                 h-10 w-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200
@@ -158,6 +176,10 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
                   ? 'bg-primary text-white font-bold'
                   : isInRange
                   ? 'bg-primary/30 text-primary'
+                  : isInHoverRange
+                  ? 'bg-primary/15 text-primary animate-pulse'
+                  : isHoveredEnd
+                  ? 'bg-primary/25 text-primary ring-2 ring-primary/40 animate-pulse'
                   : isHighlighted
                   ? 'bg-primary/20 text-primary'
                   : isToday && isInCurrentMonth
