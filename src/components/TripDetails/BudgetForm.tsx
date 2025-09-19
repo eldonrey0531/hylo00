@@ -43,12 +43,11 @@ const BudgetForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
     const totalTravelers = (formData.adults || 1) + (formData.children || 0);
     
     if (budgetMode === 'per-person' && totalTravelers > 0) {
-      const perPersonAmount = Math.round(budgetRange / totalTravelers);
+      // Show the same amount as total budget, not divided by travelers
       if (budgetRange >= MAX_BUDGET) {
-        const perPersonMax = Math.round(MAX_BUDGET / totalTravelers);
-        return `${symbol}${perPersonMax.toLocaleString()}+`;
+        return `${symbol}10,000+`;
       }
-      return `${symbol}${perPersonAmount.toLocaleString()}`;
+      return `${symbol}${budgetRange.toLocaleString()}`;
     } else {
       if (budgetRange >= MAX_BUDGET) {
         return `${symbol}10,000+`;

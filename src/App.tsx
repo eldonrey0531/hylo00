@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { generateItinerary, TravelFormData, AgentLog } from './services/groqService';
+import { TravelFormData, AgentLog } from './services/groqService';
 import TripDetails from './components/TripDetails';
 import { FormData } from './components/TripDetails/types';
 import ConditionalTravelStyle from './components/ConditionalTravelStyle';
@@ -21,6 +21,7 @@ function App() {
     budget: 5000,
     currency: 'USD',
     flexibleBudget: false,
+    budgetMode: 'total', // Add the missing budgetMode property
     travelStyleChoice: 'not-selected',
     travelStyleAnswers: {},
     // Additional fields for new components
@@ -76,12 +77,47 @@ function App() {
     setAgentLogs([]); // Clear previous logs
 
     try {
-      const result = await generateItinerary(travelData, (logs) => {
-        setAgentLogs(logs);
-      });
+      // Instead of calling AI/LLM, display the gathered form data
+      const formDataDisplay = JSON.stringify(travelData, null, 2);
+      const debugItinerary = `
+# Gathered Form Data for Review
 
-      setGeneratedItinerary(result.itinerary);
-      setAgentLogs(result.logs);
+## Trip Details
+${JSON.stringify(travelData.tripDetails, null, 2)}
+
+## Travel Preferences
+- **Groups**: ${JSON.stringify(travelData.groups)}
+- **Interests**: ${JSON.stringify(travelData.interests)}
+- **Inclusions**: ${JSON.stringify(travelData.inclusions)}
+- **Experience Level**: ${JSON.stringify(travelData.experience)}
+- **Vibes**: ${JSON.stringify(travelData.vibes)}
+- **Sample Days**: ${JSON.stringify(travelData.sampleDays)}
+- **Dinner Choices**: ${JSON.stringify(travelData.dinnerChoices)}
+
+## Contact Information
+- **Trip Nickname**: ${travelData.nickname}
+- **Contact**: ${JSON.stringify(travelData.contact)}
+
+---
+
+**Note**: This is a debug view showing all collected form data. AI/LLM functionality has been temporarily disabled.
+
+## Complete Data Object
+\`\`\`json
+${formDataDisplay}
+\`\`\`
+      `;
+
+      setGeneratedItinerary(debugItinerary);
+      setAgentLogs([{
+        agentId: 0,
+        agentName: 'Form Data Collector',
+        model: 'Debug Mode',
+        timestamp: new Date().toISOString(),
+        input: 'Form data collection request',
+        output: 'Successfully gathered all form fields',
+        decisions: ['Form data collected', 'AI/LLM functionality disabled for debugging']
+      }]);
 
       // Smooth scroll to the itinerary after a short delay
       setTimeout(() => {
@@ -91,9 +127,9 @@ function App() {
         });
       }, 100);
     } catch (error) {
-      console.error('Error generating itinerary:', error);
+      console.error('Error displaying form data:', error);
       setGenerationError(
-        'Sorry, we encountered an error generating your itinerary. Please try again.'
+        'Sorry, we encountered an error displaying the form data. Please try again.'
       );
     } finally {
       setIsGenerating(false);
