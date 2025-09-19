@@ -4,20 +4,24 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface VisualCalendarProps {
   selectedDate?: Date | null | undefined;
+  selectedEndDate?: Date | null | undefined;
   onDateSelect: (date: Date) => void;
   minDate?: Date;
   maxDate?: Date;
   highlightedDates?: Date[];
   className?: string;
+  enableRangeSelection?: boolean;
 }
 
 export const VisualCalendar: React.FC<VisualCalendarProps> = ({
   selectedDate,
+  selectedEndDate,
   onDateSelect,
   minDate,
   maxDate,
   highlightedDates = [],
   className = '',
+  enableRangeSelection = false,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (selectedDate) return new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
@@ -61,6 +65,18 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
   const isDateSelected = (date: Date) => {
     if (!selectedDate) return false;
     return date.toDateString() === selectedDate.toDateString();
+  };
+
+  const isDateEndSelected = (date: Date) => {
+    if (!selectedEndDate) return false;
+    return date.toDateString() === selectedEndDate.toDateString();
+  };
+
+  const isDateInRange = (date: Date) => {
+    if (!enableRangeSelection || !selectedDate || !selectedEndDate) return false;
+    const startDate = selectedDate < selectedEndDate ? selectedDate : selectedEndDate;
+    const endDate = selectedDate > selectedEndDate ? selectedDate : selectedEndDate;
+    return date > startDate && date < endDate;
   };
 
   const isDateHighlighted = (date: Date) => {
@@ -122,6 +138,8 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
       <div className="grid grid-cols-7 gap-1">
         {daysInMonth.map((date, index) => {
           const isSelected = isDateSelected(date);
+          const isEndSelected = isDateEndSelected(date);
+          const isInRange = isDateInRange(date);
           const isHighlighted = isDateHighlighted(date);
           const isDisabled = isDateDisabled(date);
           const isToday = date.toDateString() === today.toDateString();
@@ -136,8 +154,10 @@ export const VisualCalendar: React.FC<VisualCalendarProps> = ({
                 h-10 w-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200
                 ${isDisabled
                   ? 'text-gray-300 cursor-not-allowed'
-                  : isSelected
+                  : isSelected || isEndSelected
                   ? 'bg-primary text-white font-bold'
+                  : isInRange
+                  ? 'bg-primary/30 text-primary'
                   : isHighlighted
                   ? 'bg-primary/20 text-primary'
                   : isToday && isInCurrentMonth

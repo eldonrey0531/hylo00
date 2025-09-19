@@ -19,7 +19,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   departDate,
   returnDate,
   onDatesChange,
-  disabled = false,
 }) => {
   const [localDepartDate, setLocalDepartDate] = useState(departDate);
   const [localReturnDate, setLocalReturnDate] = useState(returnDate);
@@ -49,6 +48,38 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     }
   }, [departDate, returnDate, isOpen]);
 
+  const formatDate = (date: Date | undefined): string => {
+    if (!date) return 'Select date';
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const handleCalendarDateSelect = (date: Date) => {
+    // If no departure date is set, or if both dates are set, start fresh with departure
+    if (!selectedDepartDate || (selectedDepartDate && selectedReturnDate)) {
+      setSelectedDepartDate(date);
+      setSelectedReturnDate(undefined);
+      setLocalDepartDate(dateUtils.formatToMMDDYY(date));
+      setLocalReturnDate('');
+    } else if (selectedDepartDate && !selectedReturnDate) {
+      // If departure is set but not return, set return date
+      // Ensure return is not before departure
+      if (date >= selectedDepartDate) {
+        setSelectedReturnDate(date);
+        setLocalReturnDate(dateUtils.formatToMMDDYY(date));
+      } else {
+        // If selected date is before departure, make it the new departure
+        setSelectedDepartDate(date);
+        setSelectedReturnDate(undefined);
+        setLocalDepartDate(dateUtils.formatToMMDDYY(date));
+        setLocalReturnDate('');
+      }
+    }
+  };
+
   // Validate dates
   const validateDates = useCallback(() => {
     const newErrors: { departDate?: string; returnDate?: string } = {};
@@ -75,24 +106,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   }, [localDepartDate, localReturnDate]);
 
   // Handle departure date selection from calendar
-  const handleDepartDateSelect = useCallback((date: Date) => {
-    const formattedDate = dateUtils.formatToMMDDYY(date);
-    setLocalDepartDate(formattedDate);
-    setSelectedDepartDate(date);
+  // This function is replaced by handleCalendarDateSelect for range selection
 
-    // Clear return date if it becomes invalid
-    if (localReturnDate && !dateUtils.isReturnDateValid(formattedDate, localReturnDate)) {
-      setLocalReturnDate('');
-      setSelectedReturnDate(undefined);
-    }
-  }, [localReturnDate]);
-
-  // Handle return date selection from calendar
-  const handleReturnDateSelect = useCallback((date: Date) => {
-    const formattedDate = dateUtils.formatToMMDDYY(date);
-    setLocalReturnDate(formattedDate);
-    setSelectedReturnDate(date);
-  }, []);
+  // Handle return date selection from calendar  
+  // This function is replaced by handleCalendarDateSelect for range selection
 
   // Handle save
   const handleSave = useCallback(() => {
@@ -138,46 +155,50 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
         {/* Content */}
         <div className="p-6">
-          {/* Calendar Grid - 2 Columns */}
+          {/* Date Selection Headers */}
           <div className="grid grid-cols-2 gap-6 mb-6">
-            {/* Departure Calendar */}
-            <div>
-              <h4 className="text-lg font-bold text-primary mb-3 font-raleway text-center">
+            {/* Departure Date Display */}
+            <div className="text-center">
+              <h4 className="text-lg font-bold text-primary mb-2 font-raleway">
                 Departure Date *
               </h4>
-              <VisualCalendar
-                selectedDate={selectedDepartDate}
-                onDateSelect={handleDepartDateSelect}
-                minDate={new Date()}
-                highlightedDates={selectedReturnDate ? [selectedReturnDate] : []}
-                className="w-full"
-              />
+              <div className={`py-3 px-4 border-3 rounded-[10px] ${selectedDepartDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
+                <span className={`font-bold font-raleway ${selectedDepartDate ? 'text-primary' : 'text-gray-500'}`}>
+                  {selectedDepartDate ? formatDate(selectedDepartDate) : 'Select date'}
+                </span>
+              </div>
               {errors.departDate && (
-                <p className="text-red-500 text-sm mt-2 font-raleway text-center">{errors.departDate}</p>
+                <p className="text-red-500 text-sm mt-2 font-raleway">{errors.departDate}</p>
               )}
             </div>
 
-            {/* Return Calendar */}
-            <div>
-              <h4 className="text-lg font-bold text-primary mb-3 font-raleway text-center">
+            {/* Return Date Display */}
+            <div className="text-center">
+              <h4 className="text-lg font-bold text-primary mb-2 font-raleway">
                 Return Date (Optional)
               </h4>
-              <VisualCalendar
-                selectedDate={selectedReturnDate}
-                onDateSelect={handleReturnDateSelect}
-                minDate={selectedDepartDate ? new Date(selectedDepartDate.getTime() + 24 * 60 * 60 * 1000) : new Date()}
-                highlightedDates={selectedDepartDate ? [selectedDepartDate] : []}
-                className={`w-full ${!selectedDepartDate ? 'opacity-50' : ''}`}
-              />
+              <div className={`py-3 px-4 border-3 rounded-[10px] ${selectedReturnDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
+                <span className={`font-bold font-raleway ${selectedReturnDate ? 'text-primary' : 'text-gray-500'}`}>
+                  {selectedReturnDate ? formatDate(selectedReturnDate) : 'Select date'}
+                </span>
+              </div>
               {errors.returnDate && (
-                <p className="text-red-500 text-sm mt-2 font-raleway text-center">{errors.returnDate}</p>
-              )}
-              {!selectedDepartDate && (
-                <p className="text-gray-500 text-sm mt-2 font-raleway text-center">
-                  Select departure date first
-                </p>
+                <p className="text-red-500 text-sm mt-2 font-raleway">{errors.returnDate}</p>
               )}
             </div>
+          </div>
+
+          {/* Single Calendar with Range Selection */}
+          <div className="flex justify-center mb-6">
+            <VisualCalendar
+              selectedDate={selectedDepartDate}
+              selectedEndDate={selectedReturnDate}
+              onDateSelect={handleCalendarDateSelect}
+              minDate={new Date()}
+              highlightedDates={[]}
+              className="w-full max-w-md"
+              enableRangeSelection={true}
+            />
           </div>
 
           {/* Trip Duration Display */}

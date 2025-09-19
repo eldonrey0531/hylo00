@@ -172,7 +172,5 @@ export const ITINERARY_INCLUSIONS: ItineraryInclusion[] = [
   { id: 'nature', label: 'Nature', emoji: '🌲' },
   { id: 'train', label: 'Train Tickets', emoji: '🚆' },
   { id: 'cruise', label: 'Cruise', emoji: '🛳️' },
-  { id: 'local-transport', label: 'Local Transportation', emoji: '🚌' },
-  { id: 'wellness', label: 'Spa & Wellness', emoji: '🧘' },
   { id: 'other', label: 'Other', emoji: '✨' },
 ];

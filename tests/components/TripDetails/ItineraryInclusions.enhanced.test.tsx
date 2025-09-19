@@ -43,8 +43,6 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
       expect(screen.getByText('Nature')).toBeInTheDocument();
       expect(screen.getByText('Train Tickets')).toBeInTheDocument();
       expect(screen.getByText('Cruise')).toBeInTheDocument();
-      expect(screen.getByText('Local Transportation')).toBeInTheDocument();
-      expect(screen.getByText('Spa & Wellness')).toBeInTheDocument();
       expect(screen.getByText('Other')).toBeInTheDocument();
       
       // Check for emojis
@@ -57,8 +55,6 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
       expect(screen.getByText('🌲')).toBeInTheDocument();
       expect(screen.getByText('🚆')).toBeInTheDocument();
       expect(screen.getByText('🛳️')).toBeInTheDocument();
-      expect(screen.getByText('🚌')).toBeInTheDocument();
-      expect(screen.getByText('🧘')).toBeInTheDocument();
       expect(screen.getByText('✨')).toBeInTheDocument();
     });
 
@@ -111,11 +107,11 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
 
       const flightsButton = screen.getByLabelText('Toggle Flights inclusion');
       const activitiesButton = screen.getByLabelText('Toggle Activities & Tours inclusion');
-      const wellnessButton = screen.getByLabelText('Toggle Spa & Wellness inclusion');
+      const diningButton = screen.getByLabelText('Toggle Dining inclusion');
 
       fireEvent.click(flightsButton);
       fireEvent.click(activitiesButton);
-      fireEvent.click(wellnessButton);
+      fireEvent.click(diningButton);
 
       // Each click calls onFormChange separately since props don't update in test
       expect(mockOnFormChange).toHaveBeenNthCalledWith(1, {
@@ -125,7 +121,7 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
         selectedInclusions: ['activities']
       });
       expect(mockOnFormChange).toHaveBeenNthCalledWith(3, {
-        selectedInclusions: ['wellness']
+        selectedInclusions: ['dining']
       });
     });
   });
@@ -200,8 +196,9 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
       const otherButton = screen.getByLabelText('Toggle Other inclusion');
       fireEvent.click(otherButton);
       
-      expect(mockOnFormChange).toHaveBeenCalledWith({
-        selectedInclusions: ['other'] // Each click operates on original formData in tests
+      // The final call should include all previous selections plus 'other'
+      expect(mockOnFormChange).toHaveBeenLastCalledWith({
+        selectedInclusions: ['flights', 'accommodations', 'other']
       });
     });
   });
@@ -252,16 +249,12 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
   });
 
   describe('Complete Inclusion Options', () => {
-    it('should include all 12 itinerary inclusion options', () => {
+    it('should include all 10 itinerary inclusion options', () => {
       render(<ItineraryInclusions formData={mockFormData} onFormChange={mockOnFormChange} />);
       
-      // Count all buttons (should be 12)
+      // Count all buttons (should be 10)
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(12);
-      
-      // Verify specific new additions
-      expect(screen.getByLabelText('Toggle Local Transportation inclusion')).toBeInTheDocument();
-      expect(screen.getByLabelText('Toggle Spa & Wellness inclusion')).toBeInTheDocument();
+      expect(buttons).toHaveLength(10);
     });
   });
 
@@ -278,8 +271,6 @@ describe('ItineraryInclusions Enhanced - 12 Options with Choices and Preferences
       expect(screen.getByLabelText('Toggle Nature inclusion')).toBeInTheDocument();
       expect(screen.getByLabelText('Toggle Train Tickets inclusion')).toBeInTheDocument();
       expect(screen.getByLabelText('Toggle Cruise inclusion')).toBeInTheDocument();
-      expect(screen.getByLabelText('Toggle Local Transportation inclusion')).toBeInTheDocument();
-      expect(screen.getByLabelText('Toggle Spa & Wellness inclusion')).toBeInTheDocument();
       expect(screen.getByLabelText('Toggle Other inclusion')).toBeInTheDocument();
     });
 
