@@ -48,7 +48,7 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
 
   return (
     <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
-      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4 rounded-t-[33px]">
+      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4 rounded-b-[20px]">
         <span className="text-2xl">🚗</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Rental Car Preferences
@@ -80,7 +80,7 @@ const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
 
         {/* Special Requirements */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
             (Optional) Special requirements or preferences
           </label>
           <textarea
