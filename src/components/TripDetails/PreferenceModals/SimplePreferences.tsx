@@ -31,8 +31,8 @@ const SimplePreferences: React.FC<SimplePreferencesProps> = ({
   }, [text]);
 
   return (
-    <div className="w-full bg-[#b0c29b] rounded-[36px] py-6 border-3 border-gray-200">
-      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4 rounded-b-[20px]">
+    <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
+      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4 rounded-t-[33px]">
         <span className="text-2xl">{emoji}</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           {title}
@@ -41,7 +41,10 @@ const SimplePreferences: React.FC<SimplePreferencesProps> = ({
 
       <div className="px-6 bg-[#b0c29b]">
         <label className="block text-primary font-bold font-raleway text-base mb-3">
+                <div>
+        <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
           (Optional) Help us understand the types of {title.toLowerCase().replace(' preferences', '')} to include
+        </label>
         </label>
         <textarea
           value={text}
