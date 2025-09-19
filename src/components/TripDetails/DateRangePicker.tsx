@@ -137,12 +137,12 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[95vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-primary text-white px-6 py-4 rounded-t-2xl">
+        <div className="bg-primary text-white px-4 py-3 sm:px-6 sm:py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold font-raleway">Select Travel Dates</h3>
+            <h3 className="text-lg sm:text-xl font-bold font-raleway">Select Travel Dates</h3>
             <button
               onClick={handleCancel}
               className="p-1 hover:bg-primary-light rounded-full transition-colors duration-200"
@@ -154,51 +154,53 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {/* Date Selection Headers */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
             {/* Departure Date Display */}
             <div className="text-center">
-              <h4 className="text-lg font-bold text-primary mb-2 font-raleway">
+              <h4 className="text-base sm:text-lg font-bold text-primary mb-2 font-raleway">
                 Departure Date *
               </h4>
-              <div className={`py-3 px-4 border-3 rounded-[10px] ${selectedDepartDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
-                <span className={`font-bold font-raleway ${selectedDepartDate ? 'text-primary' : 'text-gray-500'}`}>
+              <div className={`py-2 sm:py-3 px-3 sm:px-4 border-3 rounded-[10px] ${selectedDepartDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
+                <span className={`text-sm sm:text-base font-bold font-raleway ${selectedDepartDate ? 'text-primary' : 'text-gray-500'}`}>
                   {selectedDepartDate ? formatDate(selectedDepartDate) : 'Select date'}
                 </span>
               </div>
               {errors.departDate && (
-                <p className="text-red-500 text-sm mt-2 font-raleway">{errors.departDate}</p>
+                <p className="text-red-500 text-xs sm:text-sm mt-2 font-raleway">{errors.departDate}</p>
               )}
             </div>
 
             {/* Return Date Display */}
             <div className="text-center">
-              <h4 className="text-lg font-bold text-primary mb-2 font-raleway">
+              <h4 className="text-base sm:text-lg font-bold text-primary mb-2 font-raleway">
                 Return Date (Optional)
               </h4>
-              <div className={`py-3 px-4 border-3 rounded-[10px] ${selectedReturnDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
-                <span className={`font-bold font-raleway ${selectedReturnDate ? 'text-primary' : 'text-gray-500'}`}>
+              <div className={`py-2 sm:py-3 px-3 sm:px-4 border-3 rounded-[10px] ${selectedReturnDate ? 'border-primary bg-primary/10' : 'border-gray-300 bg-gray-50'}`}>
+                <span className={`text-sm sm:text-base font-bold font-raleway ${selectedReturnDate ? 'text-primary' : 'text-gray-500'}`}>
                   {selectedReturnDate ? formatDate(selectedReturnDate) : 'Select date'}
                 </span>
               </div>
               {errors.returnDate && (
-                <p className="text-red-500 text-sm mt-2 font-raleway">{errors.returnDate}</p>
+                <p className="text-red-500 text-xs sm:text-sm mt-2 font-raleway">{errors.returnDate}</p>
               )}
             </div>
           </div>
 
           {/* Single Calendar with Range Selection */}
-          <div className="flex justify-center mb-6">
-            <VisualCalendar
-              selectedDate={selectedDepartDate}
-              selectedEndDate={selectedReturnDate}
-              onDateSelect={handleCalendarDateSelect}
-              minDate={new Date()}
-              highlightedDates={[]}
-              className="w-full max-w-md"
-              enableRangeSelection={true}
-            />
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="w-full max-w-sm sm:max-w-md">
+              <VisualCalendar
+                selectedDate={selectedDepartDate}
+                selectedEndDate={selectedReturnDate}
+                onDateSelect={handleCalendarDateSelect}
+                minDate={new Date()}
+                highlightedDates={[]}
+                className="w-full"
+                enableRangeSelection={true}
+              />
+            </div>
           </div>
 
           {/* Trip Duration Display */}
@@ -212,23 +214,23 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 rounded-b-2xl flex gap-3 justify-end">
+        <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-4 bg-gray-50 rounded-b-2xl flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-raleway font-bold transition-colors duration-200"
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-raleway font-bold transition-colors duration-200 text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!localDepartDate || Object.keys(errors).length > 0}
-            className={`px-6 py-2 rounded-lg font-raleway font-bold transition-all duration-200 flex items-center gap-2 ${
+            className={`px-4 sm:px-6 py-2 rounded-lg font-raleway font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
               !localDepartDate || Object.keys(errors).length > 0
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary-dark'
             }`}
           >
-            <Check className="h-4 w-4" />
+            <Check className="h-3 w-3 sm:h-4 sm:w-4" />
             Save Dates
           </button>
         </div>
