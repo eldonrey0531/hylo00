@@ -2,7 +2,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { BaseFormProps, MAX_PLANNED_DAYS } from './types';
-import { dateUtils } from './utils';
 import DateRangePicker from './DateRangePicker';
 
 const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
@@ -19,8 +18,11 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
       const updates: Partial<typeof formData> = { flexibleDates: checked };
 
       if (checked) {
+        // Clear specific dates when switching to flexible
+        updates.departDate = '';
         updates.returnDate = '';
       } else {
+        // Clear planned days when switching to specific dates
         delete updates.plannedDays;
       }
 
@@ -42,10 +44,45 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
     setIsDateRangePickerOpen(false);
   }, []);
 
+  // Calculate total days if both dates are provided
   const totalDays = formData.departDate && formData.returnDate 
-    ? dateUtils.calculateDaysBetween(formData.departDate, formData.returnDate) 
+    ? (() => {
+        try {
+          // Parse MM/DD/YY format
+          const departParts = formData.departDate.split('/');
+          const returnParts = formData.returnDate.split('/');
+          
+          if (departParts.length !== 3 || returnParts.length !== 3) return null;
+          
+          const departMonth = parseInt(departParts[0] || '');
+          const departDay = parseInt(departParts[1] || '');
+          const departYear = parseInt(departParts[2] || '');
+          const returnMonth = parseInt(returnParts[0] || '');
+          const returnDay = parseInt(returnParts[1] || '');
+          const returnYear = parseInt(returnParts[2] || '');
+          
+          // Validate parsed numbers
+          if (isNaN(departMonth) || isNaN(departDay) || isNaN(departYear) ||
+              isNaN(returnMonth) || isNaN(returnDay) || isNaN(returnYear)) {
+            return null;
+          }
+          
+          // Convert 2-digit year to 4-digit year (assuming 20xx)
+          const fullDepartYear = departYear < 50 ? 2000 + departYear : 1900 + departYear;
+          const fullReturnYear = returnYear < 50 ? 2000 + returnYear : 1900 + returnYear;
+          
+          const departDateObj = new Date(fullDepartYear, departMonth - 1, departDay);
+          const returnDateObj = new Date(fullReturnYear, returnMonth - 1, returnDay);
+          
+          const diffTime = returnDateObj.getTime() - departDateObj.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include departure day
+          
+          return diffDays > 0 ? diffDays : null;
+        } catch {
+          return null;
+        }
+      })()
     : null;
-  const isFlexibleDatesEnabled = localFlexibleDates;
 
   return (
     <div className="bg-form-box rounded-[36px] p-6 border-3 border-gray-200">
@@ -53,43 +90,50 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
         DATES
       </h3>
       
-      {/* Unified Date Range Section */}
-      {!isFlexibleDatesEnabled && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-primary font-bold font-raleway text-base">
-              Travel Dates
-            </span>
-            <button
-              type="button"
-              onClick={handleOpenDateRangePicker}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-200 font-raleway font-bold"
-              aria-label="Edit travel dates"
-            >
-              <Calendar className="h-4 w-4" />
-              Edit Dates
-            </button>
+      {/* Original Individual Date Inputs */}
+      {!localFlexibleDates && (
+        <div className="space-y-4 mb-6">
+          {/* Departure Date */}
+          <div>
+            <label className="block text-primary mb-2 font-bold font-raleway text-base">
+              Departure Date
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="MM/DD/YY"
+                value={formData.departDate || ''}
+                onClick={handleOpenDateRangePicker}
+                readOnly
+                className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
+                aria-label="Departure date"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+            </div>
           </div>
 
-          {/* Date Display */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white border-3 border-primary rounded-[10px] p-4">
-              <div className="text-sm text-primary font-raleway font-bold mb-1">Depart</div>
-              <div className="text-primary font-raleway font-bold text-lg">
-                {formData.departDate || 'Select date'}
-              </div>
-            </div>
-            <div className="bg-white border-3 border-primary rounded-[10px] p-4">
-              <div className="text-sm text-primary font-raleway font-bold mb-1">Return</div>
-              <div className="text-primary font-raleway font-bold text-lg">
-                {formData.returnDate || 'Optional'}
-              </div>
+          {/* Return Date */}
+          <div>
+            <label className="block text-primary mb-2 font-bold font-raleway text-base">
+              Return Date <span className="text-sm font-normal">(Optional)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="MM/DD/YY"
+                value={formData.returnDate || ''}
+                onClick={handleOpenDateRangePicker}
+                readOnly
+                className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
+                aria-label="Return date (optional)"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
             </div>
           </div>
 
           {/* Total Days Display */}
           {totalDays && (
-            <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
+            <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center">
               <span className="text-primary font-bold font-raleway text-base">Total days: </span>
               <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
                 <span className="font-bold text-primary font-raleway text-xl">{totalDays}</span>
@@ -99,32 +143,18 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {/* Legacy individual date inputs are replaced by unified date range picker above */}
-      </div>
-
-      {/* Old Total Days Display - now integrated above */}
-      {/* {totalDays && !isFlexibleDatesEnabled && (
-        <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center mt-4">
-          <span className="text-primary font-bold font-raleway text-base">Total days: </span>
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-white rounded-full border-3 border-primary ml-2">
-            <span className="font-bold text-primary font-raleway text-xl">{totalDays}</span>
-          </div>
-        </div>
-      )} */}
-
       {/* Flexible Dates Switch */}
-      <div className="flex items-center mt-4">
+      <div className="flex items-center mb-4">
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
-            checked={isFlexibleDatesEnabled}
+            checked={localFlexibleDates}
             onChange={(e) => handleFlexibleDatesChange(e.target.checked)}
             className="sr-only peer"
           />
           <div
             className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:rounded-full after:h-5 after:w-5 after:transition-all peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 mr-3 ${
-              isFlexibleDatesEnabled
+              localFlexibleDates
                 ? 'bg-primary border-primary after:bg-white after:border-[#ece8de] after:border'
                 : 'bg-[#ece8de] border-primary border-2 after:bg-primary after:border-[#ece8de] after:border-2'
             }`}
@@ -136,8 +166,8 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
       </div>
 
       {/* Flexible Dates Dropdown */}
-      {isFlexibleDatesEnabled && (
-        <div className="mt-4 transition-all duration-300 ease-in-out">
+      {localFlexibleDates && (
+        <div className="transition-all duration-300 ease-in-out">
           <label className="block text-primary mb-2 font-bold font-raleway text-base">
             How many days should we plan?
           </label>
@@ -171,14 +201,14 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
         </div>
       )}
 
-      {/* Date Range Picker Modal */}
+      {/* Enhanced Date Range Picker Modal - Flight booking style */}
       <DateRangePicker
         isOpen={isDateRangePickerOpen}
         onClose={handleCloseDateRangePicker}
         departDate={formData.departDate || ''}
         returnDate={formData.returnDate || ''}
         onDatesChange={handleDateRangeChange}
-        disabled={isFlexibleDatesEnabled}
+        disabled={localFlexibleDates}
       />
     </div>
   );
