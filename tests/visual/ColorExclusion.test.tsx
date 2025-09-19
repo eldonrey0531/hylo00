@@ -131,7 +131,7 @@ describe('Color Exclusion Enforcement', () => {
       });
     });
 
-    it('should validate ContactForm elements avoid bg-primary backgrounds', () => {
+    it('should validate TripNickname elements avoid bg-primary backgrounds', () => {
       render(
         <ConditionalTravelStyle
           choice={TravelStyleChoice.SKIP}
@@ -139,7 +139,7 @@ describe('Color Exclusion Enforcement', () => {
         />
       );
 
-      // Check contact form input fields
+      // Check trip nickname and contact form input fields
       const inputs = screen.getAllByRole('textbox');
       inputs.forEach(input => {
         expect(input).not.toHaveClass('bg-primary');

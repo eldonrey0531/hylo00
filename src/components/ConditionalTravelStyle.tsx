@@ -47,7 +47,7 @@ const ConditionalTravelStyle: React.FC<ConditionalTravelStyleProps> = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="travel-style-container">
       {choice === TravelStyleChoiceEnum.NOT_SELECTED && (
         <TravelStyleChoice onChoiceSelect={onChoiceChange} disabled={disabled} />
       )}
