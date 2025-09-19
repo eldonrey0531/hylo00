@@ -50,7 +50,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
       <div className="space-y-6 px-6 bg-[#b0c29b]">
         {/* Departure Airports */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             Traveler departure airport(s)
           </label>
           <input
@@ -64,7 +64,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Cabin Class */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             (Optional) Preferred cabin class (select all that apply)
           </label>
           <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Flight Preferences */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             (Optional) Flight or airline preferences
           </label>
           <textarea
