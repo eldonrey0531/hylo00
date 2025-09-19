@@ -90,44 +90,47 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange }) => {
         DATES
       </h3>
       
-      {/* Original Individual Date Inputs */}
+      {/* 2-Column Date Inputs with Calendar Icons */}
       {!localFlexibleDates && (
-        <div className="space-y-4 mb-6">
-          {/* Departure Date */}
-          <div>
-            <label className="block text-primary mb-2 font-bold font-raleway text-base">
-              Departure Date
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="MM/DD/YY"
-                value={formData.departDate || ''}
-                onClick={handleOpenDateRangePicker}
-                readOnly
-                className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
-                aria-label="Departure date"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+        <div className="mb-6">
+          {/* Date Inputs in 2-Column Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Departure Date */}
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                Departure Date
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="MM/DD/YY"
+                  value={formData.departDate || ''}
+                  onClick={handleOpenDateRangePicker}
+                  readOnly
+                  className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
+                  aria-label="Departure date"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+              </div>
             </div>
-          </div>
 
-          {/* Return Date */}
-          <div>
-            <label className="block text-primary mb-2 font-bold font-raleway text-base">
-              Return Date <span className="text-sm font-normal">(Optional)</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="MM/DD/YY"
-                value={formData.returnDate || ''}
-                onClick={handleOpenDateRangePicker}
-                readOnly
-                className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
-                aria-label="Return date (optional)"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+            {/* Return Date */}
+            <div>
+              <label className="block text-primary mb-2 font-bold font-raleway text-base">
+                Return Date <span className="text-sm font-normal">(Optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="MM/DD/YY"
+                  value={formData.returnDate || ''}
+                  onClick={handleOpenDateRangePicker}
+                  readOnly
+                  className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
+                  aria-label="Return date (optional)"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-primary pointer-events-none" />
+              </div>
             </div>
           </div>
 
