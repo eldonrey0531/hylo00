@@ -40,17 +40,17 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
   return (
     <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
-      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4 rounded-b-[20px]">
+      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
         <span className="text-2xl">✈️</span>
         <h3 className="text-xl font-bold text-white uppercase tracking-wide font-raleway">
           Flight Preferences
         </h3>
       </div>
 
-      <div className="space-y-6 px-6 bg-[#b0c29b]">
+      <div className="space-y-6 px-6 bg-[#b0c29b] rounded-b-[36px] pt-2">
         {/* Departure Airports */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             Traveler departure airport(s)
           </label>
           <input
@@ -64,7 +64,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Cabin Class */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             (Optional) Preferred cabin class (select all that apply)
           </label>
           <div className="flex flex-wrap gap-2">
@@ -91,7 +91,7 @@ const FlightPreferences: React.FC<FlightPreferencesProps> = ({
 
         {/* Flight Preferences */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] border-primary pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             (Optional) Flight or airline preferences
           </label>
           <textarea
