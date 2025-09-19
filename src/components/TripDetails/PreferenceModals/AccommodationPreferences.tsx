@@ -62,7 +62,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
       <div className="space-y-6 px-6 bg-[#b0c29b]">
         {/* Accommodation Types */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             Preferred accommodation type(s)
           </label>
           <p className="text-primary font-bold font-raleway text-xs mb-4">Select all that apply</p>
@@ -109,7 +109,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
 
         {/* Special Requests */}
         <div>
-          <label className="block text-primary font-bold font-raleway text-base mb-3 border-t-[2.5px] pt-3">
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
             (Optional) Special accommodation requests or preferred hotel brands
           </label>
           <textarea
