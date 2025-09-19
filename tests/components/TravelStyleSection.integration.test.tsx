@@ -72,13 +72,13 @@ describe('Travel Style Section Visual Integration', () => {
         // Travel style container should always be present with consistent styling
         const container = screen.getByTestId('travel-style-container');
         expect(container).toBeInTheDocument();
-        expect(container).toHaveClass('bg-trip-details');
+        expect(container).toHaveClass('bg-form-box');
         expect(container).toHaveClass('text-primary');
-        expect(container).toHaveClass('rounded-[36px]');
+        expect(container).not.toHaveClass('rounded-[36px]');
 
         // Header should be consistently styled across all states
         // Use getByRole to find the main heading specifically
-        const header = screen.getByRole('heading', { name: /\?\? TRAVEL STYLE/i });
+        const header = screen.getByRole('heading', { name: /🌏 TRAVEL STYLE/i });
         expect(header).toBeInTheDocument();
 
         unmount();
@@ -165,7 +165,7 @@ describe('Travel Style Section Visual Integration', () => {
   });
 
   describe('Background Color Consistency', () => {
-    it('should maintain bg-trip-details background across all states', () => {
+    it('should maintain bg-form-box background across all states', () => {
       const states = [
         TravelStyleChoice.NOT_SELECTED,
         TravelStyleChoice.DETAILED,
@@ -183,7 +183,7 @@ describe('Travel Style Section Visual Integration', () => {
         );
 
         const container = screen.getByTestId('travel-style-container');
-        expect(container).toHaveClass('bg-trip-details');
+        expect(container).toHaveClass('bg-form-box');
         expect(container).not.toHaveClass('bg-primary');
 
         unmount();
@@ -260,7 +260,7 @@ describe('Travel Style Section Visual Integration', () => {
       // Should maintain proper visual structure during loading
       const container = screen.getByTestId('travel-style-container');
       expect(container).toBeInTheDocument();
-      expect(container).toHaveClass('bg-trip-details');
+      expect(container).toHaveClass('bg-form-box');
     });
   });
 
@@ -295,7 +295,7 @@ describe('Travel Style Section Visual Integration', () => {
       const container = screen.getByTestId('travel-style-container');
       expect(container).toHaveClass('p-6');
       expect(container).toHaveClass('shadow-lg');
-      expect(container).toHaveClass('rounded-[36px]');
+      expect(container).not.toHaveClass('rounded-[36px]');
     });
   });
 
@@ -373,7 +373,7 @@ describe('Travel Style Section Visual Integration', () => {
         expect(screen.getByTestId('travel-style-container')).toBeInTheDocument();
 
         // Header should be properly structured
-        const header = screen.getByRole('heading', { name: /\?\? TRAVEL STYLE/i });
+        const header = screen.getByRole('heading', { name: /🌏 TRAVEL STYLE/i });
         expect(header.tagName).toBe('H2');
 
         unmount();
