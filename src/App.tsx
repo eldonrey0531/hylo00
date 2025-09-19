@@ -97,7 +97,7 @@ function App() {
           "inclusionPreferences": formData.inclusionPreferences
         },
         "7. Travel Style Questions": {
-          "travelStyleChoice": formData.travelStyleChoice,
+          "travelStyleChoice": travelStyleChoice,
           "experience": formData.travelStyleAnswers?.['experience'] || [],
           "vibes": formData.travelStyleAnswers?.['vibes'] || [],
           "vibesOther": formData.travelStyleAnswers?.['vibesOther'],
@@ -106,8 +106,8 @@ function App() {
         },
         "8. Contact & Trip Details": {
           "tripNickname": formData.travelStyleAnswers?.['tripNickname'] || tripNickname,
-          "contactName": (contactInfo as any)?.name || '',
-          "contactEmail": (contactInfo as any)?.email || ''
+          "contactName": (formData as any)?.contactInfo?.name || (contactInfo as any)?.name || '',
+          "contactEmail": (formData as any)?.contactInfo?.email || (contactInfo as any)?.email || ''
         }
       };
 
