@@ -1,5 +1,5 @@
 /**
- * ConditionalTravelStyle Component
+ * ConditionalTravelStyle
  * Feature: 003-group-travel-style
  * 
  * Manages conditional rendering based on user's travel style choice:
@@ -9,213 +9,102 @@
  */
 
 import React from 'react';
-import TravelStyleChoice from './TravelStyleChoice';
-import TravelExperience from './travel-style/TravelExperience';
-import TripVibe from './travel-style/TripVibe';
-import SampleDays from './travel-style/SampleDays';
-import DinnerChoice from './travel-style/DinnerChoice';
-import TripNickname from './travel-style/TripNickname';
-import { GenerateItineraryButton } from './GenerateItineraryButton';
 import { TravelStyleChoice as TravelStyleChoiceEnum, ConditionalTravelStyleProps } from '../types/travel-style-choice';
+import TravelStyleChoice from './TravelStyleChoice';
+import { TravelStyleGroup } from './TravelStyleGroup';
+import ContactForm from './ContactForm';
+import { GenerateItineraryButton } from './GenerateItineraryButton';
 
 const ConditionalTravelStyle: React.FC<ConditionalTravelStyleProps> = ({
   choice,
   onChoiceChange,
   formData,
   onFormChange,
+  selectedExperience,
+  onExperienceChange,
+  selectedVibes,
+  onVibeChange,
+  customVibesText,
+  onCustomVibesChange,
+  selectedSampleDays,
+  onSampleDaysChange,
+  dinnerChoices,
+  onDinnerChoicesChange,
+  tripNickname,
+  onTripNicknameChange,
+  contactInfo,
+  onContactChange,
   disabled = false,
+  onGenerateItinerary,
+  isGenerating = false,
 }) => {
-  // NOT_SELECTED: Show choice buttons
-  if (choice === TravelStyleChoiceEnum.NOT_SELECTED) {
-    return (
-      <div className="space-y-8">
+  // Handle itinerary generation button click
+  const handleGenerateClick = () => {
+    if (onGenerateItinerary) {
+      onGenerateItinerary();
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-trip-details text-primary rounded-[36px] p-6 shadow-lg -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-16" data-testid="travel-style-container">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4 font-raleway">
-            🌏 TRAVEL STYLE
+          <h2 className="text-3xl font-bold text-primary mb-4 font-raleway">
+            ?? TRAVEL STYLE
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-raleway">
+          <p className="text-lg text-primary max-w-2xl mx-auto font-raleway opacity-90">
             Help us create the perfect itinerary by sharing your travel preferences
           </p>
         </div>
-        
-        <TravelStyleChoice 
-          onChoiceSelect={onChoiceChange}
-          disabled={disabled}
-        />
       </div>
-    );
-  }
 
-  // DETAILED: Show existing travel style forms
-  if (choice === TravelStyleChoiceEnum.DETAILED) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4 font-raleway">
-            🌏 TRAVEL STYLE
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-raleway">
-            Tell us about your travel preferences for a personalized itinerary
-          </p>
-        </div>
-        
+      {choice === TravelStyleChoiceEnum.NOT_SELECTED && (
+        <TravelStyleChoice onChoiceSelect={onChoiceChange} disabled={disabled} />
+      )}
+
+      {choice === TravelStyleChoiceEnum.DETAILED && (
         <div className="space-y-8">
-          <div data-testid="travel-experience-form">
-            <TravelExperience
-              selectedExperience={formData?.travelStyleAnswers?.experience || []}
-              onSelectionChange={(experience) => 
-                onFormChange({
-                  ...formData,
-                  travelStyleAnswers: {
-                    ...formData?.travelStyleAnswers,
-                    experience,
-                  },
-                })
-              }
-            />
-          </div>
-
-          <div data-testid="trip-vibe-form">
-            <TripVibe
-              selectedVibes={formData?.travelStyleAnswers?.vibes || []}
-              onSelectionChange={(vibes) => 
-                onFormChange({
-                  ...formData,
-                  travelStyleAnswers: {
-                    ...formData?.travelStyleAnswers,
-                    vibes,
-                  },
-                })
-              }
-              otherText={formData?.travelStyleAnswers?.vibesOther || ''}
-              onOtherTextChange={(vibesOther: string) => 
-                onFormChange({
-                  ...formData,
-                  travelStyleAnswers: {
-                    ...formData?.travelStyleAnswers,
-                    vibesOther,
-                  },
-                })
-              }
-            />
-          </div>
-
-          <div data-testid="sample-days-form">
-            <SampleDays
-              selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
-              onSelectionChange={(sampleDays) => 
-                onFormChange({
-                  ...formData,
-                  travelStyleAnswers: {
-                    ...formData?.travelStyleAnswers,
-                    sampleDays,
-                  },
-                })
-              }
-            />
-          </div>
-
-          <div data-testid="dinner-choice-form">
-            <DinnerChoice
-              selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
-              onSelectionChange={(dinnerChoices: string[]) => 
-                onFormChange({
-                  ...formData,
-                  travelStyleAnswers: {
-                    ...formData?.travelStyleAnswers,
-                    dinnerChoices,
-                  },
-                })
-              }
-            />
-          </div>
-
-          <div data-testid="trip-nickname-form">
-            <TripNickname
-              tripNickname={formData?.tripNickname || ''}
-              onNicknameChange={(tripNickname: string) => 
-                onFormChange({
-                  ...formData,
-                  tripNickname,
-                })
-              }
-              contactInfo={formData?.contactInfo || {}}
-              onContactChange={(contactInfo: any) => 
-                onFormChange({
-                  ...formData,
-                  contactInfo,
-                })
-              }
-            />
-          </div>
-
-          <GenerateItineraryButton 
-            isSubmitting={false}
-            onClick={() => {}}
-            disabled={disabled}
+          {/* Travel Style Groups - Uses its own prop interface */}
+          <TravelStyleGroup
+            formData={formData}
+            onFormChange={onFormChange}
           />
-        </div>
-      </div>
-    );
-  }
 
-  // SKIP: Show nickname entry only
-  if (choice === TravelStyleChoiceEnum.SKIP) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4 font-raleway">
-            🏷️ TRIP NICKNAME
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-raleway">
-            Give your trip a memorable name
-          </p>
-        </div>
-        
-        <div data-testid="trip-nickname-form">
-          <TripNickname
-            tripNickname={formData?.tripNickname || ''}
-            onNicknameChange={(tripNickname: string) => 
-              onFormChange({
-                ...formData,
-                tripNickname,
-              })
-            }
-            contactInfo={formData?.contactInfo || {}}
-            onContactChange={(contactInfo: any) => 
-              onFormChange({
-                ...formData,
-                contactInfo,
-              })
-            }
+          {/* Contact Form */}
+          <ContactForm
+            contactInfo={contactInfo}
+            onContactChange={onContactChange}
           />
-        </div>
 
-        <GenerateItineraryButton 
-          isSubmitting={false}
-          onClick={() => {}}
-          disabled={disabled}
-        />
-        
-        <div className="text-center">
-          <button
-            onClick={() => onChoiceChange(TravelStyleChoiceEnum.NOT_SELECTED)}
-            disabled={disabled}
-            className={`
-              text-primary hover:text-primary-dark underline font-raleway font-medium
-              transition-colors duration-200
-              ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:no-underline'}
-            `}
-          >
-            ← Back to travel style options
-          </button>
+          {/* Generate Button for Detailed Flow */}
+          {onGenerateItinerary && (
+            <GenerateItineraryButton 
+              isSubmitting={isGenerating} 
+              onClick={handleGenerateClick} 
+            />
+          )}
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // Fallback for any unexpected state
-  return null;
+      {choice === TravelStyleChoiceEnum.SKIP && (
+        <div className="space-y-8">
+          {/* Contact Form Only */}
+          <ContactForm
+            contactInfo={contactInfo}
+            onContactChange={onContactChange}
+          />
+
+          {/* Generate Button for Skip Flow */}
+          {onGenerateItinerary && (
+            <GenerateItineraryButton 
+              isSubmitting={isGenerating} 
+              onClick={handleGenerateClick} 
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default ConditionalTravelStyle;

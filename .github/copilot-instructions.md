@@ -1,6 +1,19 @@
 ﻿# GitHub Copilot Instructions - Hylo Travel AI Platform
 
-## Project Context
+##```
+src/
+├── components/
+│   ├── ConditionalTravelStyle.tsx    # Primary target for container styling
+│   ├── TravelStyleChoice.tsx         # May need button styling review
+│   └── GenerateItineraryButton.tsx   # For duplicate removal
+├── types/
+│   └── travel-style-choice.ts        # Type definitions (no changes)
+└── App.tsx                           # Container styling integration
+
+api/                                   # Edge functions
+tests/                                 # Test files
+specs/004-fix-travel-style/           # Current feature docs
+```t
 Hylo is a travel planning platform using React + TypeScript frontend with Vercel Edge Functions backend. Multi-agent AI system for personalized itinerary generation.
 
 ## Current Stack
@@ -25,26 +38,26 @@ Hylo is a travel planning platform using React + TypeScript frontend with Vercel
 - **Forms**: React Hook Form patterns with Zod schemas
 - **Tests**: .test.tsx files, React Testing Library patterns
 
-## Current Feature: UI Improvements (Branch: 001-ui-improvements-for)
-**Context**: Updating travel form components for better visual presentation and file cleanup.
+## Current Feature: Travel Style Styling Fix (Branch: 004-fix-travel-style)
+**Context**: Fixing visual inconsistencies in travel style section background colors and button duplication.
 
 **Key Components**:
-- `TravelersForm.tsx`: Needs centered "Total travelers: X" display with thick border
-- `PreferenceModals/AccommodationPreferences.tsx`: Remove border interruptions
-- `PreferenceModals/RentalCarPreferences.tsx`: Remove border interruptions
+- `ConditionalTravelStyle.tsx`: Needs yellow background container like trip details
+- Travel style forms: Must preserve #ece8de background colors
+- `GenerateItineraryButton`: Remove duplication before choice selection
 
 **Requirements**:
-- Center text alignment for traveler count
-- Thick prominent borders using existing design tokens  
-- Full-width modal backgrounds without border interruptions
-- Remove duplicate files in wrong locations
-- Preserve all existing functionality and accessibility
+- Travel style section MUST have `bg-trip-details` (#b0c29b) background
+- All forms MUST maintain `bg-form-box` (#ece8de) backgrounds  
+- NO #406170 backgrounds anywhere in travel style content
+- Exactly one GenerateItineraryButton per page
+- Background consistency across all travel style states
 
 **Styling Approach**:
-- Use Tailwind classes: `text-center`, `border-4`, `border-primary`
-- Maintain `font-raleway` and `font-bold` for consistency
-- Remove conflicting border classes from modals
-- Ensure `w-full` for full-width backgrounds
+- Use `bg-trip-details` for travel style container
+- Preserve existing `bg-form-box` on all form components
+- NEVER use `bg-primary` (#406170) in travel style content
+- Maintain design token hierarchy: section bg → form bg → input bg
 
 ## Constitutional Requirements
 - **TDD Mandatory**: Write failing tests first
@@ -54,9 +67,9 @@ Hylo is a travel planning platform using React + TypeScript frontend with Vercel
 - **Cost Conscious**: No impact on LLM costs for UI changes
 
 ## Recent Changes (Keep Updated)
-1. **2025-09-19**: UI improvements specification created
-2. **2025-09-19**: Implementation planning completed  
-3. **Feature Focus**: TravelersForm styling + preference modal backgrounds
+1. **2025-09-19**: Travel style section styling fix specification created
+2. **2025-09-19**: Implementation planning completed for styling consistency
+3. **Feature Focus**: ConditionalTravelStyle container background + form preservation + button cleanup
 
 ## Key File Locations
 ```
@@ -111,5 +124,5 @@ const TravelersForm: React.FC<TravelersFormProps> = ({ formData, onFormChange })
 };
 ```
 
-*Last Updated: 2025-09-19 | Current Feature: UI Improvements | Constitution v2.0.0*
+*Last Updated: 2025-09-19 | Current Feature: Travel Style Styling Fix | Constitution v2.0.0*
 

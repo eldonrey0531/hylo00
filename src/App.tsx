@@ -8,7 +8,6 @@ import ItineraryDisplay from './components/ItineraryDisplay';
 import BehindTheScenes from './components/BehindTheScenes';
 import AIErrorBoundary from './components/AIErrorBoundary';
 import HealthMonitor from './components/HealthMonitor';
-import { GenerateItineraryButton } from './components/GenerateItineraryButton';
 
 function App() {
   const [formData, setFormData] = useState<FormData>({
@@ -153,12 +152,11 @@ function App() {
             contactInfo={contactInfo}
             onContactChange={setContactInfo}
             disabled={isGenerating}
+            onGenerateItinerary={handleGenerateItinerary}
+            isGenerating={isGenerating}
           />
 
-          {/* Generate Button */}
-          <GenerateItineraryButton isSubmitting={isGenerating} onClick={handleGenerateItinerary} />
-
-          {/* Itinerary Results Section - Directly below the button */}
+          {/* Itinerary Results Section - Directly below the travel style */}
           <div ref={itineraryRef}>
             {(isGenerating || generatedItinerary || generationError) && (
               <AIErrorBoundary
