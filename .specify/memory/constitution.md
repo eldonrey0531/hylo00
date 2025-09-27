@@ -1,135 +1,145 @@
-# HYLO Travel AI Platform Constitution
+<!-- Sync Impact Report
+Version change: 1.5.0 → 1.6.0
+List of modified principles: Source Root Governance → Source Root Governance (expanded refactor guidance), Development Workflow Discipline → Development Workflow Discipline (config sync checks)
+Added sections: Configuration & Documentation Sync principle
+Removed sections: None
+Templates requiring updates: plan-template.md (✅ updated), tasks-template.md (✅ updated), spec-template.md (✅ no changes required)
+Follow-up TODOs: None
+-->
+# Hylo00 Constitution
 
 ## Core Principles
 
-### I. Edge-First Architecture
+### Next.js App Router Delivery
+Build and render the user experience with Next.js 14 App Router, favoring static generation or cached ISR responses for all marketing and itinerary flows.
 
-All API endpoints run on Vercel Edge Runtime for global distribution; No client-side API keys - all secrets managed server-side; Edge functions handle LLM routing, health monitoring, and RAG operations; Progressive enhancement with graceful degradation
+Rationale: Aligns the project with the framework the site is deployed on, keeps routing consistent, and preserves fast, SEO-friendly delivery.
 
-### II. Multi-Agent AI Orchestration
+### Type-Safe React Interfaces
+Implement UI logic with React 18 and TypeScript, keeping components strongly typed and colocated with their form contracts.
 
-Multi-agent pipeline for itinerary generation (Data Gatherer → Information Gatherer → Planning Strategist → Content Compiler); Intelligent LLM provider routing based on complexity analysis; Fallback chains ensure resilience (Cerebras → Gemini → Groq); Real-time web search integration for current information
+Rationale: Type safety improves maintainability, reduces runtime errors, and matches the patterns expected by the forms, hooks, and tests in this repository.
 
-### III. Test-First Development (NON-NEGOTIABLE)
+### Tailwind-Centric Styling
+Style the application exclusively with Tailwind CSS utilities and configuration defined in `tailwind.config.js`.
 
-TDD mandatory: Tests written → Review → Tests fail → Then implement; Minimum 80% code coverage requirement; Contract tests for all API endpoints; Integration tests for multi-agent workflows; Component tests with React Testing Library
+Rationale: Tailwind underpins the design system in this project, enabling rapid iteration while guaranteeing consistent primitives across the UI.
 
-### IV. Observable AI Operations
+### Form and Validation Tooling
+Use React Hook Form together with Zod schemas for all user-input workflows, keeping validation logic in shared schema files.
 
-Comprehensive tracing via LangSmith integration; Cost tracking per LLM operation with budget alerts; Performance metrics (latency, tokens, throughput); Structured logging at all service boundaries; Health monitoring dashboard for system visibility
+Rationale: The existing forms depend on these libraries for declarative validation and error handling, ensuring a predictable user experience.
 
-### V. Type-Safe Development
+### Dependency Governance
+Rely on the dependencies already declared in `package.json`. Add or upgrade packages only with explicit user approval and corresponding updates to lockfiles.
 
-TypeScript strict mode throughout frontend and backend; Zod schemas for runtime validation matching compile-time types; Shared type definitions between client and server; API contracts validated at build time
+Rationale: Preserves a controlled surface area, keeps deployments reproducible, and avoids unreviewed transitive changes.
 
-### VI. Component-Based Architecture
+### Deployment on Vercel
+Deploy production builds via Vercel, leveraging its integration with Next.js and edge middleware support.
 
-React 18+ with functional components and hooks; Form optimization with React Hook Form + Zod validation; Tailwind CSS for utility-first styling; Reusable UI components with clear separation of concerns
+Rationale: Vercel provides zero-config hosting for Next.js, ensuring the middleware and ISR behavior match local expectations.
 
-### VII. Cost-Conscious Design
+### Source Root Governance
+Keep all application code, middleware, workflows, shared libraries, and types inside the `/src` directory, following the structure documented below. Refactors within `src/` are encouraged when they preserve this hierarchy and immediately update configuration globs, path aliases, and documentation.
 
-Daily budget limits enforced ($10/day default); Token usage optimization in LLM operations; Provider selection based on cost/performance trade-offs; Caching strategies to reduce redundant API calls
+Rationale: A consistent source root simplifies imports, enforces aliasing conventions, and ensures middleware executes correctly in the App Router while allowing iterative improvements.
 
-## Technical Standards
+### Configuration & Documentation Sync
+Whenever directories or filenames move, immediately update dependent configuration (e.g., `tsconfig.json` paths, ESLint/Tailwind globs, Next.js route aliases) and refresh relevant documentation so code remains discoverable.
 
-### Frontend Stack
+Rationale: Keeping configuration and docs aligned with the source tree prevents broken builds, dangling imports, and onboarding friction after refactors.
 
-- **Framework**: React 18+ with TypeScript 5.x
-- **Build Tool**: Vite for fast HMR and optimized builds
-- **Styling**: Tailwind CSS with custom design tokens
-- **Forms**: React Hook Form with Zod validation
-- **State**: Local state with useState/useReducer
-- **Icons**: Lucide React for consistent iconography
-- **Testing**: Vitest + React Testing Library
+### Development Workflow Discipline
+Use the provided npm scripts (`dev`, `build`, `lint`, `test`, `type-check`) along with Vitest and Playwright to validate changes before merge. Run `npm run lint` and `npm run type-check` after any structural adjustments to confirm configuration updates keep modules resolvable.
 
-### Backend Stack
+Rationale: These workflows maintain quality gates, keep automation green, and align with the repository's testing and linting investments.
 
-- **Runtime**: Vercel Edge Functions (Edge Runtime)
-- **LLM Providers**: Cerebras, Google Gemini, Groq
-- **Observability**: LangSmith for tracing
-- **Validation**: Zod schemas for all endpoints
-- **Search**: Web search service integration
-- **RAG**: Vector storage with Qdrant (future)
+### Context-Aware Research
+When gathering implementation references, use the Context7 MCP server to source canonical library documentation and examples.
 
-### API Design
+Rationale: Centralizing research through Context7 ensures the team references up-to-date, authoritative material and avoids stale guidance.
 
-- RESTful endpoints under `/api` namespace
-- Streaming responses for real-time generation
-- Health endpoints for monitoring
-- Rate limiting and quota management
-- CORS configuration for edge functions
+## Technology Stack
+Adopt the stack codified in the repository:
+- Next.js 14 (App Router) with React 18
+- TypeScript for static typing
+- Tailwind CSS for styling primitives
+- React Hook Form and Zod for forms and validation
+- Vitest for unit and integration tests, Playwright for end-to-end flows
+- ESLint for linting and Vercel for deployment automation
 
-### Development Workflow
-
-#### Code Quality Gates
-
-1. TypeScript compilation must succeed
-2. ESLint passes with no errors
-3. All tests pass (unit, integration, E2E)
-4. Zod schema validation coverage
-5. Bundle size within limits (<200KB warning)
-
-## Infrastructure Requirements
-
-### Deployment Platform
-
-- **Hosting**: Vercel with automatic deployments
-- **Edge Functions**: Global distribution
-- **Environment**: Development, Preview, Production
-- **DNS**: Verification and readiness checks
-- **Monitoring**: Real-time health dashboards
-
-### Performance Standards
-
-- API response time: <2s p95 for simple queries
-- Streaming latency: <500ms to first token
-- Frontend FCP: <1.5s on 3G networks
-- Bundle size: <200KB for initial load
-- Error rate: <1% for production
-
-### Security & Compliance
-
-- Environment variables for all secrets
-- Input sanitization on all endpoints
-- Rate limiting per IP/session
-- CORS properly configured
-- No PII in logs or traces
-
-## Project-Specific Conventions
-
-### File Organization
+## Project Structure
 
 ```
-api/              # Edge functions
-src/
-  ├── components/ # React components
-  ├── services/   # Business logic
-  ├── api/        # API client code
-  ├── types/      # TypeScript types
-  ├── hooks/      # Custom React hooks
-  └── utils/      # Utilities
-tests/            # Test files
-.specify/         # Project management
+hylo00/
+├── src/
+│   ├── app/                      # Next.js App Router
+│   │   ├── api/
+│   │   │   ├── ai/
+│   │   │   ├── inngest/
+│   │   │   ├── itinerary/
+│   │   │   ├── logs/
+│   │   │   └── maps/
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── forms/
+│   │   │   ├── travel-style/
+│   │   │   └── TripDetails/
+│   │   └── layout/
+│   ├── inngest/
+│   │   ├── client.ts
+│   │   └── functions/
+│   │       └── itinerary.ts
+│   ├── lib/
+│   │   ├── ai/
+│   │   ├── config/
+│   │   ├── redis/
+│   │   ├── vector/
+│   │   └── formSchemas.ts
+│   ├── middleware.ts             # Next.js middleware (src root)
+│   ├── types/
+│   └── utils/
+├── public/
+│   ├── fonts/
+│   └── images/
+├── scripts/
+├── specs/
+├── tests/
+├── .specify/
+├── manual-validation/
+├── next.config.js
+├── package.json
+├── tailwind.config.js
+├── tsconfig.json
+└── vercel.json
 ```
 
-### Naming Conventions
+### Structure Enforcement Rules
+- **Source Root**: Application code MUST live under `src/`; only configuration, specs, scripts, tests, public assets, and tooling live at the repository root.
+- **Routing**: App Router routes and API handlers MUST reside in `src/app`, using folders for each API namespace (`ai`, `inngest`, `itinerary`, `logs`, `maps`).
+- **UI Components**: Reusable UI lives in `src/components`, with form flows under `forms/` and shared shells under `layout/`.
+- **Workflows**: Inngest workflows and registration MUST remain in `src/inngest/functions`, with the shared client in `src/inngest/client.ts`.
+- **Shared Libraries**: Configuration, AI helpers, Redis/vector clients, and schemas MUST stay in `src/lib`.
+- **Middleware**: `src/middleware.ts` is the single middleware entry point and MUST not move.
+- **Types & Utilities**: Global TypeScript definitions belong in `src/types`, and cross-cutting helpers in `src/utils`.
+- **Assets**: Static assets live in `public/` with fonts and images in dedicated subdirectories.
+- **Quality Assets**: Tests go in `tests/`, manual QA artifacts in `manual-validation/`, and automation specs in `specs/`.
+- **Configuration**: Next.js, Tailwind, TypeScript, ESLint, Vercel, and PostCSS configs remain at the repository root.
 
-- Components: PascalCase (e.g., TripDetailsForm)
-- Services: camelCase with 'Service' suffix
-- Types: PascalCase with descriptive names
-- API routes: kebab-case endpoints
-- Test files: _.test.ts or _.spec.ts
+## Development Workflow
+Use the established npm scripts:
+- `npm run dev` for local development
+- `npm run build` for production builds (must succeed prior to deployment)
+- `npm run start` for production preview
+- `npm run lint`, `npm run test`, and `npm run test:coverage` to enforce quality gates
+- `npm run type-check` to validate TypeScript contracts
 
-### AI Agent Conventions
-
-- Each agent has single responsibility
-- Agents communicate via structured data
-- Token limits enforced per agent
-- Costs tracked per agent operation
-- Fallback strategies documented
+Ensure Vitest, Playwright, ESLint, and TypeScript checks all pass before merging, especially after refactors that touch configuration. Reference Context7 MCP for implementation research, and document architectural decisions in `specs/` when altering workflows or AI integrations.
 
 ## Governance
+Amendments require a pull request, reviewer approval, and updates to impacted templates. Versioning follows semantic rules: major for breaking governance shifts, minor for new or materially expanded principles, patch for clarifications. Code reviews must confirm structure compliance, dependency governance, and passing quality gates. Conduct at least annual audits to reaffirm adherence.
 
-Constitution supersedes all development practices; Amendments require team consensus and testing; All PRs must verify constitutional compliance via checks; Complexity violations must be justified in PR description; Use CLAUDE.md for AI-assisted development guidance
-
-**Version**: 2.0.0 | **Ratified**: 2025-01-20 | **Last Amended**: 2025-01-20
+**Version**: 1.6.0 | **Ratified**: 2025-09-27 | **Last Amended**: 2025-09-27

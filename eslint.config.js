@@ -62,7 +62,7 @@ export default tseslint.config(
   },
   {
     // API/Edge function specific configuration
-    files: ['api/**/*.ts'],
+    files: ['src/app/api/**/*.{ts,tsx}', 'src/inngest/**/*.{ts,tsx}', 'src/middleware.ts'],
     languageOptions: {
       globals: {
         ...globals.node,

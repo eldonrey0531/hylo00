@@ -1,0 +1,102 @@
+import React, { useState, useEffect, useCallback } from 'react';
+
+interface RentalCarPreferencesProps {
+  preferences: any;
+  onSave: (preferences: any) => void;
+  hasValidationError?: boolean;
+}
+
+const RentalCarPreferences: React.FC<RentalCarPreferencesProps> = ({
+  preferences = {},
+  onSave,
+  hasValidationError = false,
+}) => {
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(preferences.vehicleTypes || []);
+  const [specialRequirements, setSpecialRequirements] = useState(preferences.specialRequirements || '');
+
+  const vehicleTypeOptions = [
+    'Economy',
+    'Compact',
+    'Mid-size',
+    'Full-size',
+    'SUV',
+    'Luxury',
+    'Van/Minivan',
+    'Convertible',
+  ];
+
+  useEffect(() => {
+    setVehicleTypes(preferences.vehicleTypes || []);
+    setSpecialRequirements(preferences.specialRequirements || '');
+  }, [preferences]);
+
+  const toggleVehicleType = (type: string) => {
+    setVehicleTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const handleSave = useCallback(() => {
+    onSave({
+      vehicleTypes,
+      specialRequirements,
+    });
+  }, [vehicleTypes, specialRequirements, onSave]);
+
+  // Save when user finishes editing
+  const handleBlur = useCallback(() => {
+    handleSave();
+  }, [handleSave]);
+
+  return (
+    <div className={`w-full bg-[#b0c29b] rounded-[36px] py-6 border-4 ${hasValidationError ? 'border-red-500' : 'border-transparent'}`}>
+      <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
+        <span className="text-2xl">🚗</span>
+        <h3 className="text-[25px] font-bold text-white uppercase tracking-wide font-raleway">
+          Rental Car Preferences
+        </h3>
+      </div>
+
+      <div className="space-y-6 px-6 bg-[#b0c29b] rounded-b-[36px] pt-2">
+        {/* Vehicle Type */}
+        <div>
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
+            Preferred vehicle type(s) (select all that apply)
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {vehicleTypeOptions.map((type) => (
+              <button
+                key={type}
+                onClick={() => toggleVehicleType(type)}
+                className={`px-3 py-2 rounded-[10px] border-3 transition-all duration-200 font-bold font-raleway text-sm text-left flex items-center ${
+                  vehicleTypes.includes(type)
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-primary bg-[#ece8de] text-primary hover:bg-primary/10'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Special Requirements */}
+        <div>
+          <label className="block text-primary font-bold font-raleway text-base mb-3">
+            (Optional) Special requirements or preferences
+          </label>
+          <textarea
+            value={specialRequirements}
+            onChange={(e) => setSpecialRequirements(e.target.value)}
+            onBlur={handleBlur}
+            placeholder="Example: We need seats for 6 people, We prefer Budget or Avis"
+            className="w-full px-4 py-3 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-[#ece8de] resize-none font-raleway font-bold"
+            rows={3}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RentalCarPreferences;
