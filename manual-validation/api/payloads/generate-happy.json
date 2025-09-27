@@ -1,0 +1,34 @@
+{
+  "formData": {
+    "location": "Kyoto, Japan",
+    "departDate": "2025-04-10",
+    "returnDate": "2025-04-16",
+    "flexibleDates": false,
+    "plannedDays": null,
+    "adults": 2,
+    "children": 1,
+    "childrenAges": [7],
+    "budget": 6000,
+    "currency": "USD",
+    "budgetMode": "total",
+    "flexibleBudget": false,
+    "selectedGroups": ["Family"],
+    "customGroupText": null,
+    "selectedInterests": ["Culture", "Food"],
+    "customInterestsText": null,
+    "selectedInclusions": ["Guided Tours", "Transfers"],
+    "customInclusionsText": null,
+    "inclusionPreferences": {},
+    "travelStyleAnswers": {},
+    "contactInfo": {
+      "name": "Alex Rivera",
+      "email": "alex@example.com"
+    },
+    "tripNickname": "Spring Break in Kyoto"
+  },
+  "sessionId": "manual-validation-session-001",
+  "options": {
+    "enableDetailedLogging": true,
+    "priority": "normal"
+  }
+}

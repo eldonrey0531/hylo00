@@ -123,17 +123,9 @@ export interface Itinerary {
   updatedAt: string;
 }
 
-export interface AgentResponse {
-  agentName: string;
-  data: any;
-  confidence: number;
-  suggestions?: string[];
-  warnings?: string[];
-}
+export * from './itinerary/enums';
+export * from './itinerary/trip-form-data';
+export * from './itinerary/itinerary';
+export * from './itinerary/daily-activity';
+export * from './itinerary/travel-tip';
 
-export interface GenerationProgress {
-  stage: 'initializing' | 'planning' | 'optimizing' | 'finalizing' | 'complete';
-  percentage: number;
-  currentAgent?: string;
-  message: string;
-}

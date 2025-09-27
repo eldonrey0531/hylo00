@@ -1,39 +1,6 @@
 {
-  "env": {
-    "GROQ_API_KEY": "your-groq-api-key-here",
-    "GROQ_API_KEY_2": "your-groq-api-key-here",
-    "GROQ_API_KEY_3": "your-groq-api-key-here",
-    "CEREBRAS_API_KEY": "your-cerebras-api-key-here",
-    "CEREBRAS_API_KEY_2": "your-cerebras-api-key-here",
-    "CEREBRAS_API_KEY_3": "your-cerebras-api-key-here",
-    "GEMINI_API_KEY": "your-gemini-api-key-here",
-    "GEMINI_API_KEY_2": "your-gemini-api-key-here",
-    "GEMINI_API_KEY_3": "your-gemini-api-key-here",
-    "LANGSMITH_API_KEY": "your-langsmith-api-key-here",
-    "LANGSMITH_TRACE_URL": "your-langsmith-trace-url-here",
-    "DNS_VERIFICATION_TIMEOUT": "30000",
-    "HEALTH_CHECK_INTERVAL": "300000",
-    "PROVIDER_CACHE_TTL": "300000",
-    "MAX_RETRIES": "3",
-    "FALLBACK_TIMEOUT": "10000"
-  },
-  "build": {
-    "env": {
-      "ENABLE_EXPERIMENTAL_COREPACK": "1"
-    }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" }
-      ]
-    }
-  ],
-  "framework": "vite"
+  "buildCommand": "npm run build",
+  "outputDirectory": "out",
+  "framework": "nextjs",
+  "installCommand": "npm install"
 }
