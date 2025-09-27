@@ -183,11 +183,15 @@ export function buildGrokItineraryPrompt(formData: ExtendedTripFormData): string
   promptLines.push('Execution requirements:');
   promptLines.push('- Produce an intro paragraph that feels concierge-written, 2-3 sentences.');
   promptLines.push('- Build `dailyPlans` array with one entry per day, preserving date order.');
-  promptLines.push('- Each day must include morning, afternoon, evening anchors and a signature highlight.');
+  promptLines.push('- Each day must include morning, afternoon, evening anchors with 3+ specific activities each.');
+  promptLines.push('- For each time period (morning/afternoon/evening), provide detailed, actionable activities that create a rich experience.');
+  promptLines.push('- Activities should be varied: mix cultural experiences, local interactions, relaxation, exploration, and unique discoveries.');
   promptLines.push('- If transportation is required, include `transportation` notes with time estimates.');
   promptLines.push('- Add `dining` suggestions that match the traveler vibe and any dietary notes.');
   promptLines.push('- Reference the trip nickname if provided.');
-  promptLines.push('- End with `keyTakeaways` summarizing highlights and `nextSteps` for concierge actions.');
+  promptLines.push('- End with `keyTakeaways` summarizing highlights and a `travelTips` array tailored from the traveler form responses.');
+  promptLines.push('- For `travelTips`, output an array where each item is an object containing `title` and `description` strings with practical, concierge-ready guidance.');
+  promptLines.push('- Do not include a `nextSteps` field—focus on personalized travel tips instead.');
 
   promptLines.push(
     'Output requirements: Respond with a single JSON object containing `dailyPlans` where each entry represents one day. Each day should include activities, meals, and transportation details.',
@@ -201,8 +205,7 @@ export function buildGrokItineraryPrompt(formData: ExtendedTripFormData): string
 export async function generateGrokItineraryDraft({
   prompt,
   model = GROK_MODEL,
-  maxTokens = 4000,
-  temperature = 0.4,
+  temperature = 0.7,
 }: GrokDraftParams): Promise<GrokDraftResult> {
   if (!process.env.XAI_API_KEY) {
     throw new Error('XAI_API_KEY is not configured.');
@@ -218,7 +221,6 @@ export async function generateGrokItineraryDraft({
     body: JSON.stringify({
       model,
       input: [{ role: 'user', content: prompt }],
-      max_output_tokens: maxTokens,
       temperature,
     }),
   });
