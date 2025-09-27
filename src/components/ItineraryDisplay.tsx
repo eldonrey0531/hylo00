@@ -1,0 +1,745 @@
+import React from 'react';
+import type { FormData } from '@/components/forms/TripDetails/types';
+
+type LayoutSection = {
+  title?: string;
+  summary?: string;
+  activities?: string | string[];
+  notes?: string;
+  transportation?: string | string[];
+  dining?: DiningInput;
+};
+
+type SectionInput = LayoutSection | string | string[] | null | undefined;
+
+type DiningInput =
+  | {
+      breakfast?: string;
+      lunch?: string;
+      dinner?: string;
+    }
+  | string
+  | string[]
+  | null
+  | undefined;
+
+type LayoutDailyPlan = {
+  day?: number;
+  title?: string;
+  date?: string;
+  summary?: string;
+  morning?: SectionInput;
+  afternoon?: SectionInput;
+  evening?: SectionInput;
+  signatureHighlight?: string;
+  transportation?: SectionInput;
+  dining?: DiningInput;
+  [key: string]: unknown;
+};
+
+type LayoutMetadata = {
+  generatedAt?: string;
+  model?: string;
+  usedGroq?: boolean;
+};
+
+interface ItineraryLayout {
+  intro?: string;
+  overview?: string;
+  quickSummary?: string | string[];
+  dailyPlans?: LayoutDailyPlan[];
+  keyTakeaways?: string | string[];
+  nextSteps?: string | string[];
+  travelTips?: Array<{ title?: string; description?: string }>;
+  daily?: LayoutDailyPlan[];
+}
+
+interface ItineraryDisplayProps {
+  layout: ItineraryLayout | null;
+  formData: FormData | null;
+  mapImageUrl?: string | null;
+  isLoading?: boolean;
+  layoutMetadata?: LayoutMetadata | null;
+  lastUpdated?: string | null;
+  onStartOver: () => void;
+  onDownloadPdf?: () => void;
+  onPrepareEmail?: () => void;
+}
+
+const safeTrim = (value?: string | null) => {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim();
+};
+
+const formatList = (value?: string | string[]) => {
+  if (!value) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    return (
+      <ul className="list-disc list-inside space-y-1 text-gray-700">
+        {value.map((item, index) => (
+          <li key={`${item}-${index}`}>{item}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  return <p className="text-gray-700 whitespace-pre-line">{value}</p>;
+};
+
+const sanitizeStringOrStringArray = (value: unknown): string | string[] | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+
+    return items.length > 0 ? items : undefined;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  }
+
+  return undefined;
+};
+
+const sanitizeDiningInput = (value: unknown): DiningInput | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  }
+
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+
+    return items.length > 0 ? items : undefined;
+  }
+
+  if (typeof value === 'object') {
+    const entries = value as Record<string, unknown>;
+    const breakfast = typeof entries.breakfast === 'string' ? entries.breakfast.trim() : undefined;
+    const lunch = typeof entries.lunch === 'string' ? entries.lunch.trim() : undefined;
+    const dinner = typeof entries.dinner === 'string' ? entries.dinner.trim() : undefined;
+
+    const diningObject: { breakfast?: string; lunch?: string; dinner?: string } = {};
+
+    if (breakfast) {
+      diningObject.breakfast = breakfast;
+    }
+
+    if (lunch) {
+      diningObject.lunch = lunch;
+    }
+
+    if (dinner) {
+      diningObject.dinner = dinner;
+    }
+
+    return Object.keys(diningObject).length > 0 ? diningObject : undefined;
+  }
+
+  return undefined;
+};
+
+const normalizeSection = (input?: SectionInput): LayoutSection | null => {
+  if (!input) {
+    return null;
+  }
+
+  if (Array.isArray(input)) {
+    const items = input
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+
+    if (items.length === 0) {
+      return null;
+    }
+
+    return { activities: items };
+  }
+
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return { activities: trimmed };
+  }
+
+  const section: LayoutSection = {
+    title: input.title,
+    summary: input.summary,
+    activities: input.activities,
+    notes: input.notes,
+    transportation: sanitizeStringOrStringArray(
+      (input as Record<string, unknown>).transportation ??
+        (input as Record<string, unknown>).transport ??
+        (input as Record<string, unknown>).gettingAround ??
+        (input as Record<string, unknown>).transit ??
+        (input as Record<string, unknown>).travel ??
+        (input as Record<string, unknown>).transfer
+    ),
+    dining: sanitizeDiningInput(
+      (input as Record<string, unknown>).dining ??
+        (input as Record<string, unknown>).meals ??
+        (input as Record<string, unknown>).diningOptions ??
+        (input as Record<string, unknown>).food
+    ),
+  };
+
+  if (Array.isArray(section.activities)) {
+    section.activities = section.activities
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+  }
+
+  if (typeof section.activities === 'string') {
+    section.activities = section.activities.trim();
+  }
+
+  if (section.summary) {
+    section.summary = section.summary.trim();
+  }
+
+  if (section.notes) {
+    section.notes = section.notes.trim();
+  }
+
+  if (!section.summary && !section.activities && !section.notes && !section.transportation && !section.dining) {
+    return null;
+  }
+
+  return section;
+};
+
+type RenderDiningOptions = {
+  heading?: string;
+  headingClassName?: string;
+  containerClassName?: string;
+  headingTag?: 'h3' | 'h4';
+  textClassName?: string;
+  itemClassName?: string;
+};
+
+const renderDining = (
+  dining?: DiningInput,
+  options: RenderDiningOptions = {
+    heading: '🍽️ Dining',
+    headingClassName: 'text-lg font-semibold text-gray-800 mb-2',
+    containerClassName: 'mb-4',
+    headingTag: 'h3',
+    textClassName: 'text-gray-700 whitespace-pre-line',
+    itemClassName: 'text-gray-700',
+  }
+) => {
+  const {
+    heading = '🍽️ Dining',
+    headingClassName = 'text-lg font-semibold text-gray-800 mb-2',
+    containerClassName = 'mb-4',
+    headingTag = 'h3',
+    textClassName = 'text-gray-700 whitespace-pre-line',
+    itemClassName = 'text-gray-700',
+  } = options;
+
+  if (!dining) {
+    return null;
+  }
+
+  const HeadingTag = headingTag;
+
+  if (typeof dining === 'string') {
+    const trimmed = dining.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    return (
+      <div className={containerClassName}>
+        <HeadingTag className={headingClassName}>{heading}</HeadingTag>
+        <p className={textClassName}>{trimmed}</p>
+      </div>
+    );
+  }
+
+  if (Array.isArray(dining)) {
+    const items = dining
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+
+    if (items.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className={containerClassName}>
+        <HeadingTag className={headingClassName}>{heading}</HeadingTag>
+        <div className="space-y-2">
+          {items.map((item, index) => (
+            <p key={index} className={itemClassName}>
+              {item}
+            </p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const entries = [
+    { label: 'Breakfast', value: dining.breakfast },
+    { label: 'Lunch', value: dining.lunch },
+    { label: 'Dinner', value: dining.dinner },
+  ].filter((entry) => entry.value && typeof entry.value === 'string' && entry.value.trim());
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={containerClassName}>
+      <HeadingTag className={headingClassName}>{heading}</HeadingTag>
+      <div className="space-y-2">
+        {entries.map(({ label, value }) => (
+          <p key={label} className={itemClassName}>
+            <strong>{label}:</strong> {value}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const renderTransportationDetails = (
+  transportation?: string | string[],
+  heading: string = '🚗 Transportation',
+  headingClassName: string = 'text-lg font-semibold text-gray-800 mb-2',
+  containerClassName: string = 'mb-4',
+  textClassName: string = 'text-gray-700 whitespace-pre-line'
+) => {
+  if (!transportation) {
+    return null;
+  }
+
+  if (Array.isArray(transportation)) {
+    const items = transportation.filter(Boolean);
+    if (items.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className={containerClassName}>
+        <h4 className={headingClassName}>{heading}</h4>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          {items.map((item, index) => (
+            <li key={`${item}-${index}`}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  const trimmed = transportation.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  return (
+    <div className={containerClassName}>
+      <h4 className={headingClassName}>{heading}</h4>
+      <p className={textClassName}>{trimmed}</p>
+    </div>
+  );
+};
+
+const renderSection = (label: string, sectionInput?: SectionInput, icon?: string) => {
+  const section = normalizeSection(sectionInput);
+
+  if (!section) {
+    return null;
+  }
+
+  const activities = Array.isArray(section.activities)
+    ? section.activities.join('\n')
+    : section.activities;
+
+  return (
+    <div className="mb-4">
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        {icon ? `${icon} ` : ''}{label}
+      </h3>
+      {section.summary && <p className="text-gray-700 mb-2">{section.summary}</p>}
+      {activities && <p className="text-gray-700 whitespace-pre-line">{activities}</p>}
+      {section.notes && <p className="text-gray-600 italic mt-2">{section.notes}</p>}
+      {renderTransportationDetails(
+        section.transportation,
+        '🚗 Transportation',
+        'text-sm font-semibold uppercase tracking-wide text-gray-600 mb-1',
+        'mt-3',
+        'text-gray-700'
+      )}
+      {renderDining(section.dining, {
+        heading: 'Dining',
+        headingTag: 'h4',
+        headingClassName: 'text-sm font-semibold uppercase tracking-wide text-gray-600 mb-1',
+        containerClassName: 'mt-3',
+        textClassName: 'text-gray-700 whitespace-pre-line',
+        itemClassName: 'text-gray-700',
+      })}
+    </div>
+  );
+};
+
+const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
+  layout,
+  formData,
+  mapImageUrl = null,
+  isLoading = false,
+  onStartOver,
+  onDownloadPdf,
+  onPrepareEmail,
+}) => {
+  if (!layout || !formData) {
+    return null;
+  }
+
+  const heroName =
+    safeTrim(formData.tripNickname) ||
+    safeTrim(formData.travelStyleAnswers?.tripNickname) ||
+    safeTrim(formData.location) ||
+    'Your Adventure';
+
+  const travelersLabel = (() => {
+    const adults = formData.adults ?? 0;
+    const children = formData.children ?? 0;
+    const adultPart = `${adults} adult${adults === 1 ? '' : 's'}`;
+    const childPart =
+      children > 0 ? ` • ${children} kid${children === 1 ? '' : 's'}` : '';
+    return `${adultPart}${childPart}`;
+  })();
+
+  const dateLabel =
+    formData.departDate && formData.returnDate
+      ? `${formData.departDate} → ${formData.returnDate}`
+      : 'Flexible';
+
+  const dailyPlans: LayoutDailyPlan[] = Array.isArray(layout.dailyPlans) && layout.dailyPlans.length > 0
+    ? layout.dailyPlans
+    : Array.isArray(layout.daily)
+      ? layout.daily
+      : [];
+
+  const hasDailyPlans = dailyPlans.length > 0;
+
+  const handleDownload = () => {
+    onDownloadPdf?.();
+  };
+
+  const handlePrepareEmail = () => {
+    onPrepareEmail?.();
+  };
+
+  return (
+    <section className="w-full bg-[#406170] py-10">
+      <div className="space-y-2 text-center pt-[55px]">
+        <div className="text-[clamp(3rem,8vw,5rem)] font-bold uppercase whitespace-nowrap pt-[15px] pb-5">
+          <span className="text-[#ece8de]">YOUR </span>
+          <span className="text-[#f9dd8b]">PERSONALIZED </span>
+          <span className="text-[#ece8de]">ITINERARY</span>
+        </div>
+        <div
+          className="text-[35px] font-bold uppercase py-3 tracking-[3px]"
+          style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
+        >
+          TRIP SUMMARY | "{heroName}"
+        </div>
+      </div>
+
+      <div className="mx-auto px-[7%] pt-[3%] pb-[3%]">
+        <div className="space-y-8">
+          <div className="rounded-3xl shadow-xl p-6 bg-white">
+            <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 text-[#1f2f35] text-sm">
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                  Destination
+                </dt>
+                <dd className="mt-2 text-lg font-semibold text-[#1f2f35]">
+                  {safeTrim(formData.location) || '—'}
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                  Dates
+                </dt>
+                <dd className="mt-2 text-lg font-semibold text-[#1f2f35] break-words">
+                  {dateLabel}
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                  Travelers
+                </dt>
+                <dd className="mt-2 text-lg font-semibold text-[#1f2f35]">
+                  {travelersLabel}
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                  Budget
+                </dt>
+                <dd className="mt-2 text-sm text-[#1f2f35] space-y-1">
+                  <div>
+                    <span className="font-semibold">Currency:</span>{' '}
+                    {safeTrim(formData.currency) || '—'}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Amount:</span>{' '}
+                    {typeof formData.budget === 'number' && formData.budget > 0
+                      ? formData.budget.toLocaleString()
+                      : '—'}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Mode:</span>{' '}
+                    {safeTrim((formData as any).budgetMode) || '—'}
+                  </div>
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
+                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                  Prepared for
+                </dt>
+                <dd className="mt-2 text-lg font-semibold text-[#1f2f35] break-words">
+                  {safeTrim(formData.contactName) || safeTrim((formData.contactInfo as any)?.name) || '—'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 overflow-hidden shadow-lg">
+            {mapImageUrl ? (
+              <img
+                src={mapImageUrl}
+                alt="Trip map"
+                className="w-full object-cover max-h-[420px]"
+              />
+            ) : (
+              <div className="w-full flex flex-col items-center justify-center bg-[#f1f6f4] text-[#4d6b73] min-h-[260px]">
+                {isLoading ? 'Loading map…' : 'Map preview not available'}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div
+          className="shadow-sm mb-[45px] p-[3%]"
+          style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
+        >
+          <h3 className="font-bold uppercase text-center text-[35px] tracking-[0.05em]">
+            🗓️ Daily Itinerary
+          </h3>
+        </div>
+
+        {hasDailyPlans ? (
+          <div className="space-y-4">
+            {dailyPlans.map((plan, index) => {
+              const eveningInput = (plan as any).evening ?? (plan as any).evenning;
+              const dayNumber = plan.day ?? index + 1;
+              const titleSuffix = plan.title || (plan as any).dayTitle || plan.date || '';
+              const title = titleSuffix
+                ? `Day ${dayNumber}: ${titleSuffix}`
+                : `Day ${dayNumber}`;
+              const summary = plan.summary || (plan as any).description || '';
+              const highlight =
+                typeof plan.signatureHighlight === 'string'
+                  ? plan.signatureHighlight
+                  : typeof (plan as any).highlight === 'string'
+                    ? (plan as any).highlight
+                    : undefined;
+
+              const dining = plan.dining ?? (plan as any).meals ?? (plan as any).diningOptions;
+
+              return (
+              <div
+                key={`${plan.day ?? index}`}
+                className="max-w-4xl mx-auto shadow-sm rounded-b-2xl mb-[20px]"
+              >
+                <div
+                  className="grid grid-cols-1 rounded-t-2xl"
+                  style={{ backgroundColor: '#406170', color: '#ffffff' }}
+                >
+                  <div className="flex flex-wrap items-baseline gap-3 pr-6 pl-14 py-4">
+                      <h4 className="font-bold text-[21px]">
+                      {title}
+                    </h4>
+                    {summary && (
+                        <p className="font-bold text-[21px] text-white/80">
+                        {summary}
+                      </p>
+                    )}
+                    {plan.date && !titleSuffix && (
+                        <span className="text-sm text-white/70">{plan.date}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-5 bg-white rounded-[36px] p-6 border-[3px] border-gray-200">
+                  {renderSection('Morning', plan.morning, '🌅')}
+                  {renderSection('Afternoon', plan.afternoon, '☀️')}
+                  {renderSection('Evening', eveningInput, '🌙')}
+                  {renderDining(dining)}
+                  {renderSection('Transportation', plan.transportation, '🚗')}
+
+                  {highlight && (
+                    <div className="p-5 rounded-2xl bg-gradient-to-r from-[#f9dd8b]/60 to-[#f2a65a]/60 text-[#4d3217]">
+                      <h4 className="text-lg font-semibold mb-2">
+                        ✨ Signature highlight
+                      </h4>
+                      <p className="whitespace-pre-line">{highlight}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-slate-500">
+            Daily itinerary details are not available yet.
+          </p>
+        )}
+      </div>
+
+      {layout.travelTips && layout.travelTips.length > 0 && (
+        <div className="space-y-8">
+          <div
+            className="border border-slate-100 shadow-sm p-6 text-center mt-[45px] text-[35px]"
+            style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
+          >
+            <h3 className="font-bold uppercase tracking-widest mb-4 text-[35px]">
+              💡 Tips for Your Trip
+            </h3>
+          </div>
+
+          <div className="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#406170]">
+            Tailored for {heroName} using your travel preferences
+          </div>
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6 rounded-2xl bg-[#ece8de] border-y-[10px] border-[#d1d5db]">
+            {layout.travelTips.map((tip, index) => (
+              <article key={`${tip.title ?? index}`} className="space-y-2 py-4">
+                {tip.title && (
+                  <h4 className="text-base font-semibold text-slate-900">
+                    {tip.title}
+                  </h4>
+                )}
+                {tip.description && (
+                  <p className="text-sm text-slate-600 leading-snug">
+                    {tip.description}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(layout.keyTakeaways || layout.nextSteps) && (
+        <div className="space-y-8 mt-[45px]">
+          <div
+            className="border border-slate-100 shadow-sm p-6 text-center text-[35px]"
+            style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
+          >
+            <h3 className="font-bold uppercase tracking-widest mb-4 text-[35px]">
+              ❓ What do you want to do next?
+            </h3>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
+            {layout.keyTakeaways && (
+              <section className="rounded-2xl bg-white shadow-md border border-slate-200 p-6">
+                <h4 className="text-lg font-semibold text-slate-800 mb-3">
+                  Key takeaways
+                </h4>
+                {formatList(layout.keyTakeaways)}
+              </section>
+            )}
+
+            {layout.nextSteps && (
+              <section className="rounded-2xl bg-white shadow-md border border-slate-200 p-6">
+                <h4 className="text-lg font-semibold text-slate-800 mb-3">
+                  Next steps
+                </h4>
+                {formatList(layout.nextSteps)}
+              </section>
+            )}
+          </div>
+        </div>
+      )}
+
+
+
+      <div className="rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-3 my-[10px] max-w-4xl mx-auto mt-10 mb-16 bg-white">
+        <button
+          type="button"
+          onClick={onStartOver}
+          className="flex items-center gap-3 px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 text-blue-700 font-medium transition-colors"
+        >
+          <span>🔀</span>
+          <span>MAKE CHANGES TO MY ITINERARY</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="flex items-center gap-3 px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 text-green-700 font-medium transition-colors"
+        >
+          <span>⬇️</span>
+          <span>EXPORT IT AS A PDF</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handlePrepareEmail}
+          className="flex items-center gap-3 px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 text-purple-700 font-medium transition-colors"
+        >
+          <span>📧</span>
+          <span>EMAIL IT</span>
+        </button>
+
+        <button
+          type="button"
+          className="flex items-center gap-3 px-4 py-3 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 text-orange-700 font-medium transition-colors"
+        >
+          <span>🔗</span>
+          <span>SHARE VIA LINK</span>
+        </button>
+
+        <button
+          type="button"
+          className="flex items-center gap-3 px-4 py-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 text-red-700 font-medium transition-colors"
+        >
+          <span>🗺️</span>
+          <span>LET HYLO PLAN AND BOOK EVERYTHING FOR ME WITH HYLO CONCIERGE</span>
+        </button>
+      </div>
+    </section>
+  );
+};
+
+export default ItineraryDisplay;
