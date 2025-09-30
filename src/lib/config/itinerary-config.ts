@@ -183,7 +183,7 @@ export function getItineraryConfig(): ItineraryConfig {
       },
       inngest: {
         eventKey: process.env.INNGEST_EVENT_KEY!,
-        signingKey: process.env.INNGEST_SIGNING_KEY!,
+        signingKey: process.env.INNGEST_BRANCH_SIGNING_KEY || process.env.INNGEST_SIGNING_KEY!,
       },
       redis: {
         restUrl: process.env.KV_REST_API_URL!,
