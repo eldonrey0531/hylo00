@@ -40,8 +40,8 @@ SERP_API_KEY=your_serp_api_key
 # Workflow & Storage
 INNGEST_EVENT_KEY=your_inngest_event_key
 INNGEST_SIGNING_KEY=your_inngest_signing_key
-UPSTASH_REDIS_REST_URL=your_upstash_redis_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+KV_REST_API_URL=your_upstash_kv_url
+KV_REST_API_TOKEN=your_upstash_kv_token
 
 # Development
 NODE_ENV=development

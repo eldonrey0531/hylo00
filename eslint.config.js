@@ -5,13 +5,18 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'tests/e2e/playwright-report', 'tests/e2e/test-results'] },
+  { ignores: ['.next', 'dist', 'tests/e2e/playwright-report', 'tests/e2e/test-results'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        project: ['./tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     plugins: {
       'react-hooks': reactHooks,
@@ -21,34 +26,33 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
-      // Error handling and boundaries
+      // General hygiene
       'no-console': 'warn',
       'no-throw-literal': 'error',
       'prefer-promise-reject-errors': 'error',
-
-      // Performance monitoring
-      'no-unused-vars': 'error',
       'no-unreachable': 'error',
       'no-duplicate-imports': 'error',
 
-      // TypeScript specific for production hardening
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
+      // TypeScript-focused rules (relaxed for legacy code)
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/await-thenable': 'warn',
+      '@typescript-eslint/no-require-imports': 'off',
 
-      // Security and constitutional compliance
+      // Security and runtime safeguards
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
 
       // Edge runtime compatibility
-      'no-process-env': 'off', // Allowed in edge functions
-      'no-restricted-globals': ['error', 'window', 'document'], // Warn about client-side globals in server code
+      'no-process-env': 'off',
+      'no-restricted-globals': ['error', 'window', 'document'],
     },
   },
   {

@@ -1,7 +1,7 @@
 import { stateStore } from '@/lib/redis/stateStore';
 import { logger } from '@/utils/console-logger';
 import { buildGrokItineraryPrompt, generateGrokItineraryDraft } from '@/lib/ai/architectAI';
-import { storeItineraryVector, generateSimpleEmbedding } from '@/lib/upstash/vector';
+import { storeItineraryForSearch } from '@/lib/redis/redis-vector';
 import { inngest } from '@/inngest/client';
 import type { TripFormData } from '@/types';
 
@@ -425,14 +425,10 @@ export const itineraryWorkflow = inngest.createFunction(
         hasItinerary: !!aiArchitectResult.cleanedJson,
       });
 
-      // Step 3: Store in Vector Database for semantic search
-      await step.run('store-vector', async () => {
+      // Step 3: Store in Redis for semantic search
+      await step.run('store-search-data', async () => {
         try {
-          // Create embedding text from trip data
-          const embeddingText = `${formData.destination} ${formData.duration} days ${formData.budget} ${formData.activities?.join(' ')} ${formData.preferences?.join(' ')}`;
-          const embedding = generateSimpleEmbedding(embeddingText);
-          
-          const vectorStored = await storeItineraryVector(workflowId, embedding, {
+          const searchStored = await storeItineraryForSearch(workflowId, {
             destination: formData.destination,
             duration: parseInt(formData.duration),
             budget: formData.budget,
@@ -442,19 +438,18 @@ export const itineraryWorkflow = inngest.createFunction(
             timestamp: new Date().toISOString(),
           });
 
-          logger.log(20, 'VECTOR_STORAGE_RESULT', 'inngest/functions/itinerary.ts', 'storeVector', {
+          logger.log(20, 'SEARCH_DATA_STORAGE_RESULT', 'inngest/functions/itinerary.ts', 'storeSearchData', {
             workflowId,
-            vectorStored,
-            embeddingDimensions: embedding.length,
+            searchStored,
           });
 
-          return { vectorStored };
-        } catch (vectorError) {
-          logger.error(20, 'VECTOR_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeVector', vectorError instanceof Error ? vectorError : String(vectorError), {
+          return { searchStored };
+        } catch (searchError) {
+          logger.error(20, 'SEARCH_DATA_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeSearchData', searchError instanceof Error ? searchError : String(searchError), {
             workflowId,
           });
-          // Don't fail the workflow if vector storage fails
-          return { vectorStored: false };
+          // Don't fail the workflow if search storage fails
+          return { searchStored: false };
         }
       });
 

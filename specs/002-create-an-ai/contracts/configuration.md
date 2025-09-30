@@ -14,8 +14,8 @@
 | `SERP_API_KEY` | Yes | SERP API key used for Google Maps Static API image fetches. | `serp_live_xxx` |
 | `INNGEST_EVENT_KEY` | Yes | Inngest event key for dispatching itinerary workflow jobs. | `ingest_ev_xxx` |
 | `INNGEST_SIGNING_KEY` | Yes | Signing key to validate Inngest webhook callbacks. | `ingest_sign_xxx` |
-| `UPSTASH_REDIS_REST_URL` | Yes | REST endpoint for dedicated Upstash Redis instance. | `https://us1-upstash-url` |
-| `UPSTASH_REDIS_REST_TOKEN` | Yes | Auth token for Upstash requests. | `AXXX` |
+| `KV_REST_API_URL` | Yes | REST endpoint for Upstash KV database instance. | `https://us1-upstash-url` |
+| `KV_REST_API_TOKEN` | Yes | Auth token for Upstash KV requests. | `AXXX` |
 | `NODE_ENV` | Yes | Runtime mode; must be `development`, `preview`, or `production`. | `development` |
 | `ITINERARY_LOG_LEVEL` | No (defaults to `info`) | Controls verbosity of console logging (`silent`, `error`, `warn`, `info`, `debug`). | `debug` |
 | `ITINERARY_CACHE_TTL_MINUTES` | No (defaults to 120) | Minutes to cache AI results in Redis for manual replays. | `180` |
@@ -47,7 +47,7 @@ Flags are configured via `lib/config/itinerary-config.ts` (to be implemented) an
 | Exa Semantic Search | `https://api.exa.ai/search` | Use `POST` for `search` and `GET` for `content`. |
 | SERP Google Maps Static | `https://serpapi.com/search.json` with `engine=google_maps` | Compose map image URL server-side before proxying. |
 | Inngest API | `https://api.inngest.com` | SDK handles request signing; ensure event key loaded. |
-| Upstash Redis REST | Provided by `UPSTASH_REDIS_REST_URL` | Use `pipeline` endpoints for multi-command flows. |
+| Upstash KV REST | Provided by `KV_REST_API_URL` | Use `pipeline` endpoints for multi-command flows. |
 
 All network calls must route server-side through Next.js App Router handlers to keep keys private.
 

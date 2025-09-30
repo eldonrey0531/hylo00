@@ -66,8 +66,6 @@ function validateRequiredEnvVars(): void {
     'INNGEST_SIGNING_KEY',
     'KV_REST_API_URL',
     'KV_REST_API_TOKEN',
-    'UPSTASH_VECTOR_REST_URL',
-    'UPSTASH_VECTOR_REST_TOKEN',
   ];
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);

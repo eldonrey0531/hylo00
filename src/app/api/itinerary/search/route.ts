@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/utils/console-logger';
-import { searchSimilarItineraries, generateSimpleEmbedding } from '@/lib/upstash/vector';
+import { searchSimilarItineraries } from '@/lib/redis/redis-vector';
 
 /**
  * POST /api/itinerary/search
@@ -30,20 +30,16 @@ export async function POST(request: NextRequest) {
       topK,
     });
 
-    // Generate embedding for search query
-    const searchText = `${destination} ${duration || ''} days ${budget || ''} ${activities?.join(' ') || ''} ${preferences?.join(' ') || ''}`;
-    const queryEmbedding = generateSimpleEmbedding(searchText);
-
-    logger.log(3, 'Query embedding generated', 'search/route.ts', 'POST', {
-      embeddingDimensions: queryEmbedding.length,
-      searchText: searchText.substring(0, 100),
-    });
-
-    // Search for similar itineraries
+    // Search for similar itineraries using Redis
     const similarItineraries = await searchSimilarItineraries(
-      queryEmbedding,
-      topK,
-      true // include metadata
+      {
+        destination,
+        duration: duration ? parseInt(duration) : undefined,
+        budget,
+        activities,
+        preferences,
+      },
+      topK
     );
 
     logger.log(4, 'Similar itineraries found', 'search/route.ts', 'POST', {

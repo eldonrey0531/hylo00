@@ -1,4 +1,4 @@
-// File: C:\Users\raze0\Documents\hylo00\hylo00\src\app\layout.tsx
+// File: C:\Users\raze0\Documents\vercel_deploy\hylo00_original\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
