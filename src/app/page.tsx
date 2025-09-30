@@ -11,7 +11,6 @@ import { TravelStyleChoice } from '@/types/travel-style-choice';
 import ItineraryDisplay from '@/components/ItineraryDisplay';
 
 const STATUS_POLL_INTERVAL = 2000;
-const MAX_STATUS_NOT_FOUND_RETRIES = 5;
 
 const emojiSequence = ["✈️", "🏝️", "🗺️", "🚗", "🛳️", "🎒", "🏨", "🚆", "🚌", "🌍"];
 
@@ -213,17 +212,8 @@ function Page() {
       if (!response.ok) {
         if (response.status === 404) {
           notFoundRetryRef.current += 1;
-
-          if (notFoundRetryRef.current <= MAX_STATUS_NOT_FOUND_RETRIES) {
-            scheduleNextPoll(wfId);
-            return;
-          }
-
-          console.warn(`Workflow ${wfId} not found after retries. Stopping polling.`);
-          setIsGenerating(false);
-          setWorkflowId(null);
-          activeWorkflowIdRef.current = null;
-          clearExistingPoll();
+          console.log(`Workflow ${wfId} not found (attempt ${notFoundRetryRef.current}). Continuing to poll...`);
+          scheduleNextPoll(wfId);
           return;
         }
 
