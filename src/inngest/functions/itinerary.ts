@@ -1,6 +1,7 @@
 import { stateStore } from '@/lib/redis/stateStore';
 import { logger } from '@/utils/console-logger';
 import { buildGrokItineraryPrompt, generateGrokItineraryDraft } from '@/lib/ai/architectAI';
+import { storeItineraryVector, generateSimpleEmbedding } from '@/lib/upstash/vector';
 import { inngest } from '@/inngest/client';
 import type { TripFormData } from '@/types';
 
@@ -424,21 +425,77 @@ export const itineraryWorkflow = inngest.createFunction(
         hasItinerary: !!aiArchitectResult.cleanedJson,
       });
 
+      // Step 3: Store in Vector Database for semantic search
+      await step.run('store-vector', async () => {
+        try {
+          // Create embedding text from trip data
+          const embeddingText = `${formData.destination} ${formData.duration} days ${formData.budget} ${formData.activities?.join(' ')} ${formData.preferences?.join(' ')}`;
+          const embedding = generateSimpleEmbedding(embeddingText);
+          
+          const vectorStored = await storeItineraryVector(workflowId, embedding, {
+            destination: formData.destination,
+            duration: parseInt(formData.duration),
+            budget: formData.budget,
+            activities: formData.activities || [],
+            preferences: formData.preferences || [],
+            itinerary: aiArchitectResult.itinerary,
+            timestamp: new Date().toISOString(),
+          });
+
+          logger.log(20, 'VECTOR_STORAGE_RESULT', 'inngest/functions/itinerary.ts', 'storeVector', {
+            workflowId,
+            vectorStored,
+            embeddingDimensions: embedding.length,
+          });
+
+          return { vectorStored };
+        } catch (vectorError) {
+          logger.error(20, 'VECTOR_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeVector', vectorError instanceof Error ? vectorError : String(vectorError), {
+            workflowId,
+          });
+          // Don't fail the workflow if vector storage fails
+          return { vectorStored: false };
+        }
+      });
+
       // Save the complete AI output to a JSON file for inspection
       const fs = require('fs');
       const path = require('path');
-      const outputFile = path.join(process.cwd(), 'logs', `${workflowId}.json`);
-      const completeOutput = {
-        aiArchitectResult,
-        workflowId,
-        timestamp: new Date().toISOString(),
-      };
-      fs.writeFileSync(outputFile, JSON.stringify(completeOutput, null, 2));
-      logger.log(19, 'AI_OUTPUT_SAVED_TO_FILE', 'inngest/functions/itinerary.ts', 'storeItinerary', {
-        workflowId,
-        outputFile,
-        fileSize: fs.statSync(outputFile).size,
-      });
+      // Only attempt file logging in development environment
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          const logDir = path.join(process.cwd(), 'logs');
+          
+          // Ensure directory exists
+          if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+          }
+          
+          const outputFile = path.join(logDir, `${workflowId}.json`);
+          const completeOutput = {
+            aiArchitectResult,
+            workflowId,
+            timestamp: new Date().toISOString(),
+          };
+          
+          fs.writeFileSync(outputFile, JSON.stringify(completeOutput, null, 2));
+          logger.log(19, 'AI_OUTPUT_SAVED_TO_FILE', 'inngest/functions/itinerary.ts', 'storeItinerary', {
+            workflowId,
+            outputFile,
+            fileSize: fs.statSync(outputFile).size,
+          });
+        } catch (fileError) {
+          logger.warn(19, 'AI_OUTPUT_FILE_SAVE_FAILED', 'inngest/functions/itinerary.ts', 'storeItinerary', 'Failed to save AI output to file', {
+            workflowId,
+            error: fileError instanceof Error ? fileError.message : String(fileError),
+          });
+        }
+      } else {
+        logger.log(19, 'AI_OUTPUT_FILE_LOGGING_SKIPPED', 'inngest/functions/itinerary.ts', 'storeItinerary', {
+          workflowId,
+          reason: 'File logging disabled in production environment',
+        });
+      }
 
       if (!stored) {
         logger.warn(21, 'REDIS_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeItinerary', 'Failed to store itinerary in Redis', {

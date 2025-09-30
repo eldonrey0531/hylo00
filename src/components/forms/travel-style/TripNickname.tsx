@@ -29,7 +29,7 @@ const TripNickname: React.FC<TripNicknameProps> = ({
   const hasValidationError = validationErrors.length > 0;
 
   return (
-    <div className={`bg-form-box rounded-[36px] p-6 border-3 ${hasValidationError ? 'border-red-500' : 'border-gray-200'}`}>
+    <div className="bg-form-box rounded-[36px] p-2 border-gray-200">
       <div className="space-y-6">
         <div>
           <h4 className="text-[25px] font-bold text-primary uppercase tracking-wide mb-2 font-raleway">
