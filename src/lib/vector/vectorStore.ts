@@ -33,25 +33,28 @@ interface KeyFacts {
   travelPartyFirstSentence?: string;
 }
 
-const VECTOR_ENDPOINT = process.env.VECTOR_DB_ENDPOINT || process.env.VECTOR_DB_WRITE_URL;
-const VECTOR_API_KEY = process.env.VECTOR_DB_API_KEY || process.env.VECTOR_DB_TOKEN;
+const VECTOR_ENDPOINT = process.env.UPSTASH_VECTOR_REST_URL;
+const VECTOR_API_KEY = process.env.UPSTASH_VECTOR_REST_TOKEN;
 
 export async function storeItineraryVector(params: StoreItineraryVectorParams): Promise<StoreItineraryVectorResult> {
   const { workflowId, sessionId, destination, itinerary, model, formData } = params;
 
-  if (!VECTOR_ENDPOINT) {
-    logger.warn(201, 'VECTOR_DB_ENDPOINT_MISSING', 'vectorStore.ts', 'storeItineraryVector', 'Vector endpoint environment variable not set', {
+  // Check if vector database is configured
+  if (!VECTOR_ENDPOINT || !VECTOR_API_KEY) {
+    logger.warn(200, 'VECTOR_DB_NOT_CONFIGURED', 'vectorStore.ts', 'storeItineraryVector', 'Vector database not configured, skipping storage', {
       workflowId,
-      sessionId,
+      hasEndpoint: !!VECTOR_ENDPOINT,
+      hasApiKey: !!VECTOR_API_KEY,
     });
 
     return {
       stored: false,
       vectorIds: [],
-      message: 'Vector endpoint not configured',
+      message: 'Vector database not configured',
     };
   }
 
+  // Extract key facts for metadata
   const keyFacts = extractKeyFacts(itinerary, destination, formData);
 
   logger.debug(200, 'VECTOR_KEY_FACTS_EXTRACTED', 'vectorStore.ts', 'storeItineraryVector', {
@@ -59,6 +62,7 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
     keyFacts,
   });
 
+  // Build entries for logging (but don't store them)
   const entries = buildVectorEntries({
     workflowId,
     keyFacts,
@@ -76,11 +80,18 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
     };
   }
 
+  // Generate embeddings using Jina AI for session-only processing
   let embeddingModel = 'jina-embeddings-v3';
   let embeddingUsage: Record<string, unknown> | undefined;
   let embeddings: number[][];
 
   try {
+    logger.debug(203, 'VECTOR_EMBEDDING_GENERATION_STARTED', 'vectorStore.ts', 'storeItineraryVector', {
+      workflowId,
+      entryCount: entries.length,
+      model: embeddingModel,
+    });
+
     const embeddingResult = await generateJinaEmbeddings(
       entries.map((entry) => entry.text),
       {
@@ -96,8 +107,16 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
     if (!Array.isArray(embeddings) || embeddings.length !== entries.length) {
       throw new Error('Embedding count mismatch for itinerary entries.');
     }
+
+    logger.log(204, 'VECTOR_EMBEDDING_GENERATION_SUCCESS', 'vectorStore.ts', 'storeItineraryVector', {
+      workflowId,
+      embeddingModel,
+      embeddingUsage,
+      actualEmbeddingCount: embeddings.length,
+      totalTokens: embeddingUsage?.totalTokens,
+    });
   } catch (error) {
-    logger.error(203, 'VECTOR_EMBEDDING_FAILED', 'vectorStore.ts', 'storeItineraryVector', error instanceof Error ? error.message : String(error), {
+    logger.error(205, 'VECTOR_EMBEDDING_GENERATION_FAILED', 'vectorStore.ts', 'storeItineraryVector', error instanceof Error ? error : String(error), {
       workflowId,
     });
 
@@ -124,12 +143,17 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
   const successes: string[] = [];
   const failures: Array<{ id: string; error: string }> = [];
 
+  // Store vectors in Upstash Vector database
   for (let index = 0; index < entries.length; index += 1) {
     const entry = entries[index];
     const vector = embeddings[index];
 
     if (!Array.isArray(vector) || vector.length === 0) {
       failures.push({ id: entry.id, error: 'Received empty vector from embeddings API' });
+      logger.error(206, 'VECTOR_EMPTY_VECTOR', 'vectorStore.ts', 'storeItineraryVector', 'Empty vector received', {
+        workflowId,
+        entryId: entry.id,
+      });
       continue;
     }
 
@@ -144,41 +168,35 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
     };
 
     try {
-      logger.debug(204, 'VECTOR_DB_REQUEST', 'vectorStore.ts', 'storeItineraryVector', {
-        endpoint: VECTOR_ENDPOINT,
+      logger.debug(207, 'VECTOR_DB_UPSERT_STARTED', 'vectorStore.ts', 'storeItineraryVector', {
         workflowId,
         entryId: entry.id,
-        hasApiKey: Boolean(VECTOR_API_KEY),
+        endpoint: VECTOR_ENDPOINT,
         embeddingModel,
         category: entry.metadata?.category,
+        payloadSize: JSON.stringify(payload).length,
       });
 
-      const response = await fetch(VECTOR_ENDPOINT, {
+      // Upsert vector to Upstash Vector database
+      const response = await fetch(`${VECTOR_ENDPOINT}/upsert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(VECTOR_API_KEY ? { Authorization: `Bearer ${VECTOR_API_KEY}` } : {}),
+          'Authorization': `Bearer ${VECTOR_API_KEY}`,
         },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorBody = await response.text();
-        failures.push({ id: entry.id, error: `HTTP ${response.status}: ${errorBody}` });
-        logger.error(205, 'VECTOR_DB_REQUEST_FAILED', 'vectorStore.ts', 'storeItineraryVector', `HTTP ${response.status}`, {
-          workflowId,
-          entryId: entry.id,
-          status: response.status,
-          body: errorBody,
-        });
-        continue;
+        const errorText = await response.text();
+        throw new Error(`Vector upsert failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      const result = await response.json().catch(() => ({ id: entry.id }));
-      const storedId = result?.id || entry.id;
+      const result = await response.json();
+      const storedId = result.id || entry.id;
       successes.push(storedId);
 
-      logger.log(206, 'VECTOR_DB_REQUEST_SUCCEEDED', 'vectorStore.ts', 'storeItineraryVector', {
+      logger.log(208, 'VECTOR_DB_UPSERT_SUCCESS', 'vectorStore.ts', 'storeItineraryVector', {
         workflowId,
         entryId: entry.id,
         storedId,
@@ -187,18 +205,30 @@ export async function storeItineraryVector(params: StoreItineraryVectorParams): 
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push({ id: entry.id, error: message });
-      logger.error(207, 'VECTOR_DB_REQUEST_ERROR', 'vectorStore.ts', 'storeItineraryVector', message, {
+      logger.error(209, 'VECTOR_DB_UPSERT_FAILED', 'vectorStore.ts', 'storeItineraryVector', message, {
         workflowId,
         entryId: entry.id,
       });
     }
   }
 
+  const stored = failures.length === 0 && successes.length > 0;
+
+  logger.log(210, 'VECTOR_DB_PROCESSING_COMPLETED', 'vectorStore.ts', 'storeItineraryVector', {
+    workflowId,
+    stored,
+    vectorIds: successes,
+    failureCount: failures.length,
+    embeddingModel,
+    totalTokens: embeddingUsage?.totalTokens,
+    message: stored ? 'Embeddings generated and stored in vector database' : 'Some vector entries failed to store in database',
+  });
+
   return {
-    stored: failures.length === 0 && successes.length > 0,
+    stored,
     vectorIds: successes,
     failures: failures.length > 0 ? failures : undefined,
-    message: failures.length > 0 ? 'Some vector entries failed to store' : undefined,
+    message: stored ? 'Embeddings generated and processed in session memory only' : 'Some vector entries failed to process',
   };
 }
 

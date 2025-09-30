@@ -57,7 +57,7 @@ export const tripDetailsSchema = z
 
     travelStyleChoice: travelStyleEnum.default('not-selected'),
 
-    travelStyleAnswers: z.record(z.any()).optional(),
+  travelStyleAnswers: z.record(z.string(), z.any()).optional(),
 
     // T002: Enhanced selection fields
     selectedGroups: z.array(z.string()).optional(),
@@ -66,7 +66,7 @@ export const tripDetailsSchema = z
     customInterestsText: z.string().max(200, 'Custom interest text too long').optional(),
     selectedInclusions: z.array(z.string()).optional(),
     customInclusionsText: z.string().max(200, 'Custom inclusion text too long').optional(),
-    inclusionPreferences: z.record(z.any()).optional(),
+  inclusionPreferences: z.record(z.string(), z.any()).optional(),
     
     // T002: Travel style comprehensive data
     travelExperience: z.array(z.string()).optional(),

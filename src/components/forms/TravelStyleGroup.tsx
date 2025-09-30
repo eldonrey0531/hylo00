@@ -24,6 +24,7 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
   };
 
   const handleVibeChange = (vibes: string[]) => {
+    console.log('handleVibeChange called with:', vibes);
     onFormChange?.({
       ...formData,
       travelStyleAnswers: {
@@ -76,7 +77,7 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
   return (
     <div className="space-y-8">
 
-      <div className="bg-form-box rounded-[20px] p-6">
+      <div className="bg-form-box rounded-[36px] p-6">
         <div className="mb-4">
           <h4 className="text-[25px] font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
             What is your group's level of travel experience?
@@ -91,7 +92,7 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
         />
       </div>
 
-      <div className="bg-form-box rounded-[20px] p-6">
+      <div className="bg-form-box rounded-[36px] p-6">
         <div className="mb-4">
           <h4 className="text-[25px] font-bold text-primary uppercase tracking-wide mb-1 font-raleway">
             What do you want the "vibe" of this trip to be?
@@ -108,21 +109,21 @@ export const TravelStyleGroup: React.FC<TravelStyleGroupProps> = ({ onFormChange
         />
       </div>
 
-      <div className="bg-form-box rounded-[20px] p-6">
+      <div className="bg-form-box rounded-[36px] p-6">
         <SampleDays
           selectedDays={formData?.travelStyleAnswers?.sampleDays || []}
           onSelectionChange={handleSampleDaysChange}
         />
       </div>
 
-      <div className="bg-form-box rounded-[20px] p-6">
+      <div className="bg-form-box rounded-[36px] p-6">
         <DinnerChoice
           selectedChoice={formData?.travelStyleAnswers?.dinnerChoices || []}
           onSelectionChange={handleDinnerChoiceChange}
         />
       </div>
 
-      <div className="bg-form-box rounded-[20px] p-6">
+      <div className="bg-form-box rounded-[36px] p-6">
         <TripNickname
           tripNickname={formData?.travelStyleAnswers?.tripNickname || ''}
           onNicknameChange={handleTripNicknameChange}

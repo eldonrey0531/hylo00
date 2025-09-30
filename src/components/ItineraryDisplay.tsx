@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import type { FormData } from '@/components/forms/TripDetails/types';
 
 type LayoutSection = {
@@ -454,8 +455,18 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
   };
 
   return (
-    <section className="w-full bg-[#406170] py-10">
-      <div className="space-y-2 text-center pt-[55px]">
+    <motion.section 
+      className="w-full bg-[#406170] py-10"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.div 
+        className="space-y-2 text-center pt-[55px]"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
         <div className="text-[clamp(3rem,8vw,5rem)] font-bold uppercase whitespace-nowrap pt-[15px] pb-5">
           <span className="text-[#ece8de]">YOUR </span>
           <span className="text-[#f9dd8b]">PERSONALIZED </span>
@@ -467,69 +478,71 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         >
           TRIP SUMMARY | "{heroName}"
         </div>
-      </div>
+      </motion.div>
 
       <div className="mx-auto px-[7%] pt-[3%] pb-[3%]">
         <div className="space-y-8">
-          <div className="rounded-3xl shadow-xl p-6 bg-white">
+          <motion.div 
+            className="rounded-3xl shadow-xl p-6 bg-white"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 text-[#1f2f35] text-sm">
-              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
-                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
-                  Destination
-                </dt>
-                <dd className="mt-2 text-lg font-semibold text-[#1f2f35]">
-                  {safeTrim(formData.location) || '—'}
-                </dd>
-              </div>
-              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
-                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
-                  Dates
-                </dt>
-                <dd className="mt-2 text-lg font-semibold text-[#1f2f35] break-words">
-                  {dateLabel}
-                </dd>
-              </div>
-              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
-                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
-                  Travelers
-                </dt>
-                <dd className="mt-2 text-lg font-semibold text-[#1f2f35]">
-                  {travelersLabel}
-                </dd>
-              </div>
-              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
-                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
-                  Budget
-                </dt>
-                <dd className="mt-2 text-sm text-[#1f2f35] space-y-1">
-                  <div>
-                    <span className="font-semibold">Currency:</span>{' '}
-                    {safeTrim(formData.currency) || '—'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Amount:</span>{' '}
-                    {typeof formData.budget === 'number' && formData.budget > 0
-                      ? formData.budget.toLocaleString()
-                      : '—'}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Mode:</span>{' '}
-                    {safeTrim((formData as any).budgetMode) || '—'}
-                  </div>
-                </dd>
-              </div>
-              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm">
-                <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
-                  Prepared for
-                </dt>
-                <dd className="mt-2 text-lg font-semibold text-[#1f2f35] break-words">
-                  {safeTrim(formData.contactName) || safeTrim((formData.contactInfo as any)?.name) || '—'}
-                </dd>
-              </div>
+              {[
+                { label: 'Destination', value: safeTrim(formData.location) || '—' },
+                { label: 'Dates', value: dateLabel },
+                { label: 'Travelers', value: travelersLabel },
+                { 
+                  label: 'Budget',
+                  value: (
+                    <div className="space-y-1">
+                      <div>
+                        <span className="font-semibold">Currency:</span>{' '}
+                        {safeTrim(formData.currency) || '—'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Amount:</span>{' '}
+                        {typeof formData.budget === 'number' && formData.budget > 0
+                          ? formData.budget.toLocaleString()
+                          : '—'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Mode:</span>{' '}
+                        {safeTrim((formData as any).budgetMode) || '—'}
+                      </div>
+                    </div>
+                  )
+                },
+                { 
+                  label: 'Prepared for', 
+                  value: safeTrim(formData.contactName) || safeTrim((formData.contactInfo as any)?.name) || '—' 
+                }
+              ].map((item, index) => (
+                <motion.div 
+                  key={item.label}
+                  className="rounded-2xl border border-[#d9d9d9] bg-[#f9f6ee] px-4 py-3 shadow-sm"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.6 + (index * 0.1) }}
+                >
+                  <dt className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4d6b73]">
+                    {item.label}
+                  </dt>
+                  <dd className="mt-2 text-lg font-semibold text-[#1f2f35] break-words">
+                    {typeof item.value === 'string' ? item.value : item.value}
+                  </dd>
+                </motion.div>
+              ))}
             </dl>
-          </div>
+          </motion.div>
 
-          <div className="rounded-3xl border border-slate-200 overflow-hidden shadow-lg">
+          <motion.div 
+            className="rounded-3xl border border-slate-200 overflow-hidden shadow-lg"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          >
             {mapImageUrl ? (
               <img
                 src={mapImageUrl}
@@ -541,7 +554,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                 {isLoading ? 'Loading map…' : 'Map preview not available'}
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -575,9 +588,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               const dining = plan.dining ?? (plan as any).meals ?? (plan as any).diningOptions;
 
               return (
-              <div
+              <motion.div
                 key={`${plan.day ?? index}`}
                 className="max-w-4xl mx-auto shadow-sm rounded-b-2xl mb-[20px]"
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 + (index * 0.2) }}
               >
                 <div
                   className="grid grid-cols-1 rounded-t-2xl"
@@ -614,7 +630,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
               );
             })}
           </div>
@@ -694,51 +710,66 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
 
 
-      <div className="rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-3 my-[10px] max-w-4xl mx-auto mt-10 mb-16 bg-white">
-        <button
+      <motion.div 
+        className="rounded-2xl border border-slate-100 shadow-sm p-6 flex flex-col gap-3 my-[10px] max-w-4xl mx-auto mt-10 mb-16 bg-white"
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 2.0 }}
+      >
+        <motion.button
           type="button"
           onClick={onStartOver}
           className="flex items-center gap-3 px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 text-blue-700 font-medium transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>🔀</span>
           <span>MAKE CHANGES TO MY ITINERARY</span>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
           onClick={handleDownload}
           className="flex items-center gap-3 px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 text-green-700 font-medium transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>⬇️</span>
           <span>EXPORT IT AS A PDF</span>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
           onClick={handlePrepareEmail}
           className="flex items-center gap-3 px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 text-purple-700 font-medium transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>📧</span>
           <span>EMAIL IT</span>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
           className="flex items-center gap-3 px-4 py-3 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 text-orange-700 font-medium transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>🔗</span>
           <span>SHARE VIA LINK</span>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
           className="flex items-center gap-3 px-4 py-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 text-red-700 font-medium transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>🗺️</span>
           <span>LET HYLO PLAN AND BOOK EVERYTHING FOR ME WITH HYLO CONCIERGE</span>
-        </button>
-      </div>
-    </section>
+        </motion.button>
+      </motion.div>
+    </motion.section>
   );
 };
 

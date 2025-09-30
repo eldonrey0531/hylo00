@@ -74,7 +74,7 @@ const ConditionalTravelStyle: React.FC<ConditionalTravelStyleProps> = ({
           <button
             type="button"
             onClick={onGenerateItinerary}
-            className="w-full px-12 py-6 rounded-[36px] font-bold font-raleway text-[32px] bg-[#f68854] text-primary hover:shadow-2xl hover:shadow-white/30 border-4 border-white shadow-[inset_0_0_0_2px_rgba(255,255,255,1)] transition-all duration-300 transform hover:scale-105 relative group"
+            className="w-full px-12 py-6 rounded-[36px] font-bold font-raleway text-[32px] bg-[#f68854] text-primary hover:shadow-2xl hover:shadow-white/30 transition-all duration-300 transform hover:scale-105 relative group"
           >
             <div className="flex items-center justify-center space-x-3">
               <span>GENERATE MY PERSONALIZED ITINERARY</span>

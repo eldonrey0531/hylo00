@@ -64,8 +64,10 @@ function validateRequiredEnvVars(): void {
     'SERP_API_KEY',
     'INNGEST_EVENT_KEY',
     'INNGEST_SIGNING_KEY',
-    'UPSTASH_REDIS_REST_URL',
-    'UPSTASH_REDIS_REST_TOKEN',
+    'KV_REST_API_URL',
+    'KV_REST_API_TOKEN',
+    'UPSTASH_VECTOR_REST_URL',
+    'UPSTASH_VECTOR_REST_TOKEN',
   ];
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -186,8 +188,8 @@ export function getItineraryConfig(): ItineraryConfig {
         signingKey: process.env.INNGEST_SIGNING_KEY!,
       },
       redis: {
-        restUrl: process.env.UPSTASH_REDIS_REST_URL!,
-        restToken: process.env.UPSTASH_REDIS_REST_TOKEN!,
+        restUrl: process.env.KV_REST_API_URL!,
+        restToken: process.env.KV_REST_API_TOKEN!,
       },
       app: {
         nodeEnv: parseNodeEnv(process.env.NODE_ENV),

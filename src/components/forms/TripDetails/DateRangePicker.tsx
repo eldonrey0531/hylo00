@@ -138,7 +138,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[95vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
         {/* Header */}
         <div className="bg-primary text-white px-4 py-3 sm:px-6 sm:py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
@@ -203,37 +203,31 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             </div>
           </div>
 
-          {/* Trip Duration Display */}
-          {localDepartDate && localReturnDate && !errors.departDate && !errors.returnDate && (
-            <div className="bg-[#ece8de] border-3 border-primary rounded-[10px] p-4 text-center">
-              <span className="text-primary font-bold font-raleway text-base">
-                Trip Duration: {dateUtils.calculateDaysBetween(localDepartDate, localReturnDate)} days
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Footer */}
-        <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-4 bg-gray-50 rounded-b-2xl flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-raleway font-bold transition-colors duration-200 text-sm sm:text-base"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!localDepartDate || Object.keys(errors).length > 0}
-            className={`px-4 sm:px-6 py-2 rounded-lg font-raleway font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
-              !localDepartDate || Object.keys(errors).length > 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-primary text-white hover:bg-primary-dark'
-            }`}
-          >
-            <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-            Save Dates
-          </button>
-        </div>
+        {/* Footer - Only show when dates are selected */}
+        {localDepartDate && localReturnDate && (
+          <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-4 bg-gray-50 rounded-b-2xl flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-raleway font-bold transition-colors duration-200 text-sm sm:text-base"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!localDepartDate || Object.keys(errors).length > 0}
+              className={`px-4 sm:px-6 py-2 rounded-lg font-raleway font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
+                !localDepartDate || Object.keys(errors).length > 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-primary text-white hover:bg-primary-dark'
+              }`}
+            >
+              <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+              Save Dates
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
