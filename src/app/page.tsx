@@ -9,7 +9,6 @@ import ConditionalTravelStyle from '@/components/forms/ConditionalTravelStyle';
 import { TravelStyleGroup } from '@/components/forms/TravelStyleGroup';
 import { TravelStyleChoice } from '@/types/travel-style-choice';
 import ItineraryDisplay from '@/components/ItineraryDisplay';
-import SimilarItinerariesSearch from '@/components/SimilarItinerariesSearch';
 
 const STATUS_POLL_INTERVAL = 2000;
 const MAX_STATUS_NOT_FOUND_RETRIES = 5;
@@ -508,16 +507,6 @@ function Page() {
           ) : null}
         </motion.div>
       )}
-
-      {/* Vector Search Component */}
-      <motion.div
-        className="mt-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0, duration: 0.5 }}
-      >
-        <SimilarItinerariesSearch />
-      </motion.div>
     </div>
   );
 }
