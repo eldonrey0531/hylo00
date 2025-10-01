@@ -715,7 +715,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         transition={{ duration: 0.6, delay: 2.0 }}
       >
         <div className="flex flex-col gap-4">
-          {/* Row 1: 3 buttons */}
+          {/* Row 1: 2 buttons */}
           <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
@@ -750,7 +750,10 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               <span>⬇️</span>
               <span>EXPORT IT AS A PDF</span>
             </motion.button>
+          </div>
 
+          {/* Row 2: 3 buttons */}
+          <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
               onClick={handlePrepareEmail}
@@ -767,10 +770,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               <span>📧</span>
               <span>EMAIL IT</span>
             </motion.button>
-          </div>
 
-          {/* Row 2: 2 buttons */}
-          <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
               className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"

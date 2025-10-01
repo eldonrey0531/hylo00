@@ -128,9 +128,6 @@ export function InteractiveMap({
           </Popup>
         </Marker>
       </MapContainer>
-      <p className="text-xs text-gray-500 mt-2 text-center">
-        Satellite imagery with place names • Click and drag to explore
-      </p>
     </div>
   );
 }
