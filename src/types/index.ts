@@ -128,4 +128,5 @@ export * from './itinerary/trip-form-data';
 export * from './itinerary/itinerary';
 export * from './itinerary/daily-activity';
 export * from './itinerary/travel-tip';
+export * from './itinerary/layout';
 

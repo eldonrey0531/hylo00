@@ -1,5 +1,5 @@
 // src/components/TripDetails/index.tsx
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import LocationForm from './LocationForm';
 import DatesForm from './DatesForm';
 import TravelersForm from './TravelersForm';
@@ -22,11 +22,17 @@ const TripDetails: React.FC<TripDetailsProps> = ({
   showAdditionalForms = false,
   validationErrors = {},
 }) => {
+  const formDataRef = useRef(formData);
+  
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
   const handleFormUpdate = useCallback(
     (updates: Partial<FormData>) => {
-      onFormChange({ ...formData, ...updates });
+      onFormChange({ ...formDataRef.current, ...updates });
     },
-    [formData, onFormChange]
+    [onFormChange]
   );
 
   const baseProps = {

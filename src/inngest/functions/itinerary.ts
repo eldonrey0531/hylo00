@@ -1,6 +1,7 @@
 import { stateStore } from '@/lib/redis/stateStore';
 import { logger } from '@/utils/console-logger';
 import { buildGrokItineraryPrompt, generateGrokItineraryDraft } from '@/lib/ai/architectAI';
+import { storeItineraryForSearch } from '@/lib/redis/redis-vector';
 import { inngest } from '@/inngest/client';
 import type { TripFormData } from '@/types';
 
@@ -424,29 +425,81 @@ export const itineraryWorkflow = inngest.createFunction(
         hasItinerary: !!aiArchitectResult.cleanedJson,
       });
 
-      // Save the complete AI output to a JSON file for inspection
-      const fs = require('fs');
-      const path = require('path');
-      const outputFile = path.join(process.cwd(), 'logs', `${workflowId}.json`);
-      const completeOutput = {
-        aiArchitectResult,
-        workflowId,
-        timestamp: new Date().toISOString(),
-      };
-      fs.writeFileSync(outputFile, JSON.stringify(completeOutput, null, 2));
-      logger.log(19, 'AI_OUTPUT_SAVED_TO_FILE', 'inngest/functions/itinerary.ts', 'storeItinerary', {
-        workflowId,
-        outputFile,
-        fileSize: fs.statSync(outputFile).size,
-      });
+      return { stored };
+    });
 
-      if (!stored) {
-        logger.warn(21, 'REDIS_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeItinerary', 'Failed to store itinerary in Redis', {
+    // Step 3: Store in Redis for semantic search (moved out of nested step)
+    await step.run('store-search-data', async () => {
+      try {
+        const searchStored = await storeItineraryForSearch(workflowId, {
+          destination: formData.destination,
+          duration: parseInt(formData.duration),
+          budget: formData.budget,
+          activities: formData.activities || [],
+          preferences: formData.preferences || [],
+          itinerary: aiArchitectResult.itinerary,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.log(20, 'SEARCH_DATA_STORAGE_RESULT', 'inngest/functions/itinerary.ts', 'storeSearchData', {
+          workflowId,
+          searchStored,
+        });
+
+        return { searchStored };
+      } catch (searchError) {
+        logger.error(20, 'SEARCH_DATA_STORAGE_FAILED', 'inngest/functions/itinerary.ts', 'storeSearchData', searchError instanceof Error ? searchError : String(searchError), {
           workflowId,
         });
+        // Don't fail the workflow if search storage fails
+        return { searchStored: false };
       }
+    });
 
-      return { stored };
+    // Step 4: Save file logging (moved out and kept separate)
+
+    // Step 4: Save file logging (development only)
+    await step.run('save-file-log', async () => {
+      // Only attempt file logging in development environment
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const logDir = path.join(process.cwd(), 'logs');
+          
+          // Ensure directory exists
+          if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+          }
+          
+          const outputFile = path.join(logDir, `${workflowId}.json`);
+          const completeOutput = {
+            aiArchitectResult,
+            workflowId,
+            timestamp: new Date().toISOString(),
+          };
+          
+          fs.writeFileSync(outputFile, JSON.stringify(completeOutput, null, 2));
+          logger.log(19, 'AI_OUTPUT_SAVED_TO_FILE', 'inngest/functions/itinerary.ts', 'saveFileLog', {
+            workflowId,
+            outputFile,
+            fileSize: fs.statSync(outputFile).size,
+          });
+          return { fileSaved: true, outputFile };
+        } catch (fileError) {
+          logger.warn(19, 'AI_OUTPUT_FILE_SAVE_FAILED', 'inngest/functions/itinerary.ts', 'saveFileLog', 'Failed to save AI output to file', {
+            workflowId,
+            error: fileError instanceof Error ? fileError.message : String(fileError),
+          });
+          return { fileSaved: false };
+        }
+      } else {
+        logger.log(19, 'AI_OUTPUT_FILE_LOGGING_SKIPPED', 'inngest/functions/itinerary.ts', 'saveFileLog', {
+          workflowId,
+          reason: 'File logging disabled in production environment',
+        });
+        return { fileSaved: false, reason: 'production' };
+      }
     });
 
     logger.log(21, 'INNGEST_WORKFLOW_COMPLETED', 'inngest/functions/itinerary.ts', 'itineraryWorkflow', {

@@ -175,7 +175,11 @@ export const validateItineraryInclusions = (formData: FormData): boolean => {
 };
 
 export const validateTripNickname = (formData: FormData): boolean => {
-  const tripNickname = formData?.travelStyleAnswers?.tripNickname || '';
+  const tripNickname = formData?.travelStyleAnswers?.tripNickname;
+  if (typeof tripNickname !== 'string') {
+    return false;
+  }
+
   return tripNickname.trim().length >= 3;
 };
 

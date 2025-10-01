@@ -54,7 +54,7 @@ const AccommodationPreferences: React.FC<AccommodationPreferencesProps> = ({
   }, [handleSave]);
 
   return (
-    <div className={`w-full bg-[#b0c29b] rounded-[36px] py-6 border-4 ${hasValidationError ? 'border-red-500' : 'border-transparent'}`}>
+    <div className="w-full bg-[#b0c29b] rounded-[36px] py-6">
       <div className="w-full flex items-center space-x-3 bg-[#406170] px-6 py-4">
         <span className="text-2xl">🏨</span>
         <h3 className="text-[25px] font-bold text-white uppercase tracking-wide font-raleway">

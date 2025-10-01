@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/utils/console-logger';
+import { stateStore } from '@/lib/redis/stateStore';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workflowId: string } }
+  { params }: { params: Promise<{ workflowId: string }> }
 ) {
   const startTime = Date.now();
-  const workflowId = params.workflowId;
+  const { workflowId } = await params;
 
   try {
     logger.log(1, 'Status check request received', 'status/[workflowId]/route.ts', 'GET', { workflowId });
@@ -20,201 +21,103 @@ export async function GET(
       );
     }
 
-    // TODO: Step 3-4: Check Redis for actual workflow state (T027)
-    // For now, simulate workflow progress based on workflow ID timestamp
-    const workflowTimestamp = workflowId.split('_')[1];
-    const workflowAge = Date.now() - parseInt(workflowTimestamp || '0');
-    const ageInMinutes = workflowAge / (1000 * 60);
+    // Fetch actual workflow state from stateStore
+    logger.log(3, 'Fetching workflow state from stateStore', 'status/[workflowId]/route.ts', 'GET', { workflowId });
 
-    logger.log(3, 'Workflow age calculated', 'status/[workflowId]/route.ts', 'GET', {
-      workflowTimestamp,
-      ageInMinutes,
-      workflowAge
-    });
+    const workflowState = await stateStore.getItineraryState(workflowId);
 
-    // Simulate progress based on age (mock implementation)
-    let status: 'pending' | 'processing' | 'complete' | 'error';
-    let progress: number;
-    let currentStep: string;
-    let itinerary = null;
-    let error = null;
-
-    if (ageInMinutes < 0.5) {
-      status = 'pending';
-      progress = 1;
-      currentStep = 'Initializing workflow';
-    } else if (ageInMinutes < 1) {
-      status = 'processing';
-      progress = 5;
-      currentStep = 'Validating form data';
-    } else if (ageInMinutes < 2) {
-      status = 'processing';
-      progress = 10;
-      currentStep = 'Researching destination data';
-    } else if (ageInMinutes < 3) {
-      status = 'processing';
-      progress = 15;
-      currentStep = 'Generating AI itinerary content';
-    } else if (ageInMinutes < 4) {
-      status = 'processing';
-      progress = 20;
-      currentStep = 'Assembling final itinerary';
-    } else if (ageInMinutes < 5) {
-      status = 'complete';
-      progress = 24;
-      currentStep = 'Itinerary generation complete';
-      // Mock completed itinerary
-      itinerary = {
-        id: `itinerary_${workflowId}`,
-        metadata: {
-          createdAt: new Date().toISOString(),
-          version: '1.0',
-          status: 'complete'
-        },
-        summary: {
-          location: 'Paris, France',
-          duration: '5 days',
-          travelers: '2 adults',
-          budget: '$3000 USD',
-          theme: 'Cultural exploration'
-        },
-        keyDetails: [
-          '5-day itinerary',
-          'Cultural focus',
-          '$3000 budget',
-          '2 travelers'
-        ],
-        dailyActivities: [
-          {
-            day: 1,
-            date: '2024-06-01',
-            activities: [
-              {
-                time: '09:00',
-                title: 'Arrival and hotel check-in',
-                description: 'Arrive in Paris and settle into your accommodation',
-                location: 'Hotel in city center'
-              }
-            ]
-          }
-        ],
-        travelTips: [
-          {
-            category: 'transportation',
-            priority: 'high',
-            title: 'Use Paris Metro',
-            content: 'The metro is efficient and covers the entire city'
-          }
-        ]
-      };
-    } else {
-      // Simulate occasional errors for testing
-      if (Math.random() < 0.1) {
-        status = 'error';
-        progress = 0;
-        currentStep = 'Failed during processing';
-        error = 'AI service temporarily unavailable';
-      } else {
-        status = 'complete';
-        progress = 24;
-        currentStep = 'Itinerary generation complete';
-        itinerary = {
-          id: `itinerary_${workflowId}`,
-          metadata: {
-            createdAt: new Date().toISOString(),
-            version: '1.0',
-            status: 'complete'
-          },
-          summary: {
-            location: 'Paris, France',
-            duration: '5 days',
-            travelers: '2 adults',
-            budget: '$3000 USD',
-            theme: 'Cultural exploration'
-          },
-          keyDetails: [
-            '5-day itinerary',
-            'Cultural focus',
-            '$3000 budget',
-            '2 travelers'
-          ],
-          dailyActivities: [
-            {
-              day: 1,
-              date: '2024-06-01',
-              activities: [
-                {
-                  time: '09:00',
-                  title: 'Arrival and hotel check-in',
-                  description: 'Arrive in Paris and settle into your accommodation',
-                  location: 'Hotel in city center'
-                }
-              ]
-            }
-          ],
-          travelTips: [
-            {
-              category: 'transportation',
-              priority: 'high',
-              title: 'Use Paris Metro',
-              content: 'The metro is efficient and covers the entire city'
-            }
-          ]
-        };
-      }
+    if (!workflowState) {
+      logger.error(4, 'Workflow state not found', 'status/[workflowId]/route.ts', 'GET', 'Workflow not found in stateStore');
+      return NextResponse.json(
+        { error: 'Workflow not found', success: false },
+        { status: 404 }
+      );
     }
 
-    // Generate mock logs based on progress
-    const logs = [];
-    for (let i = 1; i <= progress; i++) {
-      logs.push({
-        step: i,
-        timestamp: new Date(Date.now() - (progress - i) * 10000).toISOString(),
-        message: `Step ${i} completed`,
-        file: 'workflow.ts',
-        method: 'process',
-        level: 'info',
-        data: { workflowId }
+    logger.log(5, 'Workflow state retrieved', 'status/[workflowId]/route.ts', 'GET', {
+      status: workflowState.status,
+      hasItinerary: !!workflowState.itinerary,
+      hasLayout: !!workflowState.layout,
+      hasLayoutContent: !!workflowState.layout?.content,
+    });
+
+    // Map status and prepare response
+    const status = workflowState.status;
+    const progress = status === 'completed' ? 100 : status === 'processing' ? 50 : 10;
+    const currentStep = status === 'completed' ? 'Itinerary generation complete' :
+                       status === 'processing' ? 'Generating AI itinerary content' :
+                       'Initializing workflow';
+
+    // Return structured response with the stored itinerary data
+  let parsedItinerary: any | null = null;
+    let rawItinerary: string | null = null;
+    let itineraryParseError: string | null = null;
+
+    if (workflowState.itinerary) {
+      rawItinerary = typeof workflowState.itinerary === 'string'
+        ? workflowState.itinerary
+        : JSON.stringify(workflowState.itinerary);
+
+      try {
+        parsedItinerary = JSON.parse(rawItinerary);
+        console.log('✅ [STATUS API] Successfully parsed itinerary JSON:', {
+          workflowId,
+          hasIntro: !!parsedItinerary?.intro,
+          dailyPlansCount: Array.isArray(parsedItinerary?.dailyPlans) ? parsedItinerary.dailyPlans.length : 0,
+          originalStringLength: rawItinerary.length,
+        });
+      } catch (error) {
+        itineraryParseError = error instanceof Error ? error.message : String(error);
+        console.error('❌ [STATUS API] Failed to parse itinerary JSON:', {
+          workflowId,
+          error: itineraryParseError,
+          originalStringPreview: rawItinerary.slice(0, 200),
+        });
+        parsedItinerary = null;
+      }
+    } else {
+      console.log('⚠️ [STATUS API] No itinerary data found in workflow state:', {
+        workflowId,
+        workflowStateKeys: Object.keys(workflowState),
       });
     }
 
-    logger.log(4, 'Status response prepared', 'status/[workflowId]/route.ts', 'GET', {
+    const response = {
+      success: true,
       status,
       progress,
       currentStep,
-      hasItinerary: !!itinerary,
-      logCount: logs.length
-    });
+      itinerary: parsedItinerary, // Use the parsed itinerary
+      rawItinerary,
+      itineraryParseError,
+      formData: workflowState.formData || null,
+      error: workflowState.error || null,
+      createdAt: workflowState.createdAt,
+      updatedAt: workflowState.updatedAt,
+    };
 
-    const processingTime = Date.now() - startTime;
-    logger.log(5, 'Status check completed', 'status/[workflowId]/route.ts', 'GET', {
-      workflowId,
-      status,
-      processingTimeMs: processingTime
-    });
-
-    // Return status response per contract
-    return NextResponse.json({
+    logger.log(6, 'Status response prepared', 'status/[workflowId]/route.ts', 'GET', {
       status,
       progress,
-      currentStep,
-      itinerary,
-      error,
-      logs
+      hasItinerary: !!response.itinerary,
+      processingTimeMs: Date.now() - startTime,
     });
+
+    return NextResponse.json(response);
 
   } catch (error) {
-    const processingTime = Date.now() - startTime;
-    logger.error(6, 'Unexpected error in status check', 'status/[workflowId]/route.ts', 'GET', error instanceof Error ? error : String(error), {
+    logger.error(7, 'Status check failed', 'status/[workflowId]/route.ts', 'GET', error instanceof Error ? error.message : String(error), {
       workflowId,
-      processingTimeMs: processingTime
+      processingTimeMs: Date.now() - startTime,
     });
 
     return NextResponse.json(
       {
-        error: 'Internal server error',
         success: false,
-        message: 'An unexpected error occurred. Please try again.'
+        error: 'Internal server error',
+        status: 'error',
+        progress: 0,
+        currentStep: 'Error occurred',
       },
       { status: 500 }
     );

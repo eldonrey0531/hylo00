@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface TripVibeProps {
   selectedVibes: string[];
@@ -21,8 +21,14 @@ const TripVibe: React.FC<TripVibeProps> = ({
   showOther,
   onToggleOther,
 }) => {
-  const derivedShowOther =
-    typeof showOther === 'boolean' ? showOther : selectedVibes.includes('other');
+  const showOtherInput = selectedVibes.includes('other');
+
+  useEffect(() => {
+    // Clear the other text if "other" is no longer selected
+    if (!selectedVibes.includes('other') && otherText) {
+      onOtherTextChange('');
+    }
+  }, [selectedVibes, otherText, onOtherTextChange]);
 
   const vibeOptions = [
     { id: 'up-for-anything', text: 'Up for anything', emoji: '🎊' },
@@ -44,22 +50,11 @@ const TripVibe: React.FC<TripVibeProps> = ({
   ];
 
   const toggleVibe = (id: string) => {
-    if (id === 'other') {
-      const willShow = !derivedShowOther;
-      if (willShow) {
-        if (!selectedVibes.includes('other')) {
-          onSelectionChange([...selectedVibes, 'other']);
-        }
-      } else {
-        onSelectionChange(selectedVibes.filter((v) => v !== 'other'));
-        onOtherTextChange('');
-      }
-      onToggleOther?.(willShow);
-      return;
-    }
+    console.log('toggleVibe called for:', id, 'currently selected:', selectedVibes);
     const newSelection = selectedVibes.includes(id)
       ? selectedVibes.filter((v) => v !== id)
       : [...selectedVibes, id];
+    console.log('new selection will be:', newSelection);
     onSelectionChange(newSelection);
   };
 
@@ -75,10 +70,10 @@ const TripVibe: React.FC<TripVibeProps> = ({
               type="button"
               onClick={() => toggleVibe(option.id)}
               className={`
-                p-4 rounded-[10px] border-2 text-center transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-2
+                p-4 rounded-[10px] border-2 text-center transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-2 cursor-pointer select-none
                 ${
                   isSelected
-                    ? 'border-primary bg-primary text-white shadow-md'
+                    ? 'border-primary bg-primary text-white shadow-md hover:bg-primary-dark'
                     : 'border-primary bg-[#ece8de] hover:border-primary hover:shadow-md text-primary'
                 }
               `}
@@ -97,7 +92,7 @@ const TripVibe: React.FC<TripVibeProps> = ({
       </div>
 
       {/* Other Input Field */}
-      {derivedShowOther && (
+      {showOtherInput && (
         <div className="bg-primary/10 rounded-[10px] p-4 border border-primary/20 mt-4">
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-xl">✨</span>
