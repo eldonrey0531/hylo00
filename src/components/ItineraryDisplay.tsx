@@ -708,24 +708,25 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
 
       <motion.div 
-        className="rounded-2xl p-8 my-[10px] max-w-4xl mx-auto mt-10 mb-16"
+        className="rounded-2xl p-8 my-[10px] max-w-6xl mx-auto mt-10 mb-16"
         style={{ backgroundColor: '#406170' }}
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 2.0 }}
       >
         <div className="flex flex-col gap-4">
-          {/* Row 1: 2 buttons */}
+          {/* Row 1: 3 buttons */}
           <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
               onClick={onStartOver}
-              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 flex-1"
               style={{ 
                 backgroundColor: '#f9dd8b', 
                 color: '#406170',
                 fontWeight: 700,
-                border: 'none'
+                border: 'none',
+                minWidth: 'fit-content'
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -737,12 +738,13 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             <motion.button
               type="button"
               onClick={handleDownload}
-              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 flex-1"
               style={{ 
                 backgroundColor: '#e2a2d2', 
                 color: '#406170',
                 fontWeight: 700,
-                border: 'none'
+                border: 'none',
+                minWidth: 'fit-content'
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -750,19 +752,17 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               <span>⬇️</span>
               <span>EXPORT IT AS A PDF</span>
             </motion.button>
-          </div>
 
-          {/* Row 2: 3 buttons */}
-          <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
               onClick={handlePrepareEmail}
-              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 flex-1"
               style={{ 
                 backgroundColor: '#96a4f2', 
                 color: '#406170',
                 fontWeight: 700,
-                border: 'none'
+                border: 'none',
+                minWidth: 'fit-content'
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -770,15 +770,19 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               <span>📧</span>
               <span>EMAIL IT</span>
             </motion.button>
+          </div>
 
+          {/* Row 2: 2 buttons */}
+          <div className="flex gap-3 justify-start flex-wrap">
             <motion.button
               type="button"
-              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 flex-1"
               style={{ 
                 backgroundColor: '#f68854', 
                 color: '#406170',
                 fontWeight: 700,
-                border: 'none'
+                border: 'none',
+                minWidth: 'fit-content'
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -789,12 +793,13 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
             <motion.button
               type="button"
-              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 flex-1"
               style={{ 
                 backgroundColor: '#b0c29b', 
                 color: '#406170',
                 fontWeight: 700,
-                border: 'none'
+                border: 'none',
+                minWidth: 'fit-content'
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
