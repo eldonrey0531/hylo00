@@ -484,7 +484,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
       <div className="mx-auto px-[7%] pt-[3%] pb-[3%]">
         <div className="space-y-8">
           <motion.div 
-            className="rounded-3xl shadow-xl p-8"
+            className="rounded-3xl p-8"
             style={{ backgroundColor: '#406170' }}
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -497,23 +497,19 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                 { label: 'Travelers', value: travelersLabel },
                 { 
                   label: 'Budget',
-                  value: (
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs text-[#d4e0dd]">Currency:</span>
-                        <span className="font-medium">{safeTrim(formData.currency) || '—'}</span>
+                  value: formData.flexibleBudget ? (
+                    <div className="text-center">
+                      <span className="font-semibold">Budget is Flexible</span>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-1">
+                      <div className="text-xl font-bold">
+                        ${typeof formData.budget === 'number' && formData.budget > 0
+                          ? formData.budget.toLocaleString()
+                          : '0'}
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs text-[#d4e0dd]">Amount:</span>
-                        <span className="font-medium">
-                          {typeof formData.budget === 'number' && formData.budget > 0
-                            ? formData.budget.toLocaleString()
-                            : '—'}
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs text-[#d4e0dd]">Mode:</span>
-                        <span className="font-medium">{safeTrim((formData as any).budgetMode) || '—'}</span>
+                      <div className="text-sm font-medium">
+                        {(formData as any).budgetMode === 'total' ? 'Total Budget' : 'Per-Person'}
                       </div>
                     </div>
                   )
@@ -525,12 +521,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
               ].map((item, index) => (
                 <motion.div 
                   key={item.label}
-                  className="rounded-xl border border-[#5a8291] bg-[#f9f6ee] px-5 py-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                  className="rounded-xl border border-[#5a8291] bg-[#f9f6ee] px-5 py-4"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.6 + (index * 0.1) }}
                 >
-                  <dt className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#406170] mb-2.5">
+                  <dt className="text-[18px] font-bold uppercase tracking-[0.15em] text-[#406170] mb-2.5 text-center">
                     {item.label}
                   </dt>
                   <dd className="text-base font-semibold text-[#1f2f35] leading-relaxed break-words">
@@ -550,7 +546,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             {formData?.location ? (
               <InteractiveMap
                 location={formData.location}
-                zoom={6}
+                zoom={5.5}
                 className="w-full"
               />
             ) : mapImageUrl ? (
@@ -712,100 +708,101 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
 
 
       <motion.div 
-        className="rounded-2xl border border-slate-100 shadow-sm p-8 my-[10px] max-w-4xl mx-auto mt-10 mb-16"
+        className="rounded-2xl p-8 my-[10px] max-w-4xl mx-auto mt-10 mb-16"
         style={{ backgroundColor: '#406170' }}
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 2.0 }}
       >
-        <div className="grid grid-cols-2 gap-5">
-          {/* Row 1, Col 1 */}
-          <motion.button
-            type="button"
-            onClick={onStartOver}
-            className="flex items-center gap-3 px-5 py-3 rounded-lg border-2 transition-all hover:scale-105 w-fit"
-            style={{ 
-              backgroundColor: '#f9dd8b', 
-              color: '#406170',
-              fontWeight: 700,
-              borderColor: '#e5c877'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>🔀</span>
-            <span>MAKE CHANGES TO MY ITINERARY</span>
-          </motion.button>
+        <div className="flex flex-col gap-4">
+          {/* Row 1: 3 buttons */}
+          <div className="flex gap-3 justify-start flex-wrap">
+            <motion.button
+              type="button"
+              onClick={onStartOver}
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              style={{ 
+                backgroundColor: '#f9dd8b', 
+                color: '#406170',
+                fontWeight: 700,
+                border: 'none'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span>🔀</span>
+              <span>MAKE CHANGES TO MY ITINERARY</span>
+            </motion.button>
 
-          {/* Row 1, Col 2 */}
-          <motion.button
-            type="button"
-            onClick={handleDownload}
-            className="flex items-center gap-3 px-5 py-3 rounded-lg border-2 transition-all hover:scale-105 w-fit"
-            style={{ 
-              backgroundColor: '#e2a2d2', 
-              color: '#406170',
-              fontWeight: 700,
-              borderColor: '#d18ec0'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>⬇️</span>
-            <span>EXPORT IT AS A PDF</span>
-          </motion.button>
+            <motion.button
+              type="button"
+              onClick={handleDownload}
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              style={{ 
+                backgroundColor: '#e2a2d2', 
+                color: '#406170',
+                fontWeight: 700,
+                border: 'none'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span>⬇️</span>
+              <span>EXPORT IT AS A PDF</span>
+            </motion.button>
 
-          {/* Row 2, Col 1 */}
-          <motion.button
-            type="button"
-            onClick={handlePrepareEmail}
-            className="flex items-center gap-3 px-5 py-3 rounded-lg border-2 transition-all hover:scale-105 w-fit"
-            style={{ 
-              backgroundColor: '#96a4f2', 
-              color: '#406170',
-              fontWeight: 700,
-              borderColor: '#8090e8'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>📧</span>
-            <span>EMAIL IT</span>
-          </motion.button>
+            <motion.button
+              type="button"
+              onClick={handlePrepareEmail}
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              style={{ 
+                backgroundColor: '#96a4f2', 
+                color: '#406170',
+                fontWeight: 700,
+                border: 'none'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span>📧</span>
+              <span>EMAIL IT</span>
+            </motion.button>
+          </div>
 
-          {/* Row 2, Col 2 */}
-          <motion.button
-            type="button"
-            className="flex items-center gap-3 px-5 py-3 rounded-lg border-2 transition-all hover:scale-105 w-fit"
-            style={{ 
-              backgroundColor: '#f68854', 
-              color: '#406170',
-              fontWeight: 700,
-              borderColor: '#e57644'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>🔗</span>
-            <span>SHARE VIA LINK</span>
-          </motion.button>
+          {/* Row 2: 2 buttons */}
+          <div className="flex gap-3 justify-start flex-wrap">
+            <motion.button
+              type="button"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              style={{ 
+                backgroundColor: '#f68854', 
+                color: '#406170',
+                fontWeight: 700,
+                border: 'none'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span>🔗</span>
+              <span>SHARE VIA LINK</span>
+            </motion.button>
 
-          {/* Row 3, Col 1 + Col 2 (spans 2 columns) */}
-          <motion.button
-            type="button"
-            className="flex items-center gap-3 px-5 py-3 rounded-lg border-2 transition-all hover:scale-105 w-fit col-span-2"
-            style={{ 
-              backgroundColor: '#b0c29b', 
-              color: '#406170',
-              fontWeight: 700,
-              borderColor: '#9eb088'
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>🗺️</span>
-            <span className="whitespace-normal text-left">LET HYLO PLAN AND BOOK EVERYTHING FOR ME WITH HYLO CONCIERGE</span>
-          </motion.button>
+            <motion.button
+              type="button"
+              className="flex items-center gap-3 px-5 py-3 rounded-lg transition-all hover:scale-105 w-fit"
+              style={{ 
+                backgroundColor: '#b0c29b', 
+                color: '#406170',
+                fontWeight: 700,
+                border: 'none'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span>🗺️</span>
+              <span className="whitespace-normal text-left">LET HYLO PLAN AND BOOK EVERYTHING FOR ME WITH HYLO CONCIERGE</span>
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     </motion.section>

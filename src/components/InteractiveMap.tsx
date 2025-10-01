@@ -42,7 +42,7 @@ export function InteractiveMap({
   location,
   lat,
   lng,
-  zoom = 6,
+  zoom = 5.5,
   className = '',
 }: InteractiveMapProps) {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(
@@ -110,10 +110,16 @@ export function InteractiveMap({
         scrollWheelZoom={false}
         style={{ height: '400px', width: '100%', borderRadius: '12px' }}
       >
-        {/* Using Esri WorldImagery tiles - Satellite imagery, free */}
+        {/* Satellite imagery base layer */}
         <TileLayer
           attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={19}
+        />
+        {/* Labels and place names overlay */}
+        <TileLayer
+          attribution=''
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
           maxZoom={19}
         />
         <Marker position={[coordinates.lat, coordinates.lng]}>
@@ -123,7 +129,7 @@ export function InteractiveMap({
         </Marker>
       </MapContainer>
       <p className="text-xs text-gray-500 mt-2 text-center">
-        Satellite imagery powered by Esri • Click and drag to explore
+        Satellite imagery with place names • Click and drag to explore
       </p>
     </div>
   );
