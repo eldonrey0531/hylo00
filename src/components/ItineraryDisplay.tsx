@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { FormData } from '@/components/forms/TripDetails/types';
+import { InteractiveMap } from '@/components/InteractiveMap';
 
 type LayoutSection = {
   title?: string;
@@ -543,7 +544,13 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, delay: 1.2 }}
           >
-            {mapImageUrl ? (
+            {formData?.location ? (
+              <InteractiveMap
+                location={formData.location}
+                zoom={12}
+                className="w-full"
+              />
+            ) : mapImageUrl ? (
               <img
                 src={mapImageUrl}
                 alt="Trip map"
