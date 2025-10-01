@@ -4,7 +4,7 @@ import { logger } from '@/utils/console-logger';
 type FallbackSource = 'none' | 'parsed-content' | 'tool-call' | 'reasoning';
 
 const GROK_MODEL = 'grok-4-fast-reasoning';
-const XAI_ENDPOINT = 'https://api.x.ai/v1/responses';
+const XAI_ENDPOINT = 'https://api.x.ai/v1/chat/completions';
 
 export interface GenerationUsage {
   promptTokens?: number;
@@ -220,7 +220,7 @@ export async function generateGrokItineraryDraft({
     },
     body: JSON.stringify({
       model,
-      input: [{ role: 'user', content: prompt }],
+      messages: [{ role: 'user', content: prompt }],
       temperature,
     }),
   });
@@ -229,10 +229,14 @@ export async function generateGrokItineraryDraft({
   const responseBody = await response.text();
 
   if (!response.ok) {
-    logger.error(17, 'XAI_REQUEST_FAILED', 'lib/ai/architectAI.ts', 'generateGrokItineraryDraft', responseBody, {
+    logger.error(17, 'XAI_REQUEST_FAILED', 'lib/ai/architectAI.ts', 'generateGrokItineraryDraft', 'xAI API request failed', {
       responseStatus,
+      responseBody: responseBody.slice(0, 1000),
+      model,
+      endpoint: XAI_ENDPOINT,
+      promptLength: prompt.length,
     });
-    throw new Error(`xAI request failed (${responseStatus})`);
+    throw new Error(`xAI request failed (${responseStatus}): ${responseBody.slice(0, 200)}`);
   }
 
   let parsedResponse: any;

@@ -1,13 +1,14 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/ai/grok-demo/route": "app/api/ai/grok-demo/route.js",
-  "/api/itinerary/email/prepare/route": "app/api/itinerary/email/prepare/route.js",
   "/api/ai/health/route": "app/api/ai/health/route.js",
+  "/api/itinerary/email/prepare/route": "app/api/itinerary/email/prepare/route.js",
   "/api/itinerary/generate/route": "app/api/itinerary/generate/route.js",
-  "/api/maps/static/route": "app/api/maps/static/route.js",
+  "/api/itinerary/search/route": "app/api/itinerary/search/route.js",
+  "/api/ai/grok-demo/route": "app/api/ai/grok-demo/route.js",
   "/api/itinerary/status/[workflowId]/route": "app/api/itinerary/status/[workflowId]/route.js",
   "/api/logs/route": "app/api/logs/route.js",
-  "/api/itinerary/search/route": "app/api/itinerary/search/route.js",
+  "/api/maps/static/route": "app/api/maps/static/route.js",
   "/page": "app/page.js",
+  "/api/ai/test-xai/route": "app/api/ai/test-xai/route.js",
   "/api/inngest/route": "app/api/inngest/route.js"
 }
