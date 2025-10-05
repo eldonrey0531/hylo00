@@ -33,11 +33,29 @@ export const dateUtils = {
     return date;
   },
 
+  formatDisplayDate: (date: Date): string => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'long',
+      day: 'numeric',
+    });
+  },
+
   formatToMMDDYY: (date: Date): string => {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = date.getFullYear().toString().slice(-2);
     return `${month}/${day}/${year}`;
+  },
+
+  formatMMDDYYToDisplay: (dateStr: string): string => {
+    const date = dateUtils.parseMMDDYY(dateStr);
+
+    if (!date) {
+      return dateStr;
+    }
+
+    return dateUtils.formatDisplayDate(date);
   },
 
   convertToInputFormat: (dateStr: string): string => {

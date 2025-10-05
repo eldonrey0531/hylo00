@@ -1,0 +1,395 @@
+{
+	"info": {
+		"_postman_id": "831ac878-8139-484f-9981-fd37abd10ff9",
+		"name": "Viator Partner API v2 (Basic-Access Affiliate)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "/products/{product-code}",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{papi_host}}/products/2050P348",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"products",
+								"2050P348"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/products/tags/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{papi_host}}/products/tags/",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"products",
+								"tags",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/products/search",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"filtering\": {\n    \"destination\": \"732\",\n    \"tags\": [\n        21972\n    ],\n    \"flags\": [\n        \"LIKELY_TO_SELL_OUT\",\n        \"FREE_CANCELLATION\"\n    ],\n    \"lowestPrice\": 5,\n    \"highestPrice\": 500,\n    \"startDate\": \"2023-01-30\",\n    \"endDate\": \"2023-02-28\",\n    \"includeAutomaticTranslations\": true,\n    \"confirmationType\": \"INSTANT\",\n    \"durationInMinutes\": {\n        \"from\": 20,\n        \"to\": 360\n    },\n    \"rating\": {\n        \"from\": 3,\n        \"to\": 5\n    }\n  },\n  \"sorting\": {\n    \"sort\": \"TRAVELER_RATING\",\n    \"order\": \"DESCENDING\"\n  },\n  \"pagination\": {\n    \"start\": 1,\n    \"count\": 5\n  },\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{papi_host}}/products/search",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"products",
+								"search"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attractions",
+			"item": [
+				{
+					"name": "/attractions/search",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"destinationId\": 479,\n    \"pagination\": {\n        \"start\": 1,\n        \"count\": 20\n        },\n        \"sorting\": {\n            \"sort\": \"DEFAULT\"\n        }\n}"
+						},
+						"url": {
+							"raw": "{{papi_host}}/attractions/search",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"attractions",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/attractions/{attraction-id}",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{papi_host}}/attractions/97/",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"attractions",
+								"97"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Availability",
+			"item": [
+				{
+					"name": "/availability/schedules/{product-code}",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{papi_host}}/availability/schedules/5010SYDNEY",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"availability",
+								"schedules",
+								"5010SYDNEY"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auxiliary",
+			"item": [
+				{
+					"name": "/search/freetext",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "default"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "default"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"searchTerm\": \"fast\",\n  \"productFiltering\": {\n    \"destination\": \"77\",\n    \"dateRange\": {\n      \"from\": \"2023-01-01\",\n      \"to\": \"2023-01-31\"\n    },\n    \"price\": {\n      \"from\": 0,\n      \"to\": 1000\n    },\n    \"rating\": {\n      \"from\": 0,\n      \"to\": 5\n    },\n    \"durationInMinutes\": {\n      \"from\": 0,\n      \"to\": 1000\n    },\n    \"flags\": [\n      \"LIKELY_TO_SELL_OUT\"\n    ],\n    \"includeAutomaticTranslations\": true\n  },\n  \"productSorting\": {\n    \"sort\": \"PRICE\",\n    \"order\": \"DESCENDING\"\n  },\n  \"searchTypes\": [\n    {\n      \"searchType\": \"PRODUCTS\",\n      \"pagination\": {\n        \"start\": 1,\n        \"count\": 10\n      }\n    }\n  ],\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{papi_host}}/search/freetext",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"search",
+								"freetext"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/locations/bulk",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locations\": [\n    \"LOC-6eKJ+or5y8o99Qw0C8xWyLZq7TSQT++LPZ7dk4z18Ls=\",\n    \"LOC-6eKJ+or5y8o99Qw0C8xWyDqh8JwkYr6VZRumIvyTTvA=\",\n    \"LOC-o0AXGEKPN4wJ9sIG0RAn5HJ50dRnnDILDxHC0aDaFxp7pTMyhWhGCLGcIKI9V5BA\",\n    \"CONTACT_SUPPLIER_LATER\",\n    \"MEET_AT_DEPARTURE_POINT\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{papi_host}}/locations/bulk",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"locations",
+								"bulk"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/exchange-rates",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sourceCurrencies\": [\n    \"AUD\",\n    \"EUR\",\n    \"USD\",\n    \"GBP\"\n  ],\n  \"targetCurrencies\": [\n    \"AUD\",\n    \"EUR\",\n    \"USD\",\n    \"GBP\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{papi_host}}/exchange-rates",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"exchange-rates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/destinations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json;version={{version}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{papi_host}}/destinations/",
+							"host": [
+								"{{papi_host}}"
+							],
+							"path": [
+								"destinations",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "exp-api-key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "papi_host",
+			"value": "https://api.viator.com/partner"
+		},
+		{
+			"key": "version",
+			"value": "2.0"
+		}
+	]
+}

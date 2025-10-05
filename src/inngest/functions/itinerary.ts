@@ -1,6 +1,7 @@
 import { stateStore } from '@/lib/redis/stateStore';
 import { logger } from '@/utils/console-logger';
 import { buildGrokItineraryPrompt, generateGrokItineraryDraft } from '@/lib/ai/architectAI';
+import { formatItineraryLayout } from '@/lib/ai/grokService';
 import { storeItineraryForSearch } from '@/lib/redis/redis-vector';
 import { inngest } from '@/inngest/client';
 import type { TripFormData } from '@/types';
@@ -8,6 +9,217 @@ import type { TripFormData } from '@/types';
 type TravelTip = {
   title: string;
   description: string;
+};
+
+const ensureStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  return [];
+};
+
+const normalizeDaySection = (section: unknown): Record<string, any> | null => {
+  if (!section) {
+    return null;
+  }
+
+  if (Array.isArray(section) || typeof section === 'string') {
+    const activities = ensureStringArray(section);
+    return activities.length > 0 ? { activities } : null;
+  }
+
+  if (typeof section === 'object') {
+    const record = { ...(section as Record<string, any>) };
+
+    if ('transport' in record && !record.transportation) {
+      record.transportation = record.transport;
+    }
+
+    if ('time' in record && typeof record.time === 'string') {
+      record.time = record.time.trim();
+    }
+
+    if ('summary' in record && typeof record.summary === 'string') {
+      record.summary = record.summary.trim();
+    }
+
+    record.activities = ensureStringArray(record.activities ?? record.activity ?? record.items ?? record.events ?? []);
+
+    return Object.values(record).some((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return Boolean(value);
+    })
+      ? record
+      : null;
+  }
+
+  return null;
+};
+
+const normalizeItineraryStructure = (itinerary: Record<string, any>, formData: TripFormData): Record<string, any> => {
+  const normalized: Record<string, any> = { ...itinerary };
+
+  const numericDayEntries = Object.keys(normalized)
+    .filter((key) => /^\d+$/.test(key))
+    .map((key) => ({ index: Number(key), value: normalized[key] }))
+    .sort((a, b) => a.index - b.index);
+
+  const extractedDays = numericDayEntries.map((entry) => {
+    const value = entry.value;
+    delete normalized[String(entry.index)];
+    return value;
+  });
+
+  if (!normalized.destination) {
+    normalized.destination = (formData as any).location ?? (formData as any).destination ?? '';
+  }
+
+  const candidateDays = (() => {
+    if (Array.isArray(normalized.dailyPlans) && normalized.dailyPlans.length > 0) {
+      return normalized.dailyPlans;
+    }
+    if (Array.isArray(normalized.dailyItinerary) && normalized.dailyItinerary.length > 0) {
+      return normalized.dailyItinerary;
+    }
+    if (Array.isArray(normalized.days) && normalized.days.length > 0) {
+      return normalized.days;
+    }
+    if (extractedDays.length > 0) {
+      return extractedDays;
+    }
+    return [];
+  })();
+
+  normalized.dailyPlans = candidateDays.map((entry, index) => {
+    if (entry && typeof entry === 'object') {
+      const day = { ...(entry as Record<string, any>) };
+      day.day = day.day ?? index + 1;
+      if (!day.title && typeof day.day === 'number') {
+        day.title = `Day ${day.day}`;
+      }
+      day.summary = typeof day.summary === 'string' ? day.summary.trim() : day.summary;
+      day.morning = normalizeDaySection(day.morning);
+      day.afternoon = normalizeDaySection(day.afternoon);
+      day.evening = normalizeDaySection(day.evening);
+      day.transportation = day.transportation ?? day.transport ?? null;
+      return day;
+    }
+
+    const description = typeof entry === 'string' ? entry.trim() : '';
+    return {
+      day: index + 1,
+      title: `Day ${index + 1}`,
+      summary: description,
+      morning: normalizeDaySection(description ? [`Morning: ${description}`] : null),
+      afternoon: null,
+      evening: null,
+    };
+  });
+
+  if (normalized.dailyPlans.length === 0) {
+    normalized.dailyPlans = [];
+  }
+
+  normalized.dailyItinerary = normalized.dailyPlans;
+
+  return normalized;
+};
+
+const parseIsoDate = (value: unknown): Date | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const calculateTripDuration = (formData: TripFormData): number => {
+  const depart = parseIsoDate((formData as any).departDate);
+  const ret = parseIsoDate((formData as any).returnDate);
+
+  if (depart && ret) {
+    const diffMs = ret.getTime() - depart.getTime();
+    if (diffMs >= 0) {
+      return Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    }
+  }
+
+  if (typeof (formData as any).plannedDays === 'number' && (formData as any).plannedDays > 0) {
+    return (formData as any).plannedDays;
+  }
+
+  return 0;
+};
+
+const buildBudgetLabel = (formData: TripFormData): string => {
+  const amount = typeof (formData as any).budget === 'number' ? (formData as any).budget : null;
+  const currency = typeof (formData as any).currency === 'string' ? (formData as any).currency : 'USD';
+  const mode = typeof (formData as any).budgetMode === 'string' ? (formData as any).budgetMode : 'total';
+
+  if (amount !== null) {
+    return `${currency} ${amount.toLocaleString()} (${mode})`;
+  }
+
+  return (formData as any).flexibleBudget ? 'flexible' : 'unspecified';
+};
+
+const collectPreferenceSignals = (formData: TripFormData): { activities: string[]; preferences: string[] } => {
+  const interests = Array.isArray((formData as any).selectedInterests)
+    ? ((formData as any).selectedInterests as unknown[])
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter(Boolean)
+    : [];
+
+  const travelStyleAnswers = ((formData as any).travelStyleAnswers ?? {}) as Record<string, unknown>;
+  const vibes = ensureStringArray(travelStyleAnswers.vibes);
+  const experience = ensureStringArray(travelStyleAnswers.experience);
+
+  return {
+    activities: interests,
+    preferences: [...vibes, ...experience],
+  };
+};
+
+const pickDestinationName = (formData: TripFormData): string => {
+  const details = (formData as any).locationDetails as Record<string, unknown> | undefined;
+  if (details) {
+    const label = typeof details.label === 'string' ? details.label.trim() : '';
+    const city = typeof details.city === 'string' ? details.city.trim() : '';
+    const country = typeof details.country === 'string' ? details.country.trim() : '';
+
+    if (label) {
+      return label;
+    }
+
+    if (city && country) {
+      return `${city}, ${country}`;
+    }
+
+    if (city) {
+      return city;
+    }
+
+    if (country) {
+      return country;
+    }
+  }
+
+  const location = toTrimmedString((formData as any).location);
+  return location ?? 'Unknown destination';
 };
 
 const toTrimmedString = (value: unknown): string | null => {
@@ -221,9 +433,27 @@ const normalizeTravelTips = (tips: unknown, fallback: TravelTip[]): TravelTip[] 
           }
         : null;
     })
-    .filter((tip): tip is TravelTip => Boolean(tip));
+    .filter((tip): tip is TravelTip => Boolean(tip))
+    .filter((tip) => {
+      // Quality check: Filter out generic/low-quality tips
+      const desc = tip.description.toLowerCase();
+      const isShort = tip.description.length < 50;
+      const isGeneric = [
+        'have fun',
+        'have a great trip',
+        'stay safe',
+        'enjoy',
+        'good luck',
+        'bon voyage',
+        'pack light',
+      ].some((phrase) => desc === phrase || (desc.includes(phrase) && tip.description.length < 100));
 
-  return normalized.length > 0 ? normalized : fallback;
+      // Keep tip only if it's substantial AND not generic
+      return !isShort && !isGeneric;
+    });
+
+  // Use fallback if we don't have at least 3 high-quality tips
+  return normalized.length >= 3 ? normalized : fallback;
 };
 
 const enhanceItineraryWithTravelTips = (
@@ -323,9 +553,17 @@ export const itineraryWorkflow = inngest.createFunction(
           promptCharacters: prompt.length,
         });
 
+        const viatorContext: string | undefined = undefined;
+        logger.log(15, 'VIATOR_CONTEXT_SKIPPED', 'inngest/functions/itinerary.ts', 'aiItineraryArchitect', {
+          workflowId,
+          reason: 'integration_disabled',
+        });
+
         const draft = await generateGrokItineraryDraft({
           prompt,
+          formData: formData as any,
           model: modelName,
+          viatorContext: viatorContext ?? undefined,
         });
 
         logger.log(16, 'XAI_RESPONSE_METADATA', 'inngest/functions/itinerary.ts', 'aiItineraryArchitect', {
@@ -353,35 +591,43 @@ export const itineraryWorkflow = inngest.createFunction(
         });
 
         const rawItinerary = (draft.itinerary ?? {}) as Record<string, any>;
+        const normalizedItinerary = normalizeItineraryStructure(
+          enhanceItineraryWithTravelTips(rawItinerary, formData as TripFormData),
+          formData as TripFormData,
+        );
         const hadIncomingTips = Array.isArray((rawItinerary as any)?.travelTips)
           ? ((rawItinerary as any).travelTips as unknown[]).length
           : 0;
-        const enrichedItinerary = enhanceItineraryWithTravelTips(rawItinerary, formData as TripFormData);
-        const cleanedJson = JSON.stringify(enrichedItinerary, null, 2);
+        const normalizedPayload = {
+          creationProcess: draft.creationProcess ?? null,
+          itinerary: normalizedItinerary,
+        };
+        const serializedItinerary = JSON.stringify(normalizedPayload, null, 2);
 
         logger.log(16, 'AI_ARCHITECT_COMPLETED', 'inngest/functions/itinerary.ts', 'aiItineraryArchitect', {
           workflowId,
           durationMs: Date.now() - startedAt,
-          generatedDays: Array.isArray((enrichedItinerary as any)?.dailyPlans)
-            ? (enrichedItinerary as any).dailyPlans.length
-            : Array.isArray((enrichedItinerary as any)?.dailyItinerary)
-              ? (enrichedItinerary as any).dailyItinerary.length
-              : Array.isArray((enrichedItinerary as any)?.days)
-                ? (enrichedItinerary as any).days.length
-                : 0,
+          generatedDays: Array.isArray((normalizedItinerary as any)?.dailyPlans)
+            ? (normalizedItinerary as any).dailyPlans.length
+            : 0,
           travelTips: {
             incomingCount: hadIncomingTips,
-            finalCount: Array.isArray((enrichedItinerary as any)?.travelTips)
-              ? (enrichedItinerary as any).travelTips.length
+            finalCount: Array.isArray((normalizedItinerary as any)?.travelTips)
+              ? (normalizedItinerary as any).travelTips.length
               : 0,
           },
           reasoningCharacters: 0,
+          creationProcessSections:
+            draft.creationProcess && typeof draft.creationProcess === 'object'
+              ? Object.keys(draft.creationProcess as Record<string, unknown>)
+              : [],
         });
 
         return {
-          itinerary: enrichedItinerary,
+          itinerary: normalizedItinerary,
+          creationProcess: draft.creationProcess ?? null,
           rawOutput: draft.rawOutput,
-          cleanedJson,
+          cleanedJson: serializedItinerary,
         };
       } catch (error) {
         logger.error(17, 'AI_ARCHITECT_FAILED', 'inngest/functions/itinerary.ts', 'aiItineraryArchitect', error instanceof Error ? error : String(error), {
@@ -399,14 +645,28 @@ export const itineraryWorkflow = inngest.createFunction(
 
       console.log('📋 [STORE] Raw JSON string to be saved:', aiArchitectResult.cleanedJson);
 
-      // Store the raw JSON string directly to preserve original order
+      const layoutResult = await formatItineraryLayout({
+        workflowId,
+        itinerary: aiArchitectResult.itinerary,
+        rawContent: aiArchitectResult.rawOutput,
+        formData: formData as TripFormData,
+      });
+
+      // Store the structured itinerary plus formatted layout
       const stored = await stateStore.storeItineraryState({
         workflowId,
         sessionId,
         status: 'completed',
         formData,
-        itinerary: aiArchitectResult.cleanedJson,
-        rawItinerary: aiArchitectResult.rawOutput,
+        itinerary: aiArchitectResult.itinerary,
+        creationProcess: aiArchitectResult.creationProcess ?? undefined,
+        rawItinerary: aiArchitectResult.cleanedJson,
+        layout: {
+          model: layoutResult.model,
+          usedGroq: layoutResult.usedGroq,
+          content: layoutResult.layout,
+          rawText: layoutResult.rawText || undefined,
+        },
         createdAt: workflowCreatedAt,
         updatedAt: new Date().toISOString(),
       });
@@ -414,7 +674,7 @@ export const itineraryWorkflow = inngest.createFunction(
       console.log('💾 [STORE] Data stored in Redis:', {
         workflowId,
         stored,
-        itineraryType: typeof aiArchitectResult.cleanedJson,
+        itineraryType: typeof aiArchitectResult.itinerary,
         hasItinerary: !!aiArchitectResult.cleanedJson,
         itineraryLength: aiArchitectResult.cleanedJson ? aiArchitectResult.cleanedJson.length : 0,
       });
@@ -431,12 +691,15 @@ export const itineraryWorkflow = inngest.createFunction(
     // Step 3: Store in Redis for semantic search (moved out of nested step)
     await step.run('store-search-data', async () => {
       try {
+        const destinationName = pickDestinationName(formData as TripFormData);
+        const durationDays = calculateTripDuration(formData as TripFormData);
+        const { activities, preferences } = collectPreferenceSignals(formData as TripFormData);
         const searchStored = await storeItineraryForSearch(workflowId, {
-          destination: formData.destination,
-          duration: parseInt(formData.duration),
-          budget: formData.budget,
-          activities: formData.activities || [],
-          preferences: formData.preferences || [],
+          destination: destinationName,
+          duration: durationDays,
+          budget: buildBudgetLabel(formData as TripFormData),
+          activities,
+          preferences,
           itinerary: aiArchitectResult.itinerary,
           timestamp: new Date().toISOString(),
         });

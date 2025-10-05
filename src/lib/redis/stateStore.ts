@@ -11,6 +11,7 @@ interface ItineraryState {
   status: 'queued' | 'processing' | 'completed' | 'error';
   formData: Record<string, any>;
   itinerary?: any;
+  creationProcess?: any;
   research?: any;
   vector?: any;
   rawItinerary?: string;

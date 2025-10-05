@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
   const prompt = buildGrokItineraryPrompt(itineraryInput as any);
   const result = await generateGrokItineraryDraft({
     prompt,
+    formData: itineraryInput as any, // Added required formData parameter
     model: 'grok-4-fast-reasoning',
     temperature: 0.4,
   });

@@ -19,6 +19,10 @@ export interface ItineraryConfig {
   exa: {
     apiKey: string;
   };
+  viator: {
+    apiKey: string;
+    partnerId: string;
+  };
 
   // Maps
   serp: {
@@ -61,7 +65,8 @@ function validateRequiredEnvVars(): void {
     'XAI_API_KEY',
     'TAVILY_API_KEY',
     'EXA_API_KEY',
-    'SERP_API_KEY',
+  'SERP_API_KEY',
+  'VIATOR_API_KEY',
     'INNGEST_EVENT_KEY',
     'INNGEST_SIGNING_KEY',
     'KV_REST_API_URL',
@@ -178,6 +183,10 @@ export function getItineraryConfig(): ItineraryConfig {
       exa: {
         apiKey: process.env.EXA_API_KEY!,
       },
+      viator: {
+        apiKey: process.env.VIATOR_API_KEY || '',
+        partnerId: process.env.VIATOR_PARTNER_ID || 'HYLO',
+      },
       serp: {
         apiKey: process.env.SERP_API_KEY!,
       },
@@ -208,6 +217,7 @@ export function getItineraryConfig(): ItineraryConfig {
       logLevel: configInstance!.app.logLevel,
       cacheTtlMinutes: configInstance!.app.cacheTtlMinutes,
       mapsFallbackMode: configInstance!.flags.mapsFallbackMode,
+      viatorConfigured: Boolean(configInstance!.viator.apiKey),
     });
 
     return configInstance!;

@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { BaseFormProps, MAX_PLANNED_DAYS, validateDates } from './types';
+import { dateUtils } from './utils';
 import DateRangePicker from './DateRangePicker';
 
 const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange, validationErrors = [] }) => {
@@ -88,6 +89,14 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange, validation
 
   const hasValidationError = validationErrors.length > 0;
 
+  const displayDepartDate = formData.departDate
+    ? dateUtils.formatMMDDYYToDisplay(formData.departDate)
+    : '';
+
+  const displayReturnDate = formData.returnDate
+    ? dateUtils.formatMMDDYYToDisplay(formData.returnDate)
+    : '';
+
   return (
     <div className={`bg-form-box rounded-[36px] p-6 border-3 ${hasValidationError ? 'border-red-500' : 'border-gray-200'}`}>
       <h3 className="text-[25px] font-bold text-primary uppercase tracking-wide mb-4 font-raleway">
@@ -106,7 +115,7 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange, validation
               <input
                 type="text"
                 placeholder="MM/DD/YY"
-                value={formData.departDate || ''}
+                value={displayDepartDate}
                 onClick={handleOpenDateRangePicker}
                 readOnly
                 className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"
@@ -125,7 +134,7 @@ const DatesForm: React.FC<BaseFormProps> = ({ formData, onFormChange, validation
               <input
                 type="text"
                 placeholder="MM/DD/YY"
-                value={formData.returnDate || ''}
+                value={displayReturnDate}
                 onClick={handleOpenDateRangePicker}
                 readOnly
                 className="w-full px-4 py-3 pr-12 border-3 border-primary rounded-[10px] focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 text-primary bg-white font-bold font-raleway text-base cursor-pointer"

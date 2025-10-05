@@ -1,5 +1,6 @@
 // src/components/TripDetails/types.ts
 import { TripDetailsFormData, tripDetailsSchema } from '@/lib/formSchemas';
+import { TripLocationDetails } from '@/types';
 
 export { tripDetailsSchema };
 
@@ -48,6 +49,7 @@ export type FormData = TripDetailsFormData & {
   };
   contactName?: string;
   contactEmail?: string;
+  locationDetails?: TripLocationDetails | null;
 };
 
 // Travel Group interfaces

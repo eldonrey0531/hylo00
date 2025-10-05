@@ -50,11 +50,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const formatDate = (date: Date | undefined): string => {
     if (!date) return 'Select date';
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
+    return dateUtils.formatDisplayDate(date);
   };
 
   const handleCalendarDateSelect = (date: Date) => {

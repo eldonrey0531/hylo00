@@ -226,6 +226,106 @@ function normalizeLayout(layout: Partial<ItineraryLayout>): ItineraryLayout {
 	};
 }
 
+type ScheduleEntry = {
+	time?: string;
+	activity?: string;
+	details?: string;
+};
+
+function splitScheduleByPeriod(schedule: ScheduleEntry[] | undefined): {
+	morning: string[];
+	afternoon: string[];
+	evening: string[];
+	dining: string[];
+	highlight: string | null;
+} {
+	if (!Array.isArray(schedule) || schedule.length === 0) {
+		return { morning: [], afternoon: [], evening: [], dining: [], highlight: null };
+	}
+
+	const morning: string[] = [];
+	const afternoon: string[] = [];
+	const evening: string[] = [];
+	const dining: string[] = [];
+	let highlight: string | null = null;
+
+	const inferPeriod = (time?: string): 'morning' | 'afternoon' | 'evening' => {
+		if (!time) return 'afternoon';
+		const lower = time.toLowerCase();
+		if (lower.includes('evening') || lower.includes('late') || lower.includes('night')) {
+			return 'evening';
+		}
+		if (lower.includes('morning')) {
+			return 'morning';
+		}
+		if (lower.includes('afternoon')) {
+			return 'afternoon';
+		}
+
+		const durationMatch = lower.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/);
+		if (durationMatch) {
+			const hour = parseInt(durationMatch[1], 10) % 12;
+			const isPm = durationMatch[3] === 'pm';
+			const normalizedHour = hour + (isPm ? 12 : 0);
+			if (normalizedHour >= 17 || normalizedHour < 5) {
+				return 'evening';
+			}
+			if (normalizedHour >= 12) {
+				return 'afternoon';
+			}
+			return 'morning';
+		}
+
+		return 'afternoon';
+	};
+
+	schedule.forEach((entry) => {
+		if (!entry || (typeof entry.activity !== 'string' && typeof entry.details !== 'string')) {
+			return;
+		}
+
+		const bulletParts: string[] = [];
+		if (entry.activity) {
+			bulletParts.push(entry.activity.trim());
+		}
+		if (entry.details) {
+			bulletParts.push(entry.details.trim());
+		}
+		const bullet = bulletParts.join(' — ').trim();
+		if (!bullet) {
+			return;
+		}
+
+		const period = inferPeriod(entry.time);
+		switch (period) {
+			case 'morning':
+				morning.push(bullet);
+				break;
+			case 'evening':
+				evening.push(bullet);
+				break;
+			default:
+				afternoon.push(bullet);
+		}
+
+		if (!highlight) {
+			highlight = bullet;
+		}
+
+		if (entry.details && /dinner|lunch|breakfast|meal|tapas|restaurant|bar/i.test(entry.details)) {
+			dining.push(entry.details.trim());
+		}
+	});
+
+	return {
+		morning,
+		afternoon,
+		evening,
+		dining,
+		highlight,
+	};
+}
+
 function normalizeDaily(daily?: LayoutDailySection[]): LayoutDailySection[] {
 	if (!Array.isArray(daily) || daily.length === 0) {
 		return [
@@ -241,15 +341,40 @@ function normalizeDaily(daily?: LayoutDailySection[]): LayoutDailySection[] {
 		];
 	}
 
-	return daily.map((section, index) => ({
-		title: section?.title || `Day ${index + 1}: Discovery & Adventure`,
-		summary: section?.summary || 'A carefully crafted day of meaningful experiences and memorable moments.',
-		morning: normalizeStringArray(section?.morning, ['Start your day with a nourishing breakfast', 'Take a morning walk to explore the neighborhood', 'Visit a local café for coffee and people-watching']),
-		afternoon: normalizeStringArray(section?.afternoon, ['Discover a key attraction or cultural site', 'Enjoy a leisurely lunch with local flavors', 'Explore nearby areas at a comfortable pace']),
-		evening: normalizeStringArray(section?.evening, ['Experience the destination as locals do', 'Find a scenic spot to watch the day transition', 'Relax with evening entertainment or quiet reflection']),
-		dining: normalizeStringArray(section?.dining, ['Savor traditional dishes with regional specialties', 'Try a restaurant that locals recommend', 'Experience dining that tells a story about the place']),
-		highlight: section?.highlight || 'A standout experience that will become a cherished memory of your journey.',
-	}));
+	return daily.map((section, index) => {
+		const scheduleData = splitScheduleByPeriod((section as any)?.schedule);
+		const derivedMorning = scheduleData.morning.length > 0 ? scheduleData.morning : undefined;
+		const derivedAfternoon = scheduleData.afternoon.length > 0 ? scheduleData.afternoon : undefined;
+		const derivedEvening = scheduleData.evening.length > 0 ? scheduleData.evening : undefined;
+		const derivedDining = scheduleData.dining.length > 0 ? scheduleData.dining : undefined;
+		const derivedHighlight = scheduleData.highlight;
+
+		return {
+			title: section?.title || `Day ${index + 1}: Discovery & Adventure`,
+			summary: section?.summary || 'A carefully crafted day of meaningful experiences and memorable moments.',
+			morning: normalizeStringArray(section?.morning, derivedMorning ?? [
+				'Start your day with a nourishing breakfast',
+				'Take a morning walk to explore the neighborhood',
+				'Visit a local café for coffee and people-watching',
+			]),
+			afternoon: normalizeStringArray(section?.afternoon, derivedAfternoon ?? [
+				'Discover a key attraction or cultural site',
+				'Enjoy a leisurely lunch with local flavors',
+				'Explore nearby areas at a comfortable pace',
+			]),
+			evening: normalizeStringArray(section?.evening, derivedEvening ?? [
+				'Experience the destination as locals do',
+				'Find a scenic spot to watch the day transition',
+				'Relax with evening entertainment or quiet reflection',
+			]),
+			dining: normalizeStringArray(section?.dining, derivedDining ?? [
+				'Savor traditional dishes with regional specialties',
+				'Try a restaurant that locals recommend',
+				'Experience dining that tells a story about the place',
+			]),
+			highlight: section?.highlight || derivedHighlight || 'A standout experience that will become a cherished memory of your journey.',
+		};
+	});
 }
 
 function normalizeTips(tips?: LayoutTipSection[]): LayoutTipSection[] {

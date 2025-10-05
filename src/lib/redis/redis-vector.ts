@@ -51,24 +51,42 @@ export async function storeItineraryForSearch(
   try {
     const redis = getRedisClient();
     
+    const destination = typeof metadata.destination === 'string' && metadata.destination.trim()
+      ? metadata.destination.trim()
+      : 'unknown destination';
+    const duration = Number.isFinite(metadata.duration) && metadata.duration > 0 ? metadata.duration : 0;
+    const budget = typeof metadata.budget === 'string' && metadata.budget.trim()
+      ? metadata.budget.trim()
+      : 'unspecified';
+    const activities = Array.isArray(metadata.activities)
+      ? metadata.activities
+          .map((item) => (typeof item === 'string' ? item.trim() : ''))
+          .filter((item): item is string => item.length > 0)
+      : [];
+    const preferences = Array.isArray(metadata.preferences)
+      ? metadata.preferences
+          .map((item) => (typeof item === 'string' ? item.trim() : ''))
+          .filter((item): item is string => item.length > 0)
+      : [];
+
     // Create searchable text for simple text-based search
     const searchText = [
-      metadata.destination.toLowerCase(),
-      `${metadata.duration} days`,
-      metadata.budget.toLowerCase(),
-      ...metadata.activities.map(a => a.toLowerCase()),
-      ...metadata.preferences.map(p => p.toLowerCase())
+      destination.toLowerCase(),
+      duration ? `${duration} days` : '',
+      budget.toLowerCase(),
+      ...activities.map(a => a.toLowerCase()),
+      ...preferences.map(p => p.toLowerCase())
     ].join(' ');
 
     // Store in Redis with search metadata
     const searchKey = `search:${workflowId}`;
     await redis.hset(searchKey, {
       workflowId,
-      destination: metadata.destination,
-      duration: metadata.duration,
-      budget: metadata.budget,
-      activities: JSON.stringify(metadata.activities),
-      preferences: JSON.stringify(metadata.preferences),
+      destination,
+      duration,
+      budget,
+      activities: JSON.stringify(activities),
+      preferences: JSON.stringify(preferences),
       searchText, // For text-based search
       timestamp: metadata.timestamp,
       itinerary: JSON.stringify(metadata.itinerary),
@@ -78,17 +96,17 @@ export async function storeItineraryForSearch(
     const pipe = redis.pipeline();
     
     // Index by destination
-    pipe.sadd(`idx:destination:${metadata.destination.toLowerCase()}`, workflowId);
+  pipe.sadd(`idx:destination:${destination.toLowerCase()}`, workflowId);
     
     // Index by budget
-    pipe.sadd(`idx:budget:${metadata.budget.toLowerCase()}`, workflowId);
+    pipe.sadd(`idx:budget:${budget.toLowerCase()}`, workflowId);
     
     // Index by duration range
-    const durationRange = getDurationRange(metadata.duration);
+    const durationRange = getDurationRange(duration);
     pipe.sadd(`idx:duration:${durationRange}`, workflowId);
     
     // Index by activities
-    metadata.activities.forEach(activity => {
+    activities.forEach(activity => {
       pipe.sadd(`idx:activity:${activity.toLowerCase()}`, workflowId);
     });
 
@@ -99,7 +117,7 @@ export async function storeItineraryForSearch(
 
     logger.log(201, 'ITINERARY_SEARCH_DATA_STORED', 'redis-vector.ts', 'storeItineraryForSearch', {
       workflowId,
-      destination: metadata.destination,
+      destination,
     });
 
     return true;

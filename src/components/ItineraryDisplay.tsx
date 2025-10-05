@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import type { FormData } from '@/components/forms/TripDetails/types';
 import { InteractiveMap } from '@/components/InteractiveMap';
+import { dateUtils } from '@/components/forms/TripDetails/utils';
 
 type LayoutSection = {
   title?: string;
@@ -74,6 +75,29 @@ const safeTrim = (value?: string | null) => {
   }
 
   return value.trim();
+};
+
+const toFriendlyDateLabel = (value?: string | null): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsedFromMMDD = dateUtils.parseMMDDYY(trimmed);
+  if (parsedFromMMDD) {
+    return dateUtils.formatDisplayDate(parsedFromMMDD);
+  }
+
+  const fallback = new Date(trimmed);
+  if (!Number.isNaN(fallback.getTime())) {
+    return dateUtils.formatDisplayDate(fallback);
+  }
+
+  return trimmed;
 };
 
 const formatList = (value?: string | string[]) => {
@@ -434,9 +458,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
     return `${adultPart}${childPart}`;
   })();
 
+  const departDateLabel = toFriendlyDateLabel(formData.departDate);
+  const returnDateLabel = toFriendlyDateLabel(formData.returnDate);
+
   const dateLabel =
-    formData.departDate && formData.returnDate
-      ? `${formData.departDate} → ${formData.returnDate}`
+    departDateLabel && returnDateLabel
+      ? `${departDateLabel} → ${returnDateLabel}`
       : 'Flexible';
 
   const dailyPlans: LayoutDailyPlan[] = Array.isArray(layout.dailyPlans) && layout.dailyPlans.length > 0
@@ -498,17 +525,19 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                 { 
                   label: 'Budget',
                   value: formData.flexibleBudget ? (
-                    <div className="text-center">
-                      <span className="font-semibold">Budget is Flexible</span>
+                    <div className="flex flex-col items-center text-center gap-1">
+                      <span className="text-[22px] font-bold text-[#1f2f35]">
+                        Budget is Flexible
+                      </span>
                     </div>
                   ) : (
-                    <div className="text-center space-y-1">
-                      <div className="text-xl font-bold">
+                    <div className="flex flex-col items-center text-center gap-1">
+                      <div className="text-[22px] font-bold text-[#1f2f35]">
                         ${typeof formData.budget === 'number' && formData.budget > 0
                           ? formData.budget.toLocaleString()
                           : '0'}
                       </div>
-                      <div className="text-sm font-medium">
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#43636f]">
                         {(formData as any).budgetMode === 'total' ? 'Total Budget' : 'Per-Person'}
                       </div>
                     </div>
@@ -529,8 +558,12 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                   <dt className="text-[18px] font-bold uppercase tracking-[0.15em] text-[#406170] mb-2.5 text-center">
                     {item.label}
                   </dt>
-                  <dd className="text-base font-semibold text-[#1f2f35] leading-relaxed break-words">
-                    {typeof item.value === 'string' ? item.value : item.value}
+                  <dd className="flex flex-col items-center text-center gap-1 text-[#1f2f35] leading-snug break-words">
+                    {typeof item.value === 'string' ? (
+                      <span className="text-[22px] font-bold">{item.value}</span>
+                    ) : (
+                      item.value
+                    )}
                   </dd>
                 </motion.div>
               ))}
@@ -546,6 +579,8 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             {formData?.location ? (
               <InteractiveMap
                 location={formData.location}
+                lat={formData.locationDetails?.latitude ?? undefined}
+                lng={formData.locationDetails?.longitude ?? undefined}
                 zoom={5.5}
                 className="w-full"
               />
@@ -579,7 +614,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             {dailyPlans.map((plan, index) => {
               const eveningInput = (plan as any).evening ?? (plan as any).evenning;
               const dayNumber = plan.day ?? index + 1;
-              const titleSuffix = plan.title || (plan as any).dayTitle || plan.date || '';
+              const planTitle = plan.title || (plan as any).dayTitle || '';
+              const planDateLabel = toFriendlyDateLabel(plan.date);
+              const titleSuffix = planTitle || planDateLabel || '';
               const title = titleSuffix
                 ? `Day ${dayNumber}: ${titleSuffix}`
                 : `Day ${dayNumber}`;
@@ -609,18 +646,18 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
                       <h4 className="font-bold text-[21px]">
                       {title}
                     </h4>
-                    {summary && (
-                        <p className="font-bold text-[21px] text-white/80">
-                        {summary}
-                      </p>
-                    )}
-                    {plan.date && !titleSuffix && (
-                        <span className="text-sm text-white/70">{plan.date}</span>
+                    {planDateLabel && planTitle && (
+                      <span className="text-sm text-white/70">{planDateLabel}</span>
                     )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-5 bg-white rounded-[36px] p-6 border-[3px] border-gray-200">
+                  {summary && (
+                    <div className="rounded-2xl border border-[#dce5e2] bg-[#f7f9f8] p-4 text-base leading-relaxed text-[#1f2f35]">
+                      {summary}
+                    </div>
+                  )}
                   {renderSection('Morning', plan.morning, '🌅')}
                   {renderSection('Afternoon', plan.afternoon, '☀️')}
                   {renderSection('Evening', eveningInput, '🌙')}
@@ -662,9 +699,9 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
             Tailored for {heroName} using your travel preferences
           </div>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6 rounded-2xl bg-[#ece8de] border-y-[10px] border-[#d1d5db]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-4 rounded-2xl bg-[#ece8de] border-y-[10px] border-[#d1d5db]">
             {layout.travelTips.map((tip, index) => (
-              <article key={`${tip.title ?? index}`} className="space-y-2 py-4">
+              <article key={`${tip.title ?? index}`} className="space-y-1 py-3">
                 {tip.title && (
                   <h4 className="text-base font-semibold text-slate-900">
                     {tip.title}
@@ -681,31 +718,14 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         </div>
       )}
 
-      {(layout.keyTakeaways || layout.nextSteps) && (
-        <div className="space-y-8 mt-[45px]">
-          <div
-            className="border border-slate-100 shadow-sm p-6 text-center text-[35px]"
-            style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
-          >
-            <h3 className="font-bold uppercase tracking-widest mb-4 text-[35px]">
-              ❓ What do you want to do next?
-            </h3>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
-            {layout.nextSteps && (
-              <section className="rounded-2xl bg-white shadow-md border border-slate-200 p-6">
-                <h4 className="text-lg font-semibold text-slate-800 mb-3">
-                  Next steps
-                </h4>
-                {formatList(layout.nextSteps)}
-              </section>
-            )}
-          </div>
-        </div>
-      )}
-
-
+      <div
+        className="border border-slate-100 shadow-sm p-6 text-center text-[35px] mt-[45px]"
+        style={{ backgroundColor: 'rgb(176, 194, 155)', color: 'rgb(64, 97, 112)' }}
+      >
+        <h3 className="font-bold uppercase tracking-widest mb-0 text-[35px]">
+          ❓ What do you want to do next?
+        </h3>
+      </div>
 
       <motion.div 
         className="rounded-2xl p-8 my-[10px] max-w-6xl mx-auto mt-10 mb-16"

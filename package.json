@@ -16,7 +16,6 @@
     "run:grok-demo": "node --loader ts-node/esm scripts/run-grok-demo.ts"
   },
   "dependencies": {
-    "@ai-sdk/xai": "^2.0.23",
     "@types/leaflet": "^1.9.20",
     "@upstash/redis": "^1.35.4",
     "ai": "^3.4.33",

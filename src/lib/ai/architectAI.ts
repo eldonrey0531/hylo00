@@ -1,10 +1,181 @@
-import type { TripFormData } from '@/types';
 import { logger } from '@/utils/console-logger';
+
+import {
+  addUtcDays,
+  computeInferredDayCount,
+  formatIsoDate,
+  parseIsoDate,
+  resolveRecommendationCategories,
+  type ExtendedTripFormData,
+} from './itineraryShared';
+import { validateItineraryPayload } from './itinerarySchema';
+
+export type { ExtendedTripFormData } from './itineraryShared';
 
 type FallbackSource = 'none' | 'parsed-content' | 'tool-call' | 'reasoning';
 
 const GROK_MODEL = 'grok-4-fast-reasoning';
 const XAI_ENDPOINT = 'https://api.x.ai/v1/chat/completions';
+
+
+/**
+ * Builds a dynamic system prompt based on the user's form data
+ * Only includes relevant instructions for what they actually provided
+ */
+function buildSystemPrompt(formData: ExtendedTripFormData): string {
+  const parts: string[] = [];
+
+  parts.push("You are Hylo's AI Itinerary Architect, a professional travel concierge creating personalized itineraries.");
+
+  const hasFlexibleDates = formData.flexibleDates === true;
+  const selectedInclusions = Array.isArray(formData.selectedInclusions)
+    ? (formData.selectedInclusions as unknown[])
+        .map((value) => (typeof value === 'string' ? value.trim() : ''))
+        .filter((value): value is string => Boolean(value))
+    : [];
+
+  const departDate = parseIsoDate((formData as Record<string, unknown>).departDate);
+  const returnDate = parseIsoDate((formData as Record<string, unknown>).returnDate);
+  const inferredDayCount = Math.max(1, Math.min(21, computeInferredDayCount(formData, departDate, returnDate)));
+
+  const calendarGuidance: string[] = [];
+  if (!hasFlexibleDates && departDate) {
+    for (let index = 0; index < inferredDayCount; index += 1) {
+      calendarGuidance.push(`- Day ${index + 1}: ${formatIsoDate(addUtcDays(departDate, index))}`);
+    }
+  }
+
+  const currency =
+    typeof (formData as Record<string, unknown>).currency === 'string' &&
+    (formData as Record<string, unknown>).currency
+      ? String((formData as Record<string, unknown>).currency).trim()
+      : 'USD';
+
+  const recommendationCategories = resolveRecommendationCategories(formData);
+
+  if (calendarGuidance.length > 0) {
+    parts.push(
+      `Trip calendar:\n${calendarGuidance.join('\n')}\nUse these ISO dates exactly for each "date" field. Continue sequentially if you add additional days.`,
+    );
+  } else if (hasFlexibleDates) {
+    parts.push(
+      `Dates are flexible. Omit the "date" property and label days sequentially (Day 1 … Day ${inferredDayCount}).`,
+    );
+  } else {
+    parts.push(
+      'Calendar information is incomplete. Only include a "date" field when you can guarantee it is correct; otherwise omit it.',
+    );
+  }
+
+  parts.push(
+    `Daily plan target: Produce ${inferredDayCount} fully detailed dailyPlans unless traveler context clearly demands otherwise. Explain any adjustment inside creationProcess.`,
+  );
+
+  parts.push(`
+Output Format: Return ONLY valid JSON (no markdown, no explanations). The payload MUST satisfy the following TypeScript types:
+
+type CreationProcessEntry = string;
+
+interface CreationProcess {
+  inputsUsed: CreationProcessEntry[];
+  reasoningSteps: CreationProcessEntry[];
+  qualityChecks: CreationProcessEntry[];
+}
+
+interface Recommendation {
+  type: string;
+  category: string;
+  name: string;
+  description: string;
+  estimatedCost: string;
+  bookingUrl: string;
+  priority: 'high' | 'medium' | 'low';
+  recommendedDay?: number;
+}
+
+interface DaySegment {
+  activities: string[];
+  inlineRecommendations: Recommendation[];
+}
+
+interface ItineraryDayPlan {
+  day: number;
+  date?: string;
+  title: string;
+  summary: string;
+  location: string;
+  morning: DaySegment;
+  afternoon: DaySegment;
+  evening: DaySegment;
+  dining: string[];
+  signatureHighlight: string;
+  logistics: string[];
+}
+
+interface TravelTip {
+  title: string;
+  description: string;
+}
+
+type GlobalRecommendations = {
+  [category: string]: Recommendation[];
+};
+
+Response shape:
+{
+  creationProcess: CreationProcess;
+  itinerary: {
+    daySummary: string;
+    keyTakeaways: string[];
+    dailyPlans: ItineraryDayPlan[];
+    travelTips: TravelTip[];
+    globalRecommendations: GlobalRecommendations;
+  };
+}
+`);
+
+  const selectedInclusionText = selectedInclusions.length > 0
+    ? selectedInclusions.join(', ')
+    : 'all categories (no specific selection)';
+  const categoryKeys = recommendationCategories.map((c) => c.key).join(', ');
+  const categoryGuidance = recommendationCategories
+    .map((c) => `- ${c.key} (${c.label})`)
+    .join('\n');
+
+  parts.push(`
+CRITICAL INSTRUCTIONS:
+1. Populate creationProcess before filling itinerary. Each of "inputsUsed", "reasoningSteps", and "qualityChecks" must contain 2-4 concise entries tied to the traveler data.
+2. User selected these inclusions: ${selectedInclusionText}.
+3. ONLY include recommendation categories the user selected: ${categoryKeys}.
+   Required category keys and labels:\n${categoryGuidance}
+4. If you recommend an experience for a specific day, set "recommendedDay" accordingly and align with the ISO date.
+5. Inline recommendations belong in "inlineRecommendations" for the relevant time period; leave an empty array when nothing contextual is needed.
+6. When dates are fixed, use the provided ISO guidance exactly. When dates are flexible, omit the "date" field entirely.
+7. Do not include any text outside the JSON object (no commentary, explanations, or markdown).
+8. Emit every required key even when values are empty; use [] or null when information is unavailable.
+9. For each recommendation, include bookingUrl, estimatedCost (in ${currency}), and priority ("high", "medium", or "low").
+10. Mirror traveler counts, vibe, inclusions, and budget throughout the itinerary narrative and logistics.
+`);
+
+  parts.push(`
+Recommendations Guidelines:
+- Provide 2-5 recommendations per active category (quality over quantity).
+- Include realistic pricing in ${currency}.
+- Priority levels: "high" (must-have), "medium" (strongly suggested), "low" (nice-to-have).
+- Booking URLs should reference real platforms (Booking.com, GetYourGuide, TripAdvisor, OpenTable, etc.).
+- Inline recommendations should reinforce the surrounding activities (same neighborhood, logical timing).
+- Global recommendations are for bookings that span the whole trip (flights, stays, ground transport).
+`);
+
+  parts.push(`
+Creation Process Guidance:
+- "inputsUsed" should cite specific traveler signals (e.g., travel style answers, inclusions, party composition).
+- "reasoningSteps" must explain how you sequenced days, balanced pacing, and fulfilled priorities.
+- "qualityChecks" must confirm calendar alignment, diversity of experiences, and budget/preference adherence.
+`);
+
+  return parts.join('\n');
+}
 
 export interface GenerationUsage {
   promptTokens?: number;
@@ -27,17 +198,18 @@ export interface GrokDraftResult {
   rawOutput: string;
   cleanedJson: string;
   itinerary: unknown;
+  creationProcess?: unknown;
   metadata: GrokDraftMetadata;
 }
 
 export interface GrokDraftParams {
   prompt: string;
+  formData: ExtendedTripFormData;
   model?: string;
   maxTokens?: number;
   temperature?: number;
+  viatorContext?: any; // Viator API search results to include as context
 }
-
-export type ExtendedTripFormData = TripFormData & Record<string, unknown>;
 
 export function buildGrokItineraryPrompt(formData: ExtendedTripFormData): string {
   const promptLines: string[] = [];
@@ -88,6 +260,9 @@ export function buildGrokItineraryPrompt(formData: ExtendedTripFormData): string
       `Travel party: ${adultCount} adult(s). Trip is adults-only; highlight late-night, intimate, or adventurous options when appropriate.`,
     );
   }
+
+  promptLines.push('If information is unavailable, return null or an empty array for that field rather than omitting the key.');
+  promptLines.push('Do not prepend or append prose—respond with a single JSON object only.');
 
   if (formData.flexibleBudget === true) {
     promptLines.push('Budget: Flexible. Offer tiered recommendations (value, mid, premium) when relevant.');
@@ -180,37 +355,117 @@ export function buildGrokItineraryPrompt(formData: ExtendedTripFormData): string
     promptLines.push(`Traveler notes: ${(formData as any).additionalNotes.trim()}`);
   }
 
-  promptLines.push('Execution requirements:');
-  promptLines.push('- Produce an intro paragraph that feels concierge-written, 2-3 sentences.');
-  promptLines.push('- Build `dailyPlans` array with one entry per day, preserving date order.');
-  promptLines.push('- Each day must include morning, afternoon, evening anchors with 3+ specific activities each.');
-  promptLines.push('- For each time period (morning/afternoon/evening), provide detailed, actionable activities that create a rich experience.');
-  promptLines.push('- Activities should be varied: mix cultural experiences, local interactions, relaxation, exploration, and unique discoveries.');
-  promptLines.push('- If transportation is required, include `transportation` notes with time estimates.');
-  promptLines.push('- Add `dining` suggestions that match the traveler vibe and any dietary notes.');
-  promptLines.push('- Reference the trip nickname if provided.');
-  promptLines.push('- End with `keyTakeaways` summarizing highlights and a `travelTips` array tailored from the traveler form responses.');
-  promptLines.push('- For `travelTips`, output an array where each item is an object containing `title` and `description` strings with practical, concierge-ready guidance.');
-  promptLines.push('- Do not include a `nextSteps` field—focus on personalized travel tips instead.');
+  // Dynamic travel tips guidance based on form data
+  promptLines.push('\n---\n');
+  promptLines.push('Travel Tips Generation Instructions:');
+  promptLines.push('Produce exactly 4 travelTips objects tailored to this traveler.');
+  promptLines.push('Each tip title must be 3-7 words, vivid, and reference a specific local place, dish, neighborhood, or seasonal insight. Never use generic category labels like "Day Planning" or "Dining".');
+  promptLines.push('Each tip description must be 2-3 sentences packed with concrete advice (exact times, neighborhoods, transit modes, price ranges, booking windows) that reflects their interests, group size, and travel style.');
+  promptLines.push('Keep the tone warm, insider, and traveler-first. Ensure no two tips reuse the same wording or focus.');
+
+  const tipTopics: string[] = [];
+  const vibesText = getVibesText(travelStyleAnswers);
+
+  // Day planning / pacing focus
+  if (travelStyleDetails.length > 0) {
+    tipTopics.push(`• Smart pacing ideas aligned with their ${vibesText || 'preferred vibe'} in ${formData.location}, including ideal times to enjoy headline experiences.`);
+  } else {
+    tipTopics.push(`• Crowd-aware scheduling recommendations for signature spots in ${formData.location}, noting specific hours to visit.`);
+  }
+
+  // Dining focus
+  const hasDiningPrefs = travelStyleAnswers.dinnerChoices?.length > 0 || (formData as any).diningPreferences;
+  if (hasDiningPrefs) {
+    tipTopics.push('• Dining strategies that weave in their stated meal preferences, reservation timing, and a standout venue or dish.');
+  } else {
+    tipTopics.push(`• Local food discoveries in ${formData.location} with pricing guidance and how to find authentic flavors.`);
+  }
+
+  // Group / logistics focus
+  if (childCount > 0) {
+    tipTopics.push(`• Family logistics tips covering downtime, stroller-friendly routes, and comfort hacks for ${childCount} kid(s).`);
+  } else if (adultCount > 1) {
+    tipTopics.push(`• Coordination advice for ${adultCount} adult traveler${adultCount === 1 ? '' : 's'} (meet-up points, transit options, pacing).`);
+  } else {
+    tipTopics.push(`• Solo travel wisdom for ${formData.location}, blending safety, social connection, and memorable alone-time moments.`);
+  }
+
+  // Budget/value focus
+  if (formData.flexibleBudget === true) {
+    tipTopics.push('• Value versus splurge guidance highlighting one premium upgrade worth booking alongside smart savings.');
+  } else if (typeof formData.budget === 'number') {
+    tipTopics.push(`• Budget stewardship that references staying within ${formData.currency ?? 'USD'} ${formData.budget.toLocaleString?.() ?? formData.budget}, plus free or low-cost swaps.`);
+  } else {
+    tipTopics.push(`• Money insights for ${formData.location} covering payment customs, tipping norms, and cash versus card advice.`);
+  }
+
+  promptLines.push('Ensure tips cover the following angles:');
+  promptLines.push(tipTopics.join('\n'));
+
+  // Must-have inclusions tip (if provided)
+  if (Array.isArray(formData.selectedInclusions) && formData.selectedInclusions.length > 0) {
+    const inclusionsText = formData.selectedInclusions
+      .map((inc: any) => typeof inc === 'string' ? inc : '')
+      .filter(Boolean)
+      .join(', ');
+    promptLines.push(`\nPrioritize tips that help them experience: ${inclusionsText}`);
+  }
 
   promptLines.push(
-    'Output requirements: Respond with a single JSON object containing `dailyPlans` where each entry represents one day. Each day should include activities, meals, and transportation details.',
+    'You must respond with the exact JSON structure defined in the system instructions, including a populated "creationProcess" with 2-4 bullet points for each section and a "dailyPlans" array matching the expected ISO date rules.',
   );
 
-  promptLines.push(`Form data JSON:\n${JSON.stringify(formData, null, 2)}`);
+  promptLines.push('\nGenerate the complete itinerary following the JSON schema from your system prompt.');
+  promptLines.push(`\nComplete traveler profile:\n${JSON.stringify(formData, null, 2)}`);
 
   return promptLines.join('\n\n');
 }
 
+// Helper to extract vibes text for tip guidance
+function getVibesText(travelStyleAnswers: any): string | null {
+  if (!travelStyleAnswers) return null;
+  
+  const vibes = Array.isArray(travelStyleAnswers.vibes) ? travelStyleAnswers.vibes : [];
+  const customVibes = travelStyleAnswers.customVibesText;
+  
+  if (vibes.length > 0) {
+    return vibes.join(', ');
+  }
+  
+  if (typeof customVibes === 'string' && customVibes.trim()) {
+    return customVibes.trim();
+  }
+  
+  return null;
+}
+
 export async function generateGrokItineraryDraft({
   prompt,
+  formData,
   model = GROK_MODEL,
   temperature = 0.7,
+  viatorContext, // NEW: Pass Viator API results as context
 }: GrokDraftParams): Promise<GrokDraftResult> {
   if (!process.env.XAI_API_KEY) {
     throw new Error('XAI_API_KEY is not configured.');
   }
+  
+  // Enhance prompt with Viator data if available
+  const viatorDetails = typeof viatorContext === 'string'
+    ? viatorContext
+    : JSON.stringify(viatorContext, null, 2);
 
+  const enhancedPrompt = viatorContext
+    ? `${prompt}
+
+---
+VIATOR AVAILABLE PRODUCTS:
+${viatorDetails}
+
+Use these Viator products in your recommendations. Include the productId and affiliateUrl for each recommendation.`
+    : prompt;
+
+  const systemPrompt = buildSystemPrompt(formData);
   const startedAt = Date.now();
   const response = await fetch(XAI_ENDPOINT, {
     method: 'POST',
@@ -220,7 +475,10 @@ export async function generateGrokItineraryDraft({
     },
     body: JSON.stringify({
       model,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: enhancedPrompt } // Use enhanced prompt with Viator data
+      ],
       temperature,
     }),
   });
@@ -273,20 +531,44 @@ export async function generateGrokItineraryDraft({
     throw new Error('xAI returned empty text');
   }
 
-  const cleanedJson = extractJsonBlock(resolvedText);
-  let itinerary: unknown;
+  let cleanedJson = extractJsonBlock(resolvedText);
+  let parsedPayload: unknown;
   try {
-    itinerary = JSON.parse(cleanedJson);
+    parsedPayload = JSON.parse(cleanedJson);
   } catch (error) {
     throw new Error('Failed to parse Grok itinerary JSON');
+  }
+
+  const normalizedPayload = normalizeItineraryPayloadShape(parsedPayload, formData);
+  if (normalizedPayload && typeof normalizedPayload === 'object') {
+    try {
+      cleanedJson = JSON.stringify(normalizedPayload, null, 2);
+    } catch (error) {
+      // ignore serialization failure and retain original cleanedJson
+    }
+  }
+
+  let itinerary: unknown = normalizedPayload ?? {};
+  let creationProcess: unknown;
+
+  try {
+    const validated = validateItineraryPayload(normalizedPayload, formData);
+    itinerary = validated.itinerary;
+    creationProcess = validated.creationProcess;
+  } catch (schemaError) {
+    if (schemaError instanceof Error) {
+      throw schemaError;
+    }
+    throw new Error('Unknown schema validation failure');
   }
 
   return {
     rawOutput: resolvedText,
     cleanedJson,
     itinerary,
+    creationProcess,
     metadata: {
-      model,
+  model,
       latencyMs: Date.now() - startedAt,
       finishReason: extractFinishReason(parsedResponse),
       usage: mapUsage(parsedResponse?.usage),
@@ -296,6 +578,298 @@ export async function generateGrokItineraryDraft({
       fallbackSource,
     },
   };
+}
+
+
+
+function normalizeItineraryPayloadShape(payload: unknown, formData: ExtendedTripFormData): unknown {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  const clone = JSON.parse(JSON.stringify(payload)) as Record<string, unknown>;
+  const allowedGlobalRecommendationKeys = new Set(
+    resolveRecommendationCategories(formData).map((category) => category.key),
+  );
+
+  type SanitizedRecommendation = {
+    type: string;
+    category: string;
+    name: string;
+    description: string;
+    estimatedCost: string;
+    bookingUrl: string;
+    priority: 'high' | 'medium' | 'low';
+    recommendedDay?: number;
+  };
+
+  type SanitizedSegment = {
+    activities: string[];
+    inlineRecommendations: SanitizedRecommendation[];
+  };
+
+  type SanitizedDayPlan = {
+    day: number;
+    title: string;
+    summary: string;
+    location: string;
+    morning: SanitizedSegment;
+    afternoon: SanitizedSegment;
+    evening: SanitizedSegment;
+    dining: string[];
+    logistics: string[];
+    date?: string;
+    signatureHighlight?: string;
+  };
+
+  type SanitizedTravelTip = {
+    title: string;
+    description: string;
+  };
+
+  const sanitizeString = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  };
+
+  const sanitizeNumber = (value: unknown): number | undefined => {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return undefined;
+    }
+    return value;
+  };
+
+  const sanitizeStringArray = (value: unknown): string[] | undefined => {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    const entries = value
+      .map(sanitizeString)
+      .filter((entry): entry is string => Boolean(entry));
+    return entries.length > 0 ? entries : undefined;
+  };
+
+  const sanitizePriority = (value: unknown): 'high' | 'medium' | 'low' | undefined => {
+    if (value === 'high' || value === 'medium' || value === 'low') {
+      return value;
+    }
+    return undefined;
+  };
+
+  const sanitizeRecommendation = (value: unknown): SanitizedRecommendation | undefined => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const record = value as Record<string, unknown>;
+    const type = sanitizeString(record.type);
+    const category = sanitizeString(record.category);
+    const name = sanitizeString(record.name);
+    const description = sanitizeString(record.description);
+    const estimatedCost = sanitizeString(record.estimatedCost);
+    const bookingUrl = sanitizeString(record.bookingUrl);
+    const priority = sanitizePriority(record.priority);
+    const recommendedDay = sanitizeNumber(record.recommendedDay);
+
+    if (!type || !category || !name || !description || !estimatedCost || !bookingUrl || !priority) {
+      return undefined;
+    }
+
+    return {
+      type,
+      category,
+      name,
+      description,
+      estimatedCost,
+      bookingUrl,
+      priority,
+      ...(typeof recommendedDay === 'number' ? { recommendedDay } : {}),
+    };
+  };
+
+  const sanitizeSegment = (value: unknown): SanitizedSegment | undefined => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const record = value as Record<string, unknown>;
+    const activities = sanitizeStringArray(record.activities);
+    if (!activities) {
+      return undefined;
+    }
+
+    const inlineRecommendations = Array.isArray(record.inlineRecommendations)
+      ? record.inlineRecommendations
+          .map(sanitizeRecommendation)
+          .filter((entry): entry is SanitizedRecommendation => Boolean(entry))
+      : [];
+
+    return {
+      activities,
+      inlineRecommendations,
+    };
+  };
+
+  const sanitizeDayPlan = (value: unknown): SanitizedDayPlan | undefined => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const record = value as Record<string, unknown>;
+
+    const day = sanitizeNumber(record.day);
+    const date = sanitizeString(record.date);
+    const title = sanitizeString(record.title);
+    const summary = sanitizeString(record.summary);
+    const location = sanitizeString(record.location);
+    const dining = sanitizeStringArray(record.dining);
+  const signatureHighlight = sanitizeString(record.signatureHighlight);
+    const logistics = sanitizeStringArray(record.logistics);
+
+    const morning = sanitizeSegment(record.morning);
+    const afternoon = sanitizeSegment(record.afternoon);
+    const evening = sanitizeSegment(record.evening);
+
+    if (
+      !day ||
+      !title ||
+      !summary ||
+      !location ||
+      !morning ||
+      !afternoon ||
+      !evening ||
+      !dining ||
+      !logistics ||
+      !signatureHighlight
+    ) {
+      return undefined;
+    }
+
+    const sanitized: SanitizedDayPlan = {
+      day,
+      title,
+      summary,
+      location,
+      morning,
+      afternoon,
+      evening,
+      dining,
+      logistics,
+      signatureHighlight,
+    };
+
+    if (date) sanitized.date = date;
+    if (signatureHighlight) sanitized.signatureHighlight = signatureHighlight;
+
+    return sanitized;
+  };
+
+  const sanitizeTravelTip = (value: unknown): SanitizedTravelTip | undefined => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const record = value as Record<string, unknown>;
+    const title = sanitizeString(record.title);
+    const description = sanitizeString(record.description);
+    if (!title || !description) {
+      return undefined;
+    }
+
+    return { title, description };
+  };
+
+  const sanitizeRecommendationGroup = (value: unknown): SanitizedRecommendation[] | undefined => {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+
+    const entries = value
+      .map(sanitizeRecommendation)
+      .filter((entry): entry is SanitizedRecommendation => Boolean(entry));
+
+    return entries.length > 0 ? entries : undefined;
+  };
+
+  if (clone.creationProcess && typeof clone.creationProcess === 'object') {
+    const creation = clone.creationProcess as Record<string, unknown>;
+    ['inputsUsed', 'reasoningSteps', 'qualityChecks'].forEach((key) => {
+      if (Array.isArray(creation[key])) {
+        creation[key] = (creation[key] as unknown[])
+          .map(sanitizeString)
+          .filter((entry): entry is string => Boolean(entry))
+          .slice(0, 4);
+      } else {
+        delete creation[key];
+      }
+    });
+  }
+
+  if (clone.itinerary && typeof clone.itinerary === 'object') {
+    const itinerary = clone.itinerary as Record<string, unknown>;
+
+    const daySummary = sanitizeString(itinerary.daySummary);
+    const keyTakeaways = sanitizeStringArray(itinerary.keyTakeaways);
+    const travelTips = Array.isArray(itinerary.travelTips)
+      ? itinerary.travelTips
+          .map(sanitizeTravelTip)
+          .filter((entry): entry is SanitizedTravelTip => Boolean(entry))
+      : undefined;
+    const dailyPlans = Array.isArray(itinerary.dailyPlans)
+      ? itinerary.dailyPlans
+          .map(sanitizeDayPlan)
+          .filter((entry): entry is SanitizedDayPlan => Boolean(entry))
+      : undefined;
+
+    if (daySummary) {
+      itinerary.daySummary = daySummary;
+    } else {
+      delete itinerary.daySummary;
+    }
+
+    if (keyTakeaways && keyTakeaways.length > 0) {
+      itinerary.keyTakeaways = keyTakeaways;
+    } else {
+      delete itinerary.keyTakeaways;
+    }
+
+    if (travelTips && travelTips.length > 0) {
+      itinerary.travelTips = travelTips;
+    } else {
+      delete itinerary.travelTips;
+    }
+
+    if (dailyPlans && dailyPlans.length > 0) {
+      itinerary.dailyPlans = dailyPlans;
+    } else {
+      delete itinerary.dailyPlans;
+    }
+
+    const globalRecommendations = itinerary.globalRecommendations as Record<string, unknown> | undefined;
+    if (globalRecommendations && typeof globalRecommendations === 'object') {
+      Object.keys(globalRecommendations).forEach((key) => {
+        if (!allowedGlobalRecommendationKeys.has(key)) {
+          delete globalRecommendations[key];
+          return;
+        }
+
+        const sanitizedGroup = sanitizeRecommendationGroup(globalRecommendations[key]);
+        if (sanitizedGroup) {
+          globalRecommendations[key] = sanitizedGroup;
+        } else {
+          delete globalRecommendations[key];
+        }
+      });
+    }
+
+    delete itinerary.destination;
+    delete itinerary.dailyItinerary;
+  }
+
+  return clone;
 }
 
 function resolveXaiText(payload: any): { text: string | null; fallbackSource: FallbackSource } {

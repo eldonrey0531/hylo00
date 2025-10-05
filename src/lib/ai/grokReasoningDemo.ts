@@ -67,6 +67,7 @@ export async function runGrokReasoningDemo({
 
   return generateGrokItineraryDraft({
     prompt,
+    formData: mergedForm, // Added required formData parameter
     model,
     temperature,
   });

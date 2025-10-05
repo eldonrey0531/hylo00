@@ -13,13 +13,8 @@ import ItineraryDisplay from '@/components/ItineraryDisplay';
 const STATUS_POLL_INTERVAL = 2000;
 
 const emojiSequence = ["✈️", "🏝️", "🗺️", "🚗", "🛳️", "🎒", "🏨", "🚆", "🚌", "🌍"];
-
-const createHorizontalPath = (index: number) => {
-  return {
-    x: [0, 400, 1200], // Start from current position, move further to center (400px), then to far right edge (1200px)
-    rotateY: [90, 0, -90], // Start rotated (coming from back), face forward, then rotate away (going to back)
-  };
-};
+const EMOJI_CYCLE_DURATION = 7.5;
+const EMOJI_STAGGER = EMOJI_CYCLE_DURATION / emojiSequence.length;
 
 type LayoutMetadata = {
   model?: string;
@@ -33,6 +28,7 @@ interface WorkflowLog {
 
 const createInitialFormData = (): FormData => ({
   location: '',
+  locationDetails: null,
   departDate: '',
   returnDate: '',
   flexibleDates: false,
@@ -76,6 +72,7 @@ function Page() {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showAnalyzingBanner, setShowAnalyzingBanner] = useState<boolean>(false);
+
   const loadingRef = useRef<HTMLDivElement>(null);
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeWorkflowIdRef = useRef<string | null>(null);
@@ -189,11 +186,13 @@ function Page() {
         console.error('❌ Itinerary generation failed:', result);
         alert('Failed to start itinerary generation. Please try again.');
         setIsGenerating(false);
+        setShowAnalyzingBanner(false);
       }
     } catch (error) {
       console.error('💥 Error calling itinerary API:', error);
       alert('An error occurred while starting itinerary generation. Please try again.');
       setIsGenerating(false);
+      setShowAnalyzingBanner(false);
     }
   };
 
@@ -221,6 +220,7 @@ function Page() {
         console.error('State check failed:', errorMessage);
         alert(`Itinerary state check failed: ${errorMessage}`);
         setIsGenerating(false);
+        setShowAnalyzingBanner(false);
         setWorkflowId(null);
         activeWorkflowIdRef.current = null;
         clearExistingPoll();
@@ -273,6 +273,7 @@ function Page() {
       if (statusData.status === 'completed') {
         console.log('Workflow completed, stopping polling');
         setIsGenerating(false);
+        setShowAnalyzingBanner(false);
         setLastUpdated(statusData.updatedAt);
         clearExistingPoll();
         return;
@@ -282,6 +283,7 @@ function Page() {
         console.error('Workflow error:', statusData.error);
         alert(`Itinerary generation failed: ${statusData.error || 'Unknown error'}`);
         setIsGenerating(false);
+        setShowAnalyzingBanner(false);
         clearExistingPoll();
         return;
       }
@@ -300,6 +302,7 @@ function Page() {
     notFoundRetryRef.current = 0;
     setWorkflowId(null);
     setIsGenerating(false);
+    setShowAnalyzingBanner(false);
     setItineraryLayout(null);
     setLayoutMetadata(null);
     setLastUpdated(null);
@@ -333,6 +336,9 @@ function Page() {
     }));
   };
 
+  const shouldShowLoadingBanner = showAnalyzingBanner || isGenerating;
+  const shouldShowTaDaBanner = !shouldShowLoadingBanner && !!(itineraryLayout || rawItinerary);
+
   return (
     <div className="min-h-screen bg-primary py-8 font-raleway">
       <header className="bg-trip-details text-primary py-4 px-6 shadow-lg w-full px-[20%]">
@@ -345,7 +351,6 @@ function Page() {
           </div>
         </div>
       </header>
-
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="space-y-6">
           <TripDetails formData={formData} onFormChange={setFormData} showAdditionalForms={true} validationErrors={{}} />
@@ -398,54 +403,76 @@ function Page() {
         </>
       )}
 
-      {/* Loading section - always show when generating or when we have layout */}
-  {(showAnalyzingBanner || isGenerating || itineraryLayout) && (
-        <div ref={loadingRef} className="w-full px-8 relative mt-[45px]" style={{ backgroundColor: '#b0c29c' }}>
+      {(shouldShowLoadingBanner || shouldShowTaDaBanner) && (
+        <div
+          ref={loadingRef}
+          className="w-full px-8 relative mt-[45px]"
+          style={{
+            backgroundColor: shouldShowLoadingBanner ? '#b0c29c' : '#f9dd8b',
+            transition: 'background-color 0.3s ease',
+          }}
+        >
           <div className="max-w-4xl mx-auto">
-            {/* Main content with hotel emoji and text side by side, centered on page */}
-            <div className="flex items-center justify-center relative z-10" style={{ borderBottom: '8px' }}>
-              {/* Animated emojis moving horizontally across this specific flex container */}
-              {emojiSequence.map((emoji, index) => (
-                <motion.div
-                  key={`${emoji}-${index}`}
-                  className="absolute text-4xl pointer-events-none z-20"
-                  style={{
-                    left: '-100px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{
-                    opacity: [0, 1, 1, 0],
-                    scale: [0, 1, 1, 0],
-                    ...createHorizontalPath(index),
-                  }}
-                  transition={{
-                    duration: 6,
-                    delay: index * 1.5,
-                    repeat: Infinity,
-                    repeatDelay: (emojiSequence.length - 1) * 1.5,
-                    ease: "easeInOut",
-                  }}
-                >
-                  {emoji}
-                </motion.div>
-              ))}
-              
-              <div className="text-[6rem] mr-8 leading-none">
-                🏨
-              </div>
-              {/* Show analyzing text always - never disappears */}
-              <div className="relative" style={{ paddingBottom: '0.6rem' }}>
-                <div className="text-center relative" style={{ color: '#43636f' }}>
-                  <span className="block py-4 text-[4.5rem] font-bold leading-none">
-                    <span className="text-[2.5rem] font-semibold uppercase">analyzing to create your</span><br />
+            {shouldShowLoadingBanner ? (
+              <motion.div
+                className="flex flex-col items-center text-center py-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >
+                <div className="space-y-3 text-[#43636f]">
+                  <span className="block text-[2rem] font-semibold uppercase tracking-[0.25em]">
+                    Analyzing to create your
+                  </span>
+                  <span className="block text-[4rem] font-bold leading-tight tracking-[0.1em]">
                     BEST TRIP EVER!
-                    <span className="text-[1.6rem] mt-2 block">Thanks for your patience</span>
                   </span>
                 </div>
-              </div>
-            </div>
+
+                <div className="relative w-full max-w-3xl h-20 overflow-hidden">
+                  {emojiSequence.map((emoji, index) => (
+                    <motion.div
+                      key={`${emoji}-${index}`}
+                      className="absolute text-4xl pointer-events-none"
+                      style={{ top: '50%' }}
+                      initial={{ opacity: 0, scale: 0.85, y: '-50%', left: '-18%' }}
+                      animate={{
+                        left: ['-18%', '120%'],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.85, 1, 1, 0.85],
+                      }}
+                      transition={{
+                        duration: EMOJI_CYCLE_DURATION,
+                        delay: index * EMOJI_STAGGER,
+                        repeat: Infinity,
+                        repeatType: 'loop',
+                        ease: 'linear',
+                      }}
+                    >
+                      {emoji}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <p className="text-lg font-semibold text-[#43636f]">
+                  Thanks for your patience—we're stitching together unforgettable magic.
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                className="flex flex-col items-center text-center py-12 gap-4 text-[#43636f]"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              >
+                <span className="text-[4rem] font-bold leading-none">
+                  TA-DA! 🎉
+                </span>
+                <span className="text-xl font-semibold max-w-2xl">
+                  Your itinerary is ready below—dive into curated days, foodie finds, and pro tips built just for you.
+                </span>
+              </motion.div>
+            )}
           </div>
         </div>
       )}

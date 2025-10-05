@@ -7,8 +7,23 @@ interface ContactInfo {
   subscribe?: boolean;
 }
 
+export interface TripLocationDetails {
+  placeId: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+  city?: string;
+  region?: string;
+  country?: string;
+  countryCode?: string;
+  formattedAddress?: string;
+  postalCode?: string;
+  street?: string;
+}
+
 export interface TripFormData {
   location: string;
+  locationDetails?: TripLocationDetails | null;
   departDate: string | null;
   returnDate: string | null;
   flexibleDates: boolean;

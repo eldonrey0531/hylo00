@@ -5,6 +5,20 @@ const currencyEnum = z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD']);
 const budgetModeEnum = z.enum(['total', 'per-person']); // T002: Added budget mode enum
 const travelStyleEnum = z.enum(['answer-questions', 'skip-to-details', 'not-selected']);
 
+const locationDetailsSchema = z.object({
+  placeId: z.string(),
+  label: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  city: z.string().optional(),
+  region: z.string().optional(),
+  country: z.string().optional(),
+  countryCode: z.string().optional(),
+  formattedAddress: z.string().optional(),
+  postalCode: z.string().optional(),
+  street: z.string().optional(),
+}).optional().nullable();
+
 // Trip Details Schema with enhanced validation
 export const tripDetailsSchema = z
   .object({
@@ -12,6 +26,8 @@ export const tripDetailsSchema = z
       .string()
       .min(1, 'Location is required')
       .max(100, 'Location must be less than 100 characters'),
+
+    locationDetails: locationDetailsSchema,
 
     departDate: z
       .string()

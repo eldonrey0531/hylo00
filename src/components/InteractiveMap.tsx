@@ -52,9 +52,21 @@ export function InteractiveMap({
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (lat && lng) {
+      setCoordinates({ lat, lng });
+    }
+  }, [lat, lng]);
+
+  useEffect(() => {
+    if (!isClient) {
+      return;
+    }
 
     // If coordinates not provided, geocode the location
-    if (!lat || !lng) {
+    if ((!lat || !lng) && location) {
       fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           location
@@ -73,7 +85,7 @@ export function InteractiveMap({
           console.error('Geocoding failed:', err);
         });
     }
-  }, [location, lat, lng]);
+  }, [isClient, location, lat, lng]);
 
   // Fix Leaflet default marker icon issue in Next.js
   useEffect(() => {

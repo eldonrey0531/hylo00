@@ -49,36 +49,49 @@ export async function GET(
                        'Initializing workflow';
 
     // Return structured response with the stored itinerary data
-  let parsedItinerary: any | null = null;
+    let parsedItinerary: any | null = workflowState.layout?.content ?? null;
     let rawItinerary: string | null = null;
     let itineraryParseError: string | null = null;
 
-    if (workflowState.itinerary) {
-      rawItinerary = typeof workflowState.itinerary === 'string'
-        ? workflowState.itinerary
-        : JSON.stringify(workflowState.itinerary);
+    if (!parsedItinerary) {
+      if (workflowState.itinerary) {
+        rawItinerary = typeof workflowState.itinerary === 'string'
+          ? workflowState.itinerary
+          : JSON.stringify(workflowState.itinerary, null, 2);
 
-      try {
-        parsedItinerary = JSON.parse(rawItinerary);
-        console.log('✅ [STATUS API] Successfully parsed itinerary JSON:', {
+        try {
+          parsedItinerary = JSON.parse(rawItinerary);
+          console.log('✅ [STATUS API] Successfully parsed itinerary JSON:', {
+            workflowId,
+            hasIntro: !!parsedItinerary?.intro,
+            dailyPlansCount: Array.isArray(parsedItinerary?.dailyPlans) ? parsedItinerary.dailyPlans.length : 0,
+            originalStringLength: rawItinerary.length,
+          });
+        } catch (error) {
+          itineraryParseError = error instanceof Error ? error.message : String(error);
+          console.error('❌ [STATUS API] Failed to parse itinerary JSON:', {
+            workflowId,
+            error: itineraryParseError,
+            originalStringPreview: rawItinerary.slice(0, 200),
+          });
+          parsedItinerary = null;
+        }
+      } else {
+        console.log('⚠️ [STATUS API] No itinerary data found in workflow state:', {
           workflowId,
-          hasIntro: !!parsedItinerary?.intro,
-          dailyPlansCount: Array.isArray(parsedItinerary?.dailyPlans) ? parsedItinerary.dailyPlans.length : 0,
-          originalStringLength: rawItinerary.length,
+          workflowStateKeys: Object.keys(workflowState),
         });
-      } catch (error) {
-        itineraryParseError = error instanceof Error ? error.message : String(error);
-        console.error('❌ [STATUS API] Failed to parse itinerary JSON:', {
-          workflowId,
-          error: itineraryParseError,
-          originalStringPreview: rawItinerary.slice(0, 200),
-        });
-        parsedItinerary = null;
       }
     } else {
-      console.log('⚠️ [STATUS API] No itinerary data found in workflow state:', {
+      rawItinerary = typeof workflowState.itinerary === 'string'
+        ? workflowState.itinerary
+        : JSON.stringify(workflowState.itinerary, null, 2);
+      console.log('✅ [STATUS API] Using pre-formatted layout content for itinerary response:', {
         workflowId,
-        workflowStateKeys: Object.keys(workflowState),
+        hasIntro: !!parsedItinerary?.intro,
+        dailyPlanBuckets: Array.isArray(parsedItinerary?.daily)
+          ? parsedItinerary.daily.length
+          : 0,
       });
     }
 
@@ -94,6 +107,12 @@ export async function GET(
       error: workflowState.error || null,
       createdAt: workflowState.createdAt,
       updatedAt: workflowState.updatedAt,
+      layoutMetadata: workflowState.layout
+        ? {
+            model: workflowState.layout.model,
+            usedGroq: workflowState.layout.usedGroq,
+          }
+        : null,
     };
 
     logger.log(6, 'Status response prepared', 'status/[workflowId]/route.ts', 'GET', {
